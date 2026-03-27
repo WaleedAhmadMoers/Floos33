@@ -1,0 +1,69 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}ستوكاتي | floos33{% endblock title %}
+{% block account_eyebrow %}Stocklots{% endblock account_eyebrow %}
+{% block account_title %}إدارة الستوكات{% endblock account_title %}
+{% block account_intro %}من هنا تدير الستوكات التابعة لشركتك فقط، مع فصل واضح بين الملكية التجارية والحساب الشخصي.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>ملخص الشركة والستوكات</h2>
+            <p class="subtle-copy">كل إدراج هنا مرتبط بالشركة الحالية: {{ user_company.name }}.</p>
+        </div>
+    </div>
+
+    <div class="account-summary-grid">
+        <article class="summary-item">
+            <div class="summary-label">اسم الشركة</div>
+            <div class="summary-value">{{ user_company.name }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">عدد الستوكات</div>
+            <div class="summary-value">{{ my_stocklots_count }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">حالة البائع</div>
+            <div class="summary-value">{% if request.user.is_seller %}معتمد{% else %}غير معتمد{% endif %}</div>
+        </article>
+    </div>
+
+    <div class="actions">
+        <a class="button" href="{% url 'stocklots:create' %}">إضافة ستوك جديد</a>
+        <a class="button button-secondary" href="{% url 'stocklots:list' %}">عرض السوق</a>
+    </div>
+</section>
+
+{% if stocklots %}
+    <section class="stocklot-grid">
+        {% for stocklot in stocklots %}
+            <article class="stocklot-card">
+                <div class="stocklot-card-header">
+                    <div>
+                        <p class="eyebrow">{{ stocklot.category.full_name }}</p>
+                        <h2>{{ stocklot.title }}</h2>
+                    </div>
+                    <span class="badge {% if stocklot.is_published %}badge-success{% else %}badge-muted{% endif %}">{{ stocklot.get_status_display }}</span>
+                </div>
+                <div class="stocklot-meta">
+                    <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+                    <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
+                    <span>{{ stocklot.price }} {{ stocklot.currency }}</span>
+                </div>
+                <div class="actions">
+                    {% if stocklot.is_published %}
+                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">عرض</a>
+                    {% endif %}
+                    <a class="button" href="{% url 'stocklots:edit' stocklot.slug %}">تعديل</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="content-card empty-state">
+        <h2>لا توجد ستوكات بعد</h2>
+        <p class="subtle-copy">ابدأ بإضافة أول ستوك لشركتك، ثم يمكنك نشره في السوق العام بعد مراجعة بياناته.</p>
+    </section>
+{% endif %}
+{% endblock account_content %}

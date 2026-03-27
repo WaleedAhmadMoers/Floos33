@@ -1,0 +1,114 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}{{ page_title }} | floos33{% endblock title %}
+{% block account_eyebrow %}Stocklots{% endblock account_eyebrow %}
+{% block account_title %}{{ page_title }}{% endblock account_title %}
+{% block account_intro %}{{ page_intro }}{% endblock account_intro %}
+
+{% block account_content %}
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>بيانات الستوك</h2>
+            <p class="subtle-copy">الستوكات ترتبط بالشركة الحالية: {{ user_company.name }}. حافظنا على النموذج بسيطاً وواضحاً ليتوسع لاحقاً بسهولة.</p>
+        </div>
+    </div>
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <ul class="form-errors">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="form-sections">
+            <section class="form-section">
+                <div>
+                    <h3>المعلومات الأساسية</h3>
+                </div>
+                <div class="form-section-grid">
+                    {% for field in form %}
+                        {% if field.name == "title" or field.name == "category" or field.name == "description" or field.name == "condition" %}
+                            <div class="field-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="helptext">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <ul class="field-errors">
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="form-section">
+                <div>
+                    <h3>الكمية والتسعير</h3>
+                </div>
+                <div class="form-section-grid">
+                    {% for field in form %}
+                        {% if field.name == "quantity" or field.name == "moq" or field.name == "unit_type" or field.name == "price" or field.name == "currency" %}
+                            <div class="field-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="helptext">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <ul class="field-errors">
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="form-section">
+                <div>
+                    <h3>الموقع والنشر</h3>
+                </div>
+                <div class="form-section-grid">
+                    {% for field in form %}
+                        {% if field.name == "location_country" or field.name == "location_city" or field.name == "status" or field.name == "is_active" %}
+                            <div class="field-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="helptext">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <ul class="field-errors">
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="button">{{ submit_label }}</button>
+            <a class="button button-secondary" href="{% url 'stocklots:mine' %}">العودة إلى ستوكاتي</a>
+        </div>
+    </form>
+</section>
+{% endblock account_content %}

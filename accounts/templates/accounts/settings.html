@@ -1,0 +1,98 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}إعدادات الحساب | floos33{% endblock title %}
+{% block account_eyebrow %}Settings{% endblock account_eyebrow %}
+{% block account_title %}إعدادات الحساب{% endblock account_title %}
+{% block account_intro %}حدّث بيانات الهوية الأساسية للحساب مع إبقاء الأدوار والتحقق وملف الشركة في مسارات واضحة ومنفصلة.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>البيانات الأساسية</h2>
+            <p class="subtle-copy">يمكنك تعديل الاسم والبريد واللغة المفضلة فقط في هذه المرحلة.</p>
+        </div>
+    </div>
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <ul class="form-errors">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="field-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="field-errors">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="button">حفظ التعديلات</button>
+    </form>
+</section>
+
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>الحالة الحالية</h2>
+            <p class="subtle-copy">ملخص سريع لوضع التحقق والأدوار والشركة المرتبطة بالحساب.</p>
+        </div>
+    </div>
+
+    <div class="account-summary-grid">
+        <article class="summary-item">
+            <div class="summary-label">نوع الحساب</div>
+            <div class="summary-value">{{ request.user.account_type_label }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">تحقق المشتري</div>
+            <div class="summary-value">{{ request.user.buyer_verification_status_label }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">حالة طلب البائع</div>
+            <div class="summary-value">
+                {% if seller_request %}
+                    {{ seller_request.get_status_display }}
+                {% else %}
+                    لا يوجد طلب
+                {% endif %}
+            </div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">الشركة المرتبطة</div>
+            <div class="summary-value">
+                {% if user_company %}
+                    {{ user_company.name }}
+                {% else %}
+                    لا توجد شركة بعد
+                {% endif %}
+            </div>
+        </article>
+    </div>
+
+    <div class="actions">
+        <a class="button button-secondary" href="{% url 'accounts:buyer_verification' %}">إدارة تحقق المشتري</a>
+        <a class="button button-secondary" href="{% url 'accounts:seller_request' %}">إدارة طلب البائع</a>
+        {% if user_company %}
+            <a class="button button-secondary" href="{% url 'companies:profile' %}">عرض ملف الشركة</a>
+        {% else %}
+            <a class="button button-secondary" href="{% url 'companies:create' %}">إنشاء ملف الشركة</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock account_content %}

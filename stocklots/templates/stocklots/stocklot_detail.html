@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ stocklot.title }} | floos33{% endblock title %}
+
+{% block content %}
+<section class="hero-card">
+    <p class="eyebrow">{{ stocklot.category.full_name }}</p>
+    <h1>{{ stocklot.title }}</h1>
+    <p class="lead">عرض ستوك منشور من شركة {{ stocklot.company.name }} ضمن سوق floos33.</p>
+</section>
+
+<div class="detail-layout">
+    <section class="content-card">
+        <div class="panel-header">
+            <div>
+                <h2>تفاصيل العرض</h2>
+                <p class="subtle-copy">نظرة واضحة على المواصفات الأساسية لهذا الستوك.</p>
+            </div>
+            <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
+        </div>
+
+        <div class="detail-grid">
+            <article class="detail-item">
+                <div class="detail-label">التصنيف</div>
+                <div class="detail-value">{{ stocklot.category.full_name }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">الحالة</div>
+                <div class="detail-value">{{ stocklot.get_condition_display }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">الكمية</div>
+                <div class="detail-value">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">الحد الأدنى للطلب</div>
+                <div class="detail-value">{{ stocklot.moq }} {{ stocklot.get_unit_type_display }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">السعر</div>
+                <div class="detail-value">{{ stocklot.price }} {{ stocklot.currency }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">الموقع</div>
+                <div class="detail-value">{{ stocklot.location_country }} - {{ stocklot.location_city }}</div>
+            </article>
+            <article class="detail-item detail-item-wide">
+                <div class="detail-label">الوصف</div>
+                <div class="detail-value">{{ stocklot.description|linebreaksbr }}</div>
+            </article>
+        </div>
+    </section>
+
+    <aside class="content-card sidebar-card">
+        <h2>الشركة المالكة</h2>
+        <p class="subtle-copy">الستوكات في المنصة تعود إلى الشركات، وليس إلى الحسابات الفردية مباشرة.</p>
+        <div class="detail-grid">
+            <article class="detail-item">
+                <div class="detail-label">اسم الشركة</div>
+                <div class="detail-value">{{ stocklot.company.name }}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">المدينة</div>
+                <div class="detail-value">{{ stocklot.company.city }}</div>
+            </article>
+            <article class="detail-item detail-item-wide">
+                <div class="detail-label">الوصف التجاري</div>
+                <div class="detail-value">{{ stocklot.company.description }}</div>
+            </article>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{% url 'stocklots:list' %}">العودة إلى السوق</a>
+        </div>
+    </aside>
+</div>
+{% endblock content %}

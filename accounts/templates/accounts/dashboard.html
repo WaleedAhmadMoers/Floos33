@@ -1,0 +1,186 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}لوحة الحساب | floos33{% endblock title %}
+{% block account_eyebrow %}Overview{% endblock account_eyebrow %}
+{% block account_title %}لوحة الحساب{% endblock account_title %}
+{% block account_intro %}من هنا يمكنك متابعة حالة هويتك كمشتري، وإدارة طلب البائع، والوصول السريع إلى إعدادات الحساب وملف الشركة والستوكات.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="account-summary-card">
+    <div class="panel-header">
+        <div>
+            <h2>ملخص الحساب</h2>
+            <p class="subtle-copy">عرض سريع لأهم المعلومات الحالية داخل تطبيق الحساب.</p>
+        </div>
+    </div>
+
+    <div class="account-summary-grid">
+        <article class="summary-item">
+            <div class="summary-label">الاسم الكامل</div>
+            <div class="summary-value">{{ request.user.full_name }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">البريد الإلكتروني</div>
+            <div class="summary-value">{{ request.user.email }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">اللغة المفضلة</div>
+            <div class="summary-value">{{ request.user.get_preferred_language_display }}</div>
+        </article>
+        <article class="summary-item">
+            <div class="summary-label">نوع الحساب</div>
+            <div class="summary-value">{{ request.user.account_type_label }}</div>
+        </article>
+    </div>
+</section>
+
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>ملف الشركة</h2>
+            <p class="subtle-copy">تُحفظ الكيانات التجارية بشكل منفصل عن الحسابات الشخصية حتى تكون الملكية التجارية واضحة وجاهزة لربط المخزون والصفقات لاحقاً.</p>
+        </div>
+        {% if user_company %}
+            <span class="badge badge-success">جاهز</span>
+        {% else %}
+            <span class="badge badge-muted">غير مكتمل</span>
+        {% endif %}
+    </div>
+
+    {% if user_company %}
+        <div class="account-summary-grid">
+            <article class="summary-item">
+                <div class="summary-label">اسم الشركة</div>
+                <div class="summary-value">{{ user_company.name }}</div>
+            </article>
+            <article class="summary-item">
+                <div class="summary-label">الموقع</div>
+                <div class="summary-value">{{ user_company.country }} - {{ user_company.city }}</div>
+            </article>
+            <article class="summary-item">
+                <div class="summary-label">البريد التجاري</div>
+                <div class="summary-value">{{ user_company.email }}</div>
+            </article>
+            <article class="summary-item">
+                <div class="summary-label">الهاتف</div>
+                <div class="summary-value">{{ user_company.phone }}</div>
+            </article>
+        </div>
+        <div class="actions">
+            <a class="button" href="{% url 'companies:profile' %}">عرض ملف الشركة</a>
+            <a class="button button-secondary" href="{% url 'companies:edit' %}">تعديل بيانات الشركة</a>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="subtle-copy">لا توجد شركة مرتبطة بهذا المستخدم حتى الآن. أنشئ ملف الشركة أولاً قبل البدء في أي تدفقات تجارية لاحقة.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'companies:create' %}">إنشاء ملف الشركة</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>الستوكات</h2>
+            <p class="subtle-copy">كل الستوكات ترتبط بالشركة الحالية فقط، ولا يمكن إدارتها إلا من خلال بائع معتمد.</p>
+        </div>
+        {% if request.user.is_seller and user_company %}
+            <span class="badge badge-success">مفعل</span>
+        {% else %}
+            <span class="badge badge-muted">غير جاهز</span>
+        {% endif %}
+    </div>
+
+    {% if request.user.is_seller and user_company %}
+        <div class="empty-panel">
+            <p class="subtle-copy">يمكنك الآن إدارة الستوكات الخاصة بشركتك وإنشاء عروض جديدة للسوق العام.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'stocklots:mine' %}">إدارة الستوكات</a>
+                <a class="button button-secondary" href="{% url 'stocklots:create' %}">إضافة ستوك جديد</a>
+            </div>
+        </div>
+    {% elif not user_company %}
+        <div class="empty-panel">
+            <p class="subtle-copy">أنشئ ملف الشركة أولاً حتى تصبح الستوكات مرتبطة بكيان تجاري واضح.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'companies:create' %}">إنشاء ملف الشركة</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="subtle-copy">هذا الحساب يملك شركة مرتبطة، لكنه يحتاج إلى موافقة البائع قبل إدارة الستوكات أو إنشاء إدراجات منشورة.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'accounts:seller_request' %}">إكمال طلب البائع</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>تحقق المشتري</h2>
+            <p class="subtle-copy">تحقق اختياري يرفع موثوقية الحساب ويهيئه لميزات الثقة مستقبلاً.</p>
+        </div>
+        <span class="badge badge-muted">{{ request.user.buyer_verification_status_label }}</span>
+    </div>
+
+    {% if buyer_request %}
+        <div class="status-panel status-{{ buyer_request.status }}">
+            <p>الحالة الحالية: {{ buyer_request.get_status_display }}</p>
+            {% if buyer_request.review_notes %}
+                <p>ملاحظات الإدارة: {{ buyer_request.review_notes }}</p>
+            {% endif %}
+        </div>
+        <div class="actions">
+            <a class="button" href="{% url 'accounts:buyer_verification' %}">عرض أو تحديث طلب التحقق</a>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="subtle-copy">لا يوجد طلب تحقق محفوظ لهذا الحساب حتى الآن.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'accounts:buyer_verification' %}">بدء تحقق المشتري</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>وصول البائع</h2>
+            <p class="subtle-copy">الترقية إلى بائع تتم عبر طلب مراجعة منفصل للحفاظ على تنظيم واضح بين الأدوار.</p>
+        </div>
+        {% if request.user.is_seller %}
+            <span class="badge badge-success">مفعل</span>
+        {% else %}
+            <span class="badge badge-muted">غير مفعل</span>
+        {% endif %}
+    </div>
+
+    {% if request.user.is_seller %}
+        <div class="status-panel status-approved">
+            <p>تم اعتماد هذا الحساب كبائع مع الاحتفاظ بصلاحية المشتري.</p>
+        </div>
+    {% elif seller_request %}
+        <div class="status-panel status-{{ seller_request.status }}">
+            <p>الحالة الحالية: {{ seller_request.get_status_display }}</p>
+            {% if seller_request.review_notes %}
+                <p>ملاحظات الإدارة: {{ seller_request.review_notes }}</p>
+            {% endif %}
+        </div>
+        <div class="actions">
+            <a class="button" href="{% url 'accounts:seller_request' %}">عرض أو تحديث طلب البائع</a>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="subtle-copy">هذا الحساب يعمل حالياً كمشتري فقط ويمكنه التقديم للوصول كبائع لاحقاً.</p>
+            <div class="actions">
+                <a class="button" href="{% url 'accounts:seller_request' %}">بدء طلب البائع</a>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock account_content %}

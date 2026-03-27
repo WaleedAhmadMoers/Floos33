@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auth-card {% block auth_shell_class %}{% endblock auth_shell_class %}">
+    <p class="eyebrow">{% block auth_eyebrow %}Accounts{% endblock auth_eyebrow %}</p>
+    <h1>{% block auth_title %}{% endblock auth_title %}</h1>
+    <p class="lead">{% block auth_intro %}{% endblock auth_intro %}</p>
+
+    {% block auth_content %}{% endblock auth_content %}
+</section>
+{% endblock content %}

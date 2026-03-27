@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}الستوكات | floos33{% endblock title %}
+
+{% block content %}
+<section class="hero-card">
+    <p class="eyebrow">Marketplace</p>
+    <h1>سوق الستوكات</h1>
+    <p class="lead">استعرض عروض الشركات المنشورة، وابحث حسب العنوان أو التصفية حسب التصنيف للوصول بسرعة إلى الستوك المناسب.</p>
+</section>
+
+<section class="content-card">
+    <form method="get" class="filter-form">
+        <div class="filter-grid">
+            <div class="field-group">
+                <label for="id_q">بحث بالعنوان</label>
+                <input id="id_q" type="text" name="q" value="{{ search_query }}" class="form-input" placeholder="مثال: شواحن، أدوات، ملابس">
+            </div>
+            <div class="field-group">
+                <label for="id_category">التصنيف</label>
+                <select id="id_category" name="category" class="form-input">
+                    <option value="">كل التصنيفات</option>
+                    {% for parent in marketplace_categories %}
+                        <option value="{{ parent.slug }}" {% if selected_category and selected_category.slug == parent.slug %}selected{% endif %}>{{ parent.name }}</option>
+                        {% for child in parent.children.all %}
+                            <option value="{{ child.slug }}" {% if selected_category and selected_category.slug == child.slug %}selected{% endif %}>{{ parent.name }} / {{ child.name }}</option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="actions">
+            <button type="submit" class="button">تطبيق التصفية</button>
+            <a class="button button-secondary" href="{% url 'stocklots:list' %}">إعادة الضبط</a>
+            {% if request.user.is_authenticated and request.user.is_seller %}
+                <a class="button button-secondary" href="{% url 'stocklots:create' %}">إضافة ستوك</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+{% if stocklots %}
+    <section class="stocklot-grid">
+        {% for stocklot in stocklots %}
+            <article class="stocklot-card">
+                <div class="stocklot-card-header">
+                    <div>
+                        <p class="eyebrow">{{ stocklot.category.full_name }}</p>
+                        <h2><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h2>
+                    </div>
+                    <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
+                </div>
+                <p class="subtle-copy">{{ stocklot.description|truncatechars:180 }}</p>
+                <div class="stocklot-meta">
+                    <span>{{ stocklot.company.name }}</span>
+                    <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
+                    <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+                </div>
+                <div class="stocklot-card-footer">
+                    <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
+                    <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">عرض التفاصيل</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="content-card empty-state">
+        <h2>لا توجد نتائج حالياً</h2>
+        <p class="subtle-copy">لم يتم العثور على ستوكات مطابقة لبحثك أو للتصنيف المحدد. جرّب تعديل التصفية أو العودة لكل الستوكات المنشورة.</p>
+    </section>
+{% endif %}
+{% endblock content %}

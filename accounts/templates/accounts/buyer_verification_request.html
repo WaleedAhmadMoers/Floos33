@@ -1,0 +1,80 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}تحقق هوية المشتري | floos33{% endblock title %}
+{% block account_eyebrow %}Buyer Verification{% endblock account_eyebrow %}
+{% block account_title %}تحقق هوية المشتري{% endblock account_title %}
+{% block account_intro %}تحقق اختياري وبسيط يظل داخل تطبيق الحساب حالياً، ومصمم ليكون قابلاً للتوسعة لاحقاً ضمن منطق الثقة والتحقق.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>حالة الطلب</h2>
+            <p class="subtle-copy">يمكنك إرسال الطلب أو تحديثه طالما لم يصل إلى حالة الاعتماد النهائي.</p>
+        </div>
+        <span class="badge badge-muted">{{ request.user.buyer_verification_status_label }}</span>
+    </div>
+
+    {% if buyer_request %}
+        <div class="status-panel status-{{ buyer_request.status }}">
+            <p>الحالة الحالية: {{ buyer_request.get_status_display }}</p>
+            <p>آخر تحديث: {{ buyer_request.updated_at }}</p>
+            {% if buyer_request.review_notes %}
+                <p>ملاحظات الإدارة: {{ buyer_request.review_notes }}</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="status-panel status-unverified">
+            <p>لا يوجد طلب تحقق محفوظ لهذا الحساب حتى الآن.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% if not buyer_request or buyer_request.status != "verified" %}
+<section class="account-panel">
+    <div class="panel-header">
+        <div>
+            <h2>بيانات التحقق</h2>
+            <p class="subtle-copy">املأ البيانات القانونية الأساسية وارفع المستندات المطلوبة بطريقة مرتبة وواضحة.</p>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="auth-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <ul class="form-errors">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="field-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="field-errors">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="button">
+            {% if buyer_request and buyer_request.status == "rejected" %}
+                إعادة إرسال طلب التحقق
+            {% else %}
+                حفظ وإرسال الطلب
+            {% endif %}
+        </button>
+    </form>
+</section>
+{% endif %}
+{% endblock account_content %}
