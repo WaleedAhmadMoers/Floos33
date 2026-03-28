@@ -1,75 +1,65 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="account-shell">
-    <div class="account-hero">
-        <div class="account-hero-grid">
-            <div>
-                <p class="eyebrow">{% block account_eyebrow %}Account{% endblock account_eyebrow %}</p>
-                <h1>{% block account_title %}{% endblock account_title %}</h1>
-                <p class="lead">{% block account_intro %}{% endblock account_intro %}</p>
-            </div>
-            <div class="account-hero-meta">
-                <div class="stack-sm">
-                    <div class="summary-label">الحساب الحالي</div>
-                    <div class="badge-row">
-                        {% if request.user.is_buyer %}
-                            <span class="badge">مشتري</span>
-                        {% endif %}
-                        {% if request.user.is_seller %}
-                            <span class="badge badge-success">بائع</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="stack-sm">
-                    <div class="summary-label">حالة تحقق المشتري</div>
-                    <span class="badge badge-muted">{{ request.user.buyer_verification_status_label }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="account-shell">
+    <aside class="account-nav">
+        {% with ns=request.resolver_match.namespace name=request.resolver_match.url_name %}
+        <nav>
+            <a class="{% if ns == 'accounts' and name == 'dashboard' %}is-active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                <span>Dashboard</span><span>01</span>
+            </a>
+            <a class="{% if ns == 'accounts' and name == 'settings' %}is-active{% endif %}" href="{% url 'accounts:settings' %}">
+                <span>Account settings</span><span>02</span>
+            </a>
+            <a class="{% if ns == 'companies' %}is-active{% endif %}" href="{% url 'companies:profile' %}">
+                <span>Company profile</span><span>03</span>
+            </a>
+            <a class="{% if ns == 'stocklots' and name == 'mine' %}is-active{% endif %}" href="{% url 'stocklots:mine' %}">
+                <span>Manage stocklots</span><span>04</span>
+            </a>
+            <a class="{% if ns == 'stocklots' and name == 'favorites' %}is-active{% endif %}" href="{% url 'stocklots:favorites' %}">
+                <span>Saved listings</span><span>05</span>
+            </a>
+            <a class="{% if ns == 'inquiries' and name == 'sent' %}is-active{% endif %}" href="{% url 'inquiries:sent' %}">
+                <span>My inquiries</span><span>06</span>
+            </a>
+            <a class="{% if ns == 'inquiries' and name == 'received' %}is-active{% endif %}" href="{% url 'inquiries:received' %}">
+                <span>Received inquiries</span><span>07</span>
+            </a>
+            <a class="{% if ns == 'accounts' and name == 'buyer_verification' %}is-active{% endif %}" href="{% url 'accounts:buyer_verification' %}">
+                <span>Buyer verification</span><span>08</span>
+            </a>
+            <a class="{% if ns == 'accounts' and name == 'seller_request' %}is-active{% endif %}" href="{% url 'accounts:seller_request' %}">
+                <span>Seller request</span><span>09</span>
+            </a>
+            <a class="{% if ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}is-active{% endif %}" href="{% url 'accounts:password_change' %}">
+                <span>Change password</span><span>10</span>
+            </a>
+            <a class="{% if ns == 'rfqs' and name == 'list' %}is-active{% endif %}" href="{% url 'rfqs:list' %}">
+                <span>Browse RFQs</span><span>11</span>
+            </a>
+            <a class="{% if ns == 'rfqs' and name == 'my_rfqs' %}is-active{% endif %}" href="{% url 'rfqs:my_rfqs' %}">
+                <span>My RFQs</span><span>12</span>
+            </a>
+            <a class="{% if ns == 'rfqs' and name == 'buyer_conversations' %}is-active{% endif %}" href="{% url 'rfqs:buyer_conversations' %}">
+                <span>My RFQ conversations</span><span>13</span>
+            </a>
+            <a class="{% if ns == 'rfqs' and name == 'seller_conversations' %}is-active{% endif %}" href="{% url 'rfqs:seller_conversations' %}">
+                <span>My RFQ responses</span><span>14</span>
+            </a>
+        </nav>
+        {% endwith %}
+        <p class="account-nav-note">
+            Navigation: account settings under Accounts; company info under Companies; listings under Stocklots; inquiries under Inquiries.
+        </p>
+    </aside>
 
-    <div class="account-shell-grid">
-        <aside class="account-nav-card">
-            <div class="account-nav-title">إدارة الحساب</div>
-            <nav class="account-nav" aria-label="Account">
-                <a class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}" href="{% url 'accounts:dashboard' %}">
-                    <span>لوحة الحساب</span>
-                    <span>01</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'settings' %}is-active{% endif %}" href="{% url 'accounts:settings' %}">
-                    <span>إعدادات الحساب</span>
-                    <span>02</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'companies' %}is-active{% endif %}" href="{% url 'companies:profile' %}">
-                    <span>ملف الشركة</span>
-                    <span>03</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'stocklots' %}is-active{% endif %}" href="{% url 'stocklots:mine' %}">
-                    <span>إدارة الستوكات</span>
-                    <span>04</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'buyer_verification' %}is-active{% endif %}" href="{% url 'accounts:buyer_verification' %}">
-                    <span>تحقق المشتري</span>
-                    <span>05</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'seller_request' %}is-active{% endif %}" href="{% url 'accounts:seller_request' %}">
-                    <span>طلب البائع</span>
-                    <span>06</span>
-                </a>
-                <a class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'password_change' or request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'password_change_done' %}is-active{% endif %}" href="{% url 'accounts:password_change' %}">
-                    <span>تغيير كلمة المرور</span>
-                    <span>07</span>
-                </a>
-            </nav>
-            <p class="account-nav-note">
-                تبقى الهوية والتحقق والحساب الشخصي داخل `accounts`، وتبقى الشركة داخل `companies`، بينما ترتبط الستوكات بالشركة داخل `stocklots` بشكل جاهز للتوسع التجاري لاحقاً.
-            </p>
-        </aside>
+    <div class="account-main">
+        <p class="eyebrow">{% block account_eyebrow %}{% endblock account_eyebrow %}</p>
+        <h1>{% block account_title %}{% endblock account_title %}</h1>
+        <p class="lead">{% block account_intro %}{% endblock account_intro %}</p>
 
-        <div class="account-main">
-            {% block account_content %}{% endblock account_content %}
-        </div>
+        {% block account_content %}{% endblock account_content %}
     </div>
-</section>
+</div>
 {% endblock content %}

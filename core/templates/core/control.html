@@ -1,0 +1,362 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}Admin Control Panel | floos33{% endblock title %}
+{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
+{% block account_title %}Control Panel{% endblock account_title %}
+{% block account_intro %}Queues first, then users/companies/visibility, then monitors. All actions are one click.{% endblock account_intro %}
+
+{% block account_content %}
+
+<section class="content-card">
+    <h2>Quick nav</h2>
+    <div class="pill-grid">
+        <a class="pill" href="#queues">Moderation queues</a>
+        <a class="pill" href="{% url 'core:control_deals' %}">Deals manager</a>
+        <a class="pill" href="{% url 'core:control_users' %}">Users</a>
+        <a class="pill" href="{% url 'core:control_companies' %}">Companies</a>
+        <a class="pill" href="{% url 'core:control_stocklots' %}">Listings</a>
+        <a class="pill" href="{% url 'core:control_rfqs' %}">RFQs</a>
+        <a class="pill" href="#visibility">Visibility</a>
+        <a class="pill" href="#monitors">Monitors</a>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Platform snapshot</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Users</div><div class="detail-value">{{ metrics.users }}</div></article>
+        <article class="detail-item"><div class="detail-label">Buyers</div><div class="detail-value">{{ metrics.buyers }}</div></article>
+        <article class="detail-item"><div class="detail-label">Sellers</div><div class="detail-value">{{ metrics.sellers }}</div></article>
+        <article class="detail-item"><div class="detail-label">Companies</div><div class="detail-value">{{ metrics.companies }}</div></article>
+        <article class="detail-item"><div class="detail-label">Stocklots (approved)</div><div class="detail-value">{{ metrics.stocklots_approved }}</div></article>
+        <article class="detail-item"><div class="detail-label">Stocklots (pending)</div><div class="detail-value">{{ metrics.stocklots_pending }}</div></article>
+        <article class="detail-item"><div class="detail-label">RFQs (open)</div><div class="detail-value">{{ metrics.rfqs_open }}</div></article>
+        <article class="detail-item"><div class="detail-label">Inquiries</div><div class="detail-value">{{ metrics.inquiries }}</div></article>
+        <article class="detail-item"><div class="detail-label">Pending inquiry replies</div><div class="detail-value">{{ metrics.inquiry_replies_pending }}</div></article>
+        <article class="detail-item"><div class="detail-label">Pending RFQ messages</div><div class="detail-value">{{ metrics.rfq_messages_pending }}</div></article>
+        <article class="detail-item"><div class="detail-label">Pending deal approvals</div><div class="detail-value">{{ metrics.deal_pending }}</div></article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Recent activity</h2>
+    {% if latest_activity %}
+        <ul class="notification-list">
+            {% for n in latest_activity %}
+            <li class="notification-item">
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <span class="eyebrow">{{ n.get_notification_type_display }}</span>
+                        <span class="subtle-copy timestamp">{{ n.created_at|timesince }} ago</span>
+                    </div>
+                    <h3>{{ n.title }}</h3>
+                    <p class="subtle-copy">{{ n.body|truncatewords:30 }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="subtle-copy">No recent activity.</p>
+    {% endif %}
+</section>
+
+<section class="content-card" id="queues">
+    <h2>Queues (one-click moderation)</h2>
+
+    <h3>Pending deals</h3>
+    {% if pending_deals %}
+    <table class="table">
+        <thead><tr><th>Type</th><th>Link</th><th>Buyer</th><th>Seller</th><th>When</th><th></th></tr></thead>
+        <tbody>
+        {% for deal in pending_deals %}
+            <tr>
+                <td>{{ deal.deal_type }}</td>
+                <td>
+                    {% if deal.inquiry %}<a href="{{ deal.inquiry.get_absolute_url }}">Inquiry #{{ deal.inquiry.id }}</a>
+                    {% elif deal.rfq_conversation %}<a href="{% url 'rfqs:conversation_detail' deal.rfq_conversation.id %}">RFQ convo #{{ deal.rfq_conversation.id }}</a>{% endif %}
+                </td>
+                <td>{{ deal.buyer.email }}</td>
+                <td>{{ deal.seller_company.name }}</td>
+                <td>{{ deal.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a class="button button-secondary button-small" href="{% url 'core:control_deal_detail' deal.id %}">Open</a>
+                    <form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="subtle-copy">No deals awaiting approval.</p>{% endif %}
+
+    <h3>RFQ messages (pending)</h3>
+    {% if pending_rfq_messages %}
+    <table class="table">
+        <thead><tr><th>RFQ</th><th>Sender</th><th>When</th><th>Snippet</th><th></th></tr></thead>
+        <tbody>
+        {% for m in pending_rfq_messages %}
+            <tr>
+                <td>{{ m.conversation.rfq.title|truncatechars:40 }}</td>
+                <td>{{ m.sender_user.email }}</td>
+                <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ m.message|truncatechars:80 }}</td>
+                <td>
+                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="subtle-copy">No RFQ messages pending.</p>{% endif %}
+
+    <h3>Inquiry replies (pending)</h3>
+    {% if pending_inquiry_replies %}
+    <table class="table">
+        <thead><tr><th>Inquiry</th><th>Sender</th><th>When</th><th>Snippet</th><th></th></tr></thead>
+        <tbody>
+        {% for r in pending_inquiry_replies %}
+            <tr>
+                <td>{{ r.inquiry.display_subject|truncatechars:40 }}</td>
+                <td>{{ r.sender_user.email }}</td>
+                <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.message|truncatechars:80 }}</td>
+                <td>
+                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="subtle-copy">No inquiry replies pending.</p>{% endif %}
+
+    <h3>Listings (pending)</h3>
+    {% if pending_stocklots %}
+    <table class="table">
+        <thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>When</th><th></th></tr></thead>
+        <tbody>
+        {% for lot in pending_stocklots %}
+            <tr>
+                <td>{{ lot.title|truncatechars:50 }}</td>
+                <td>{{ lot.company.name }}</td>
+                <td>{{ lot.category.full_name }}</td>
+                <td>{{ lot.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="subtle-copy">No listings pending approval.</p>{% endif %}
+</section>
+
+<section class="content-card" id="users">
+    <h2>Users</h2>
+    <p><a class="button button-secondary" href="{% url 'core:control_users' %}">Open full user manager</a></p>
+    <form method="get" action="" class="inline-form">
+        <input type="text" name="user_search" placeholder="Search email" value="{{ request.GET.user_search|default:'' }}">
+        <button class="button button-secondary" type="submit">Search</button>
+        {% if request.GET.user_search %}<a href="{% url 'core:control' %}" class="button button-ghost">Clear</a>{% endif %}
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Email</th><th>Buyer/Seller</th><th>Company</th><th>Identity</th><th>Active</th><th></th></tr></thead>
+            <tbody>
+            {% for u in users_manage %}
+                <tr>
+                    <td>{{ u.email }}</td>
+                    <td>B: {{ u.is_buyer|yesno:"Yes,No" }} / S: {{ u.is_seller|yesno:"Yes,No" }}</td>
+                    <td>{% if u.company %}{{ u.company.name }}{% else %}-{% endif %}</td>
+                    <td>{{ u.get_identity_status_display }}</td>
+                    <td>{{ u.is_active|yesno:"Active,Inactive" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'core:control_user_toggle' u.id %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Toggle active</button></form>
+                        <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Reveal</button></form>
+                        <form method="post" action="{% url 'core:control_identity' 'user' u.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Hide</button></form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card" id="companies">
+    <h2>Companies</h2>
+    <p><a class="button button-secondary" href="{% url 'core:control_companies' %}">Open full company manager</a></p>
+    <form method="get" action="" class="inline-form">
+        <input type="text" name="company_search" placeholder="Search company" value="{{ request.GET.company_search|default:'' }}">
+        <button class="button button-secondary" type="submit">Search</button>
+        {% if request.GET.company_search %}<a href="{% url 'core:control' %}" class="button button-ghost">Clear</a>{% endif %}
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Name</th><th>Owner</th><th>Identity</th><th></th></tr></thead>
+            <tbody>
+            {% for c in companies_manage %}
+                <tr>
+                    <td>{{ c.name }}</td>
+                    <td>{{ c.owner.email }}</td>
+                    <td>{{ c.get_identity_status_display }}</td>
+                    <td>
+                        <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Reveal</button></form>
+                        <form method="post" action="{% url 'core:control_identity' 'company' c.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Hide</button></form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card" id="visibility">
+    <h2>Identity visibility</h2>
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">Hidden companies</div>
+            <div class="detail-value">
+                {% if hidden_companies %}
+                    <ul class="compact-list">
+                        {% for c in hidden_companies %}
+                            <li>{{ c.name }}
+                                <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reveal</button></form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}<p class="subtle-copy">None</p>{% endif %}
+            </div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Hidden users</div>
+            <div class="detail-value">
+                {% if hidden_users %}
+                    <ul class="compact-list">
+                        {% for u in hidden_users %}
+                            <li>{{ u.email }}
+                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reveal</button></form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}<p class="subtle-copy">None</p>{% endif %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Visibility grants</h2>
+    <h4>Buyer → Company</h4>
+    <form method="post" action="{% url 'core:control_visibility_add' 'buyer_to_company' %}" class="inline-form">
+        {% csrf_token %}
+        <input type="number" name="user_id" placeholder="Buyer user id">
+        <input type="number" name="company_id" placeholder="Company id">
+        <button class="button button-secondary" type="submit">Add grant</button>
+    </form>
+    <ul>
+        {% for g in buyer_grants %}
+            <li>{{ g.buyer.email }} → {{ g.target_company.name }} ({{ g.status }})
+                <form method="post" action="{% url 'core:control_visibility_revoke' 'buyer' g.id %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Revoke</button></form>
+            </li>
+        {% endfor %}
+    </ul>
+    <h4>Company → Buyer</h4>
+    <form method="post" action="{% url 'core:control_visibility_add' 'company_to_buyer' %}" class="inline-form">
+        {% csrf_token %}
+        <input type="number" name="company_id" placeholder="Company id">
+        <input type="number" name="user_id" placeholder="Buyer user id">
+        <button class="button button-secondary" type="submit">Add grant</button>
+    </form>
+    <ul>
+        {% for g in company_grants %}
+            <li>{{ g.company.name }} → {{ g.target_buyer.email }} ({{ g.status }})
+                <form method="post" action="{% url 'core:control_visibility_revoke' 'company' g.id %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Revoke</button></form>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="content-card" id="monitors">
+    <h2>Monitoring: Listings</h2>
+    <form method="get" action="" class="inline-form">
+        <select name="listing_status" onchange="this.form.submit()">
+            <option value="">All statuses</option>
+            <option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Title</th><th>Status</th><th>Seller</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for lot in all_listings %}
+                <tr><td>{{ lot.title|truncatechars:50 }}</td><td>{{ lot.get_status_display }}</td><td>{{ lot.company.name }}</td><td>{{ lot.created_at|date:"Y-m-d" }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Monitoring: RFQs</h2>
+    <form method="get" action="" class="inline-form">
+        <select name="rfq_status" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option>
+            <option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Title</th><th>Status</th><th>Buyer</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for rfq in all_rfqs %}
+                <tr><td>{{ rfq.title|truncatechars:50 }}</td><td>{{ rfq.get_status_display }}</td><td>{{ rfq.buyer.email }}</td><td>{{ rfq.created_at|date:"Y-m-d" }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Monitoring: Inquiries</h2>
+    <form method="get" action="" class="inline-form">
+        <select name="inquiry_status" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option>
+            <option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option>
+            <option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option>
+            <option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Subject</th><th>Status</th><th>Buyer</th><th>Seller</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for iq in all_inquiries %}
+                <tr><td>{{ iq.display_subject|truncatechars:50 }}</td><td>{{ iq.get_status_display }}</td><td>{{ iq.buyer.email }}</td><td>{{ iq.seller_company.name }}</td><td>{{ iq.created_at|date:"Y-m-d" }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Monitoring: RFQ Conversations</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>RFQ</th><th>Buyer</th><th>Seller</th><th>Started</th></tr></thead>
+            <tbody>
+            {% for c in all_conversations %}
+                <tr><td>{{ c.rfq.title|truncatechars:50 }}</td><td>{{ c.buyer.email }}</td><td>{{ c.seller_company.name }}</td><td>{{ c.created_at|date:"Y-m-d" }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock account_content %}
+

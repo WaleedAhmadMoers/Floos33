@@ -16,6 +16,7 @@ class UserAdmin(BaseUserAdmin):
         "email",
         "full_name",
         "preferred_language",
+        "identity_status",
         "buyer_verification_status_display",
         "is_buyer",
         "is_seller",
@@ -25,6 +26,7 @@ class UserAdmin(BaseUserAdmin):
     )
     list_filter = (
         "preferred_language",
+        "identity_status",
         "is_buyer",
         "is_seller",
         "is_staff",
@@ -34,10 +36,11 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ("email", "full_name")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("المعلومات الشخصية", {"fields": ("full_name", "preferred_language")}),
-        ("التحقق", {"fields": ("is_buyer", "is_seller")}),
-        ("الصلاحيات", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
-        ("تواريخ مهمة", {"fields": ("last_login", "date_joined")}),
+        ("Personal info", {"fields": ("full_name", "preferred_language")}),
+        ("Privacy", {"fields": ("identity_status",)}),
+        ("Roles", {"fields": ("is_buyer", "is_seller")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Timestamps", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
         (
@@ -50,7 +53,7 @@ class UserAdmin(BaseUserAdmin):
     )
     filter_horizontal = ("groups", "user_permissions")
 
-    @admin.display(description="حالة تحقق المشتري")
+    @admin.display(description="Buyer verification status")
     def buyer_verification_status_display(self, obj):
         return obj.buyer_verification_status_label
 
@@ -71,9 +74,9 @@ class SellerVerificationRequestAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "user__full_name", "company_name", "company_email", "registration_number", "vat_number")
     readonly_fields = ("submitted_at", "updated_at", "reviewed_at")
     fieldsets = (
-        ("الحساب", {"fields": ("user", "status", "review_notes")}),
+        ("Request", {"fields": ("user", "status", "review_notes")}),
         (
-            "بيانات الشركة",
+            "Company details",
             {
                 "fields": (
                     "company_name",
@@ -91,7 +94,7 @@ class SellerVerificationRequestAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("التواريخ", {"fields": ("submitted_at", "updated_at", "reviewed_at")}),
+        ("Timestamps", {"fields": ("submitted_at", "updated_at", "reviewed_at")}),
     )
 
 
@@ -111,9 +114,9 @@ class BuyerVerificationRequestAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "user__full_name", "legal_full_name", "phone_number")
     readonly_fields = ("submitted_at", "updated_at", "reviewed_at")
     fieldsets = (
-        ("الحساب", {"fields": ("user", "status", "review_notes")}),
+        ("Request", {"fields": ("user", "status", "review_notes")}),
         (
-            "بيانات التحقق",
+            "Buyer details",
             {
                 "fields": (
                     "legal_full_name",
@@ -127,5 +130,5 @@ class BuyerVerificationRequestAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("التواريخ", {"fields": ("submitted_at", "updated_at", "reviewed_at")}),
+        ("Timestamps", {"fields": ("submitted_at", "updated_at", "reviewed_at")}),
     )

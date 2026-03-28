@@ -1,21 +1,21 @@
 {% extends "accounts/account_shell.html" %}
 
-{% block title %}ملف الشركة | floos33{% endblock title %}
+{% block title %}Company profile | floos33{% endblock title %}
 {% block account_eyebrow %}Company{% endblock account_eyebrow %}
-{% block account_title %}ملف الشركة{% endblock account_title %}
-{% block account_intro %}هذا هو الكيان التجاري المرتبط بالمستخدم الحالي. لاحقاً ستكون الشركات هي المالكة للمخزون والعروض والأنشطة التجارية بدلاً من الحسابات الفردية.{% endblock account_intro %}
+{% block account_title %}Company profile{% endblock account_title %}
+{% block account_intro %}Your saved company profile. Keep it accurate to build trust with buyers and speed up transactions.{% endblock account_intro %}
 
 {% block account_content %}
 <section class="account-panel">
     <div class="panel-header">
         <div>
             <h2>{{ company.name }}</h2>
-            <p class="subtle-copy">ملف شركة بسيط ونظيف يبقى منفصلاً عن هوية المستخدم الشخصية.</p>
+            <p class="subtle-copy">Company details provided for marketplace visibility.</p>
         </div>
         <div class="actions">
-            <a class="button" href="{% url 'companies:edit' %}">تعديل ملف الشركة</a>
+            <a class="button" href="{% url 'companies:edit' %}">Edit company</a>
             {% if request.user.is_seller %}
-                <a class="button button-secondary" href="{% url 'stocklots:mine' %}">إدارة الستوكات</a>
+                <a class="button button-secondary" href="{% url 'stocklots:mine' %}">Manage stocklots</a>
             {% endif %}
         </div>
     </div>
@@ -23,19 +23,19 @@
     <div class="panel-stack">
         <section class="form-section">
             <div>
-                <h3>المعلومات الأساسية</h3>
+                <h3>Basic company info</h3>
             </div>
             <div class="detail-grid">
                 <article class="detail-item">
-                    <div class="detail-label">اسم الشركة</div>
+                    <div class="detail-label">Company name</div>
                     <div class="detail-value">{{ company.name }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">الاسم القانوني</div>
-                    <div class="detail-value">{{ company.legal_name|default:"غير مضاف" }}</div>
+                    <div class="detail-label">Legal name</div>
+                    <div class="detail-value">{{ company.legal_name|default:"Not provided" }}</div>
                 </article>
                 <article class="detail-item detail-item-wide">
-                    <div class="detail-label">الوصف</div>
+                    <div class="detail-label">Description</div>
                     <div class="detail-value">{{ company.description }}</div>
                 </article>
             </div>
@@ -43,36 +43,36 @@
 
         <section class="form-section">
             <div>
-                <h3>بيانات التواصل</h3>
+                <h3>Contact information</h3>
             </div>
             <div class="detail-grid">
                 <article class="detail-item">
-                    <div class="detail-label">رقم الهاتف</div>
+                    <div class="detail-label">Phone</div>
                     <div class="detail-value">{{ company.phone }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">البريد الإلكتروني التجاري</div>
+                    <div class="detail-label">Email</div>
                     <div class="detail-value">{{ company.email }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">الدولة</div>
+                    <div class="detail-label">Country</div>
                     <div class="detail-value">{{ company.country }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">المدينة</div>
+                    <div class="detail-label">City</div>
                     <div class="detail-value">{{ company.city }}</div>
                 </article>
                 <article class="detail-item detail-item-wide">
-                    <div class="detail-label">العنوان</div>
+                    <div class="detail-label">Address</div>
                     <div class="detail-value">{{ company.address }}</div>
                 </article>
                 <article class="detail-item detail-item-wide">
-                    <div class="detail-label">الموقع الإلكتروني</div>
+                    <div class="detail-label">Website</div>
                     <div class="detail-value">
                         {% if company.website %}
                             <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.website }}</a>
                         {% else %}
-                            غير مضاف
+                            Not provided
                         {% endif %}
                     </div>
                 </article>
@@ -81,23 +81,23 @@
 
         <section class="form-section">
             <div>
-                <h3>البيانات القانونية</h3>
+                <h3>Registration</h3>
             </div>
             <div class="detail-grid">
                 <article class="detail-item">
-                    <div class="detail-label">رقم السجل التجاري</div>
-                    <div class="detail-value">{{ company.registration_number|default:"غير مضاف" }}</div>
+                    <div class="detail-label">Registration number</div>
+                    <div class="detail-value">{{ company.registration_number|default:"Not provided" }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">الرقم الضريبي أو VAT</div>
-                    <div class="detail-value">{{ company.vat_number|default:"غير مضاف" }}</div>
+                    <div class="detail-label">VAT number</div>
+                    <div class="detail-value">{{ company.vat_number|default:"Not provided" }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">تاريخ الإنشاء</div>
+                    <div class="detail-label">Created at</div>
                     <div class="detail-value">{{ company.created_at }}</div>
                 </article>
                 <article class="detail-item">
-                    <div class="detail-label">الحساب المرتبط</div>
+                    <div class="detail-label">Account owner</div>
                     <div class="detail-value">{{ request.user.full_name }} - {{ request.user.email }}</div>
                 </article>
             </div>

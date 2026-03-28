@@ -66,7 +66,7 @@ class SignupView(RedirectToNextMixin, FormView):
     def form_valid(self, form):
         user = form.save()
         auth_login(self.request, user)
-        messages.success(self.request, "تم إنشاء الحساب كمشتري وتسجيل الدخول بنجاح.")
+        messages.success(self.request, "Account created and you are now signed in.")
         return redirect(self.get_success_url())
 
 
@@ -86,14 +86,14 @@ class LoginView(RedirectToNextMixin, FormView):
 
     def form_valid(self, form):
         auth_login(self.request, form.get_user())
-        messages.success(self.request, "تم تسجيل الدخول بنجاح.")
+        messages.success(self.request, "Signed in successfully.")
         return redirect(self.get_success_url())
 
 
 class LogoutView(View):
     def post(self, request, *args, **kwargs):
         auth_logout(request)
-        messages.success(request, "تم تسجيل الخروج بنجاح.")
+        messages.success(request, "Signed out successfully.")
         return redirect("core:home")
 
     def get(self, request, *args, **kwargs):
@@ -126,7 +126,7 @@ class SettingsView(LoginRequiredMixin, AccountContextMixin, UpdateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, "تم تحديث بيانات الحساب بنجاح.")
+        messages.success(self.request, "Account details updated.")
         return response
 
 
@@ -157,7 +157,7 @@ class SellerVerificationRequestView(LoginRequiredMixin, AccountContextMixin, For
         if self.request.user.is_seller or (
             seller_request and seller_request.status == SellerVerificationRequest.Status.APPROVED
         ):
-            messages.info(self.request, "تمت الموافقة على وصول البائع لهذا الحساب بالفعل.")
+            messages.info(self.request, "You are already approved as a seller.")
             return redirect(self.success_url)
 
         seller_request = form.save(commit=False)
@@ -168,7 +168,7 @@ class SellerVerificationRequestView(LoginRequiredMixin, AccountContextMixin, For
 
         messages.success(
             self.request,
-            "تم إرسال طلب التحقق كبائع بنجاح. سنراجعه من لوحة الإدارة لاحقاً.",
+            "Seller verification request submitted. We will review it and notify you.",
         )
         return redirect(self.success_url)
 
@@ -197,7 +197,7 @@ class BuyerVerificationRequestView(LoginRequiredMixin, AccountContextMixin, Form
     def form_valid(self, form):
         buyer_request = self.get_buyer_request()
         if buyer_request and buyer_request.status == BuyerVerificationRequest.Status.VERIFIED:
-            messages.info(self.request, "تم اعتماد التحقق من هوية المشتري لهذا الحساب بالفعل.")
+            messages.info(self.request, "You are already verified as a buyer.")
             return redirect(self.success_url)
 
         buyer_request = form.save(commit=False)
@@ -208,7 +208,7 @@ class BuyerVerificationRequestView(LoginRequiredMixin, AccountContextMixin, Form
 
         messages.success(
             self.request,
-            "تم إرسال طلب التحقق من هوية المشتري بنجاح. ستتم مراجعته من الإدارة لاحقاً.",
+            "Buyer verification request submitted. We will review it and update you.",
         )
         return redirect(self.success_url)
 

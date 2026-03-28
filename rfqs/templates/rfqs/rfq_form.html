@@ -1,0 +1,25 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}Create RFQ | floos33{% endblock title %}
+{% block account_eyebrow %}RFQs{% endblock account_eyebrow %}
+{% block account_title %}Create RFQ{% endblock account_title %}
+{% block account_intro %}Describe what you need so sellers can respond with quotes.{% endblock account_intro %}
+
+{% block account_content %}
+<form method="post" class="auth-form">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="field-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<p class="subtle-copy">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}
+                <ul class="field-errors">
+                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="button">Publish RFQ</button>
+</form>
+{% endblock account_content %}

@@ -1,23 +1,23 @@
 {% extends "base.html" %}
+{% load identity_tags %}
 
-{% block title %}الرئيسية | floos33{% endblock title %}
+{% block title %}Home | floos33{% endblock title %}
 
 {% block content %}
 <section class="hero-card">
     <p class="eyebrow">floos33 marketplace preview</p>
-    <h1>منصة بسيطة وواضحة لعرض الستوكات التجارية</h1>
+    <h1>Marketplace built to browse liquidation and overstock listings</h1>
     <p class="lead">
-        الصفحة الرئيسية تبقى خفيفة وعملية، لكنها تعرض الآن معاينة حية لأحدث الستوكات المنشورة حتى ترى شكل السوق
-        الحقيقي دون بناء واجهة تسويقية كبيرة في هذه المرحلة.
+        A simple, focused experience to view approved seller listings and start deals faster. Browse featured lots below or jump straight to the marketplace to see active stock.
     </p>
     <div class="actions">
-        <a class="button" href="{% url 'stocklots:list' %}">عرض كل الستوكات</a>
+        <a class="button" href="{% url 'stocklots:list' %}">View marketplace</a>
         {% if request.user.is_authenticated and request.user.is_seller %}
-            <a class="button button-secondary" href="{% url 'stocklots:create' %}">إضافة ستوك جديد</a>
+            <a class="button button-secondary" href="{% url 'stocklots:create' %}">Add new stocklot</a>
         {% elif request.user.is_authenticated %}
-            <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">لوحة الحساب</a>
+            <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">Go to dashboard</a>
         {% else %}
-            <a class="button button-secondary" href="{% url 'accounts:signup' %}">إنشاء حساب</a>
+            <a class="button button-secondary" href="{% url 'accounts:signup' %}">Create account</a>
         {% endif %}
     </div>
 </section>
@@ -25,26 +25,26 @@
 <section class="content-card">
     <div class="panel-header">
         <div>
-            <h2>ما الذي أصبح جاهزاً الآن؟</h2>
-            <p class="subtle-copy">قاعدة المشروع أصبحت تضم الحسابات، الشركات، والستوكات ضمن هيكل واضح وقابل للتوسع.</p>
+            <h2>Why buyers like this preview</h2>
+            <p class="subtle-copy">Straightforward browsing, clear listings, and privacy-aware seller verification.</p>
         </div>
     </div>
     <ul class="feature-list">
-        <li>حسابات وهوية مستخدمين منفصلة عن الشركات</li>
-        <li>شركات مملوكة للمستخدمين وجاهزة لامتلاك الستوكات</li>
-        <li>سوق ستوكات عام مع تصنيفات وبحث وتصفية</li>
-        <li>إدارة ستوكات خاصة بالبائعين المعتمدين فقط</li>
+        <li>Privacy-first listing cards: neutral seller labels unless admin grants reveal</li>
+        <li>Listing cards emphasize condition, quantity, and price for quick scanning</li>
+        <li>Direct access to seller-managed listings with consistent metadata</li>
+        <li>Workflow ready for offers, messaging, and deal follow-up</li>
     </ul>
 </section>
 
 <section class="content-card">
     <div class="panel-header">
         <div>
-            <h2>معاينة من السوق</h2>
-            <p class="subtle-copy">أحدث الستوكات المنشورة تظهر هنا كمعاينة مباشرة وبسيطة من السوق العام.</p>
+            <h2>Recent stocklots</h2>
+            <p class="subtle-copy">Newest published lots from vetted sellers.</p>
         </div>
         <div class="actions homepage-preview-actions">
-            <a class="button button-secondary" href="{% url 'stocklots:list' %}">عرض كل الستوكات</a>
+            <a class="button button-secondary" href="{% url 'stocklots:list' %}">Browse all listings</a>
         </div>
     </div>
 
@@ -63,21 +63,21 @@
                     </div>
                     <p class="subtle-copy">{{ stocklot.description|truncatechars:150 }}</p>
                     <div class="stocklot-meta">
-                        <span>{{ stocklot.company.name }}</span>
+                        <span>{% display_company stocklot.company %}</span>
                         <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
                         <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
                     </div>
                     <div class="stocklot-card-footer">
                         <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
-                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">عرض التفاصيل</a>
+                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
                     </div>
                 </article>
             {% endfor %}
         </section>
     {% else %}
         <section class="empty-panel empty-state">
-            <h3>لا توجد ستوكات منشورة بعد</h3>
-            <p class="subtle-copy">بمجرد نشر أول ستوك من شركة معتمدة، سيظهر هنا مباشرة كمعاينة من السوق.</p>
+            <h3>No listings yet</h3>
+            <p class="subtle-copy">Check back soon for newly published stocklots.</p>
         </section>
     {% endif %}
 </section>

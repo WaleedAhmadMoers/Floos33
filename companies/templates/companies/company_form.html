@@ -9,8 +9,8 @@
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>بيانات الشركة</h2>
-            <p class="subtle-copy">قسّمنا الحقول إلى مجموعات بسيطة حتى يبقى إدخال البيانات واضحاً وسهل التوسعة لاحقاً.</p>
+            <h2>Company details</h2>
+            <p class="subtle-copy">Provide clear company information to unlock marketplace features.</p>
         </div>
     </div>
 
@@ -28,8 +28,8 @@
         <div class="form-sections">
             <section class="form-section">
                 <div>
-                    <h3>المعلومات الأساسية</h3>
-                    <p class="subtle-copy">تعريف واضح بالكيان التجاري الذي سيملك المخزون والأنشطة لاحقاً.</p>
+                    <h3>Basic company info</h3>
+                    <p class="subtle-copy">Name, legal name, and a short description.</p>
                 </div>
                 <div class="form-section-grid">
                     <div class="field-group">
@@ -70,8 +70,8 @@
 
             <section class="form-section">
                 <div>
-                    <h3>بيانات التواصل</h3>
-                    <p class="subtle-copy">معلومات الاتصال الأساسية التي سيُعتمد عليها في التواصل لاحقاً.</p>
+                    <h3>Contact information</h3>
+                    <p class="subtle-copy">How buyers can reach you.</p>
                 </div>
                 <div class="form-section-grid">
                     <div class="field-group">
@@ -145,8 +145,8 @@
 
             <section class="form-section">
                 <div>
-                    <h3>البيانات القانونية</h3>
-                    <p class="subtle-copy">هذه الحقول اختيارية حالياً لكنها تجهّز الملف للامتداد التجاري لاحقاً.</p>
+                    <h3>Registration</h3>
+                    <p class="subtle-copy">Official registration and tax details.</p>
                 </div>
                 <div class="form-section-grid">
                     <div class="field-group">
@@ -178,9 +178,9 @@
         <div class="actions">
             <button type="submit" class="button">{{ submit_label }}</button>
             {% if page_mode == "edit" %}
-                <a class="button button-secondary" href="{% url 'companies:profile' %}">العودة إلى الملف</a>
+                <a class="button button-secondary" href="{% url 'companies:profile' %}">Back to company</a>
             {% else %}
-                <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">العودة إلى الحساب</a>
+                <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">Back to dashboard</a>
             {% endif %}
         </div>
     </form>

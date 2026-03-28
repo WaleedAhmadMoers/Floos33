@@ -1,0 +1,28 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}Send quote | floos33{% endblock title %}
+{% block account_eyebrow %}RFQ response{% endblock account_eyebrow %}
+{% block account_title %}Send quote{% endblock account_title %}
+{% block account_intro %}Start a private, admin-moderated conversation with the buyer.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <h3>{{ rfq.title }}</h3>
+    <p class="subtle-copy">{{ rfq.quantity }} {{ rfq.get_unit_type_display }} — {{ rfq.location_country }} / {{ rfq.location_city }}</p>
+</section>
+
+<form method="post" class="auth-form">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="field-group">
+            {{ field.label_tag }}{{ field }}
+            {% if field.errors %}
+                <ul class="field-errors">
+                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="button">Send quote</button>
+</form>
+{% endblock account_content %}

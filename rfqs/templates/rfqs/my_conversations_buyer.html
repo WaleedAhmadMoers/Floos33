@@ -1,0 +1,36 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}RFQ conversations | floos33{% endblock title %}
+{% block account_eyebrow %}Buyer{% endblock account_eyebrow %}
+{% block account_title %}My RFQ conversations{% endblock account_title %}
+{% block account_intro %}Private threads for your RFQs.{% endblock account_intro %}
+
+{% block account_content %}
+{% if conversations %}
+<section class="content-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>RFQ</th>
+                <th>Seller</th>
+                <th>Started</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for convo in conversations %}
+            <tr>
+                <td><a href="{% url 'rfqs:conversation_detail' convo.pk %}">{{ convo.rfq.title }}</a></td>
+                <td>{{ convo.seller_company.name }}</td>
+                <td>{{ convo.created_at|date:"Y-m-d" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% else %}
+<section class="content-card empty-state">
+    <h2>No RFQ conversations</h2>
+    <p class="subtle-copy">Responses to your RFQs will appear here.</p>
+</section>
+{% endif %}
+{% endblock account_content %}

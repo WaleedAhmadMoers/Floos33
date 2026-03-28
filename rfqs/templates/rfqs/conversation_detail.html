@@ -1,0 +1,107 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags %}
+
+{% block title %}RFQ conversation | floos33{% endblock title %}
+{% block account_eyebrow %}RFQ conversation{% endblock account_eyebrow %}
+{% block account_title %}{{ conversation.rfq.title }}{% endblock account_title %}
+{% block account_intro %}Private thread between buyer and seller. Messages are admin moderated.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">RFQ</div>
+            <div class="detail-value"><a href="{{ conversation.rfq.get_absolute_url }}">{{ conversation.rfq.title }}</a></div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Buyer</div>
+            <div class="detail-value">{% display_user conversation.buyer 'buyer' %}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Seller</div>
+            <div class="detail-value">{% display_company conversation.seller_company %}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Deal status</div>
+            <div class="detail-value">
+                {% if deal %}
+                    {{ deal.get_status_display }}
+                    {% if deal.status == "pending" %}<span class="badge badge-muted">Waiting for confirmation</span>{% endif %}
+                    {% if deal.status == "mutual_acceptance" %}<span class="badge badge-muted">Waiting for admin approval</span>{% endif %}
+                    {% if deal.status == "approved" %}
+                        <span class="badge badge-success">Deal approved</span>
+                        <span class="badge badge-secondary">Progress: {{ deal.get_progress_status_display }}</span>
+                    {% endif %}
+                    {% if deal.status == "rejected" %}<span class="badge badge-muted">Rejected</span>{% endif %}
+                    {% if deal.status == "cancelled" %}<span class="badge badge-muted">Cancelled</span>{% endif %}
+                {% else %}
+                    No agreement yet.
+                {% endif %}
+            </div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Actions</div>
+            <div class="detail-value">
+                {% if request.user.id == conversation.buyer_id or request.user.id == conversation.seller_user_id or request.user.is_staff %}
+                    <form method="post" action="{% url 'rfqs:conversation_deal_accept' conversation.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button">Accept deal</button>
+                    </form>
+                    {% if deal and deal.status != "approved" and deal.status != "rejected" %}
+                        <form method="post" action="{% url 'rfqs:conversation_deal_cancel' conversation.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Cancel</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h3>Messages</h3>
+    {% if messages %}
+        <div class="reply-list">
+            {% for msg in messages %}
+                <article class="reply-item">
+                    <div class="reply-meta">
+                        <span class="reply-sender">
+                            {% if msg.sender_company %}{% display_company msg.sender_company %}{% else %}{% display_user msg.sender_user 'buyer' %}{% endif %}
+                        </span>
+                        <span class="reply-date">{{ msg.created_at|date:"Y-m-d H:i" }}</span>
+                        {% if msg.moderation_status == "pending_review" and request.user.is_staff %}
+                            <span class="badge badge-muted">Pending admin review</span>
+                        {% elif msg.moderation_status == "pending_review" and msg.sender_user_id == request.user.id %}
+                            <span class="badge badge-muted">Pending admin review</span>
+                        {% elif msg.moderation_status == "rejected" and request.user.is_staff %}
+                            <span class="badge badge-muted">Rejected</span>
+                        {% endif %}
+                    </div>
+                    <div class="reply-message">
+                        {% if msg.price %}<p class="subtle-copy">Offer: {{ msg.price }} {{ msg.currency }}</p>{% endif %}
+                        <p>{{ msg.message|linebreaksbr }}</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="subtle-copy">No messages yet.</p>
+    {% endif %}
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="field-group">
+                {{ field.label_tag }}{{ field }}
+                {% if field.errors %}
+                    <ul class="field-errors">
+                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="button">Send reply</button>
+    </form>
+</section>
+{% endblock account_content %}

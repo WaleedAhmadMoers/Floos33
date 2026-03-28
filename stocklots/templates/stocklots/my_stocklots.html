@@ -1,37 +1,37 @@
 {% extends "accounts/account_shell.html" %}
 
-{% block title %}ستوكاتي | floos33{% endblock title %}
-{% block account_eyebrow %}Stocklots{% endblock account_eyebrow %}
-{% block account_title %}إدارة الستوكات{% endblock account_title %}
-{% block account_intro %}من هنا تدير الستوكات التابعة لشركتك فقط، مع فصل واضح بين الملكية التجارية والحساب الشخصي.{% endblock account_intro %}
+{% block title %}My stocklots | floos33{% endblock title %}
+{% block account_eyebrow %}Listings{% endblock account_eyebrow %}
+{% block account_title %}Manage stocklots{% endblock account_title %}
+{% block account_intro %}Keep your listings accurate to build buyer trust and speed up deals.{% endblock account_intro %}
 
 {% block account_content %}
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>ملخص الشركة والستوكات</h2>
-            <p class="subtle-copy">كل إدراج هنا مرتبط بالشركة الحالية: {{ user_company.name }}.</p>
+            <h2>Company & listings summary</h2>
+            <p class="subtle-copy">Listing under company: {{ user_company.name }}.</p>
         </div>
     </div>
 
     <div class="account-summary-grid">
         <article class="summary-item">
-            <div class="summary-label">اسم الشركة</div>
+            <div class="summary-label">Company name</div>
             <div class="summary-value">{{ user_company.name }}</div>
         </article>
         <article class="summary-item">
-            <div class="summary-label">عدد الستوكات</div>
+            <div class="summary-label">Number of listings</div>
             <div class="summary-value">{{ my_stocklots_count }}</div>
         </article>
         <article class="summary-item">
-            <div class="summary-label">حالة البائع</div>
-            <div class="summary-value">{% if request.user.is_seller %}معتمد{% else %}غير معتمد{% endif %}</div>
+            <div class="summary-label">Seller status</div>
+            <div class="summary-value">{% if request.user.is_seller %}Active{% else %}Inactive{% endif %}</div>
         </article>
     </div>
 
     <div class="actions">
-        <a class="button" href="{% url 'stocklots:create' %}">إضافة ستوك جديد</a>
-        <a class="button button-secondary" href="{% url 'stocklots:list' %}">عرض السوق</a>
+        <a class="button" href="{% url 'stocklots:create' %}">Add new stocklot</a>
+        <a class="button button-secondary" href="{% url 'stocklots:list' %}">View marketplace</a>
     </div>
 </section>
 
@@ -44,7 +44,10 @@
                         <p class="eyebrow">{{ stocklot.category.full_name }}</p>
                         <h2>{{ stocklot.title }}</h2>
                     </div>
-                    <span class="badge {% if stocklot.is_published %}badge-success{% else %}badge-muted{% endif %}">{{ stocklot.get_status_display }}</span>
+                    <span class="badge {% if stocklot.status == 'approved' %}badge-success{% else %}badge-muted{% endif %}">{{ stocklot.get_status_display }}</span>
+                    {% if stocklot.is_admin_verified %}
+                        <span class="badge badge-success">Admin verified</span>
+                    {% endif %}
                 </div>
                 <div class="stocklot-meta">
                     <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
@@ -53,17 +56,49 @@
                 </div>
                 <div class="actions">
                     {% if stocklot.is_published %}
-                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">عرض</a>
+                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View</a>
                     {% endif %}
-                    <a class="button" href="{% url 'stocklots:edit' stocklot.slug %}">تعديل</a>
+                    <a class="button" href="{% url 'stocklots:edit' stocklot.slug %}">Edit</a>
+
+                    {% if stocklot.status == "archived" %}
+                        <form method="post" action="{% url 'stocklots:restore' stocklot.slug %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Undo sold</button>
+                        </form>
+                        <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Activate</button>
+                        </form>
+                    {% else %}
+                        {% if stocklot.is_active %}
+                            <form method="post" action="{% url 'stocklots:deactivate' stocklot.slug %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="button button-secondary">Deactivate</button>
+                            </form>
+                            <form method="post" action="{% url 'stocklots:mark_sold' stocklot.slug %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="button button-secondary">Mark as sold</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="button button-secondary">Activate</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'stocklots:delete' stocklot.slug %}" style="display:inline;" onsubmit="return confirm('Delete this listing?');">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-secondary">Delete</button>
+                    </form>
                 </div>
             </article>
         {% endfor %}
     </section>
 {% else %}
     <section class="content-card empty-state">
-        <h2>لا توجد ستوكات بعد</h2>
-        <p class="subtle-copy">ابدأ بإضافة أول ستوك لشركتك، ثم يمكنك نشره في السوق العام بعد مراجعة بياناته.</p>
+        <h2>No listings yet</h2>
+        <p class="subtle-copy">Add your first stocklot to start appearing in the marketplace.</p>
     </section>
 {% endif %}
 {% endblock account_content %}

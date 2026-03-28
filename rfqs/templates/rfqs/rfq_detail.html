@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load identity_tags %}
+
+{% block title %}{{ rfq.title }} | RFQ | floos33{% endblock title %}
+
+{% block content %}
+<section class="hero-card">
+    <p class="eyebrow">{{ rfq.category.full_name }}</p>
+    <h1>{{ rfq.title }}</h1>
+    <p class="lead">Buyer: {% display_user rfq.buyer 'buyer' %}</p>
+    <div class="stack-sm">
+        {% if rfq.status == "open" and request.user.is_authenticated %}
+            <a class="button" href="{% url 'rfqs:start_conversation' rfq.pk %}">Send quote</a>
+        {% elif rfq.status == "open" %}
+            <a class="button" href="{% url 'accounts:login' %}?next={% url 'rfqs:start_conversation' rfq.pk %}">Send quote</a>
+        {% else %}
+            <span class="badge badge-muted">Closed</span>
+        {% endif %}
+    </div>
+</section>
+
+<section class="content-card">
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">Quantity</div>
+            <div class="detail-value">{{ rfq.quantity }} {{ rfq.get_unit_type_display }}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Target price</div>
+            <div class="detail-value">
+                {% if rfq.target_price %}{{ rfq.target_price }} {{ rfq.currency }}{% else %}Not specified{% endif %}
+            </div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Location</div>
+            <div class="detail-value">{{ rfq.location_country }} - {{ rfq.location_city }}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">{{ rfq.get_status_display }}</div>
+        </article>
+    </div>
+
+    <section class="content-subsection">
+        <h3>Description</h3>
+        <p class="body-text">{{ rfq.description|linebreaksbr }}</p>
+    </section>
+</section>
+{% endblock content %}

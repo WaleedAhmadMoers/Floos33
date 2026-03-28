@@ -28,7 +28,7 @@ class CompanyCreateView(CompanyContextMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         if self.get_company() is not None:
-            messages.info(request, "يوجد ملف شركة مرتبط بهذا الحساب بالفعل.")
+            messages.info(request, "A company profile already exists for this account.")
             return redirect("companies:profile")
         return super().dispatch(request, *args, **kwargs)
 
@@ -37,9 +37,9 @@ class CompanyCreateView(CompanyContextMixin, CreateView):
         context.update(
             {
                 "page_mode": "create",
-                "page_title": "إنشاء ملف الشركة",
-                "page_intro": "أنشئ كيان الشركة مرة واحدة ليكون هو نقطة الارتباط المستقبلية للمخزون والأنشطة التجارية.",
-                "submit_label": "حفظ وإنشاء الشركة",
+                "page_title": "Create company",
+                "page_intro": "Add accurate company details to unlock marketplace capabilities.",
+                "submit_label": "Save company",
             }
         )
         return context
@@ -48,14 +48,14 @@ class CompanyCreateView(CompanyContextMixin, CreateView):
         self.object = form.save(commit=False)
         self.object.owner = self.request.user
         self.object.save()
-        messages.success(self.request, "تم إنشاء ملف الشركة وربطه بحسابك بنجاح.")
+        messages.success(self.request, "Company created and saved.")
         return redirect(self.get_success_url())
 
 
 class CompanyRequiredMixin(CompanyContextMixin):
     def dispatch(self, request, *args, **kwargs):
         if self.get_company() is None:
-            messages.info(request, "يجب إنشاء ملف الشركة أولاً قبل الوصول إلى هذه الصفحة.")
+            messages.info(request, "Create a company profile before accessing this page.")
             return redirect("companies:create")
         return super().dispatch(request, *args, **kwargs)
 
@@ -83,14 +83,14 @@ class CompanyEditView(CompanyRequiredMixin, UpdateView):
         context.update(
             {
                 "page_mode": "edit",
-                "page_title": "تعديل ملف الشركة",
-                "page_intro": "حدّث بيانات الشركة الأساسية مع الحفاظ على فصل واضح بين الشخص والكيان التجاري.",
-                "submit_label": "حفظ التعديلات",
+                "page_title": "Edit company",
+                "page_intro": "Keep company information current to build trust with buyers.",
+                "submit_label": "Save changes",
             }
         )
         return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, "تم تحديث بيانات الشركة بنجاح.")
+        messages.success(self.request, "Company details updated.")
         return response

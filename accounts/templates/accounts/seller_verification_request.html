@@ -1,51 +1,44 @@
 {% extends "accounts/account_shell.html" %}
 
-{% block title %}طلب التحقق كبائع | floos33{% endblock title %}
+{% block title %}Seller access | floos33{% endblock title %}
 {% block account_eyebrow %}Seller Access{% endblock account_eyebrow %}
-{% block account_title %}طلب الترقية إلى بائع{% endblock account_title %}
-{% block account_intro %}كل حساب يبدأ كمشتري، ويتم تفعيل دور البائع فقط بعد مراجعة بيانات النشاط التجاري والموافقة عليها من الإدارة.{% endblock account_intro %}
+{% block account_title %}Seller access{% endblock account_title %}
+{% block account_intro %}Apply for seller access so you can create and manage stocklots.{% endblock account_intro %}
 
 {% block account_content %}
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>حالة الطلب</h2>
-            <p class="subtle-copy">حافظنا على هذا المسار منفصلاً عن إعدادات الحساب حتى يبقى واضحاً وسهل المراجعة.</p>
+            <h2>Status</h2>
+            <p class="subtle-copy">Current seller request status.</p>
         </div>
-        {% if request.user.is_seller %}
-            <span class="badge badge-success">معتمد كبائع</span>
-        {% elif seller_request %}
+        {% if seller_request %}
             <span class="badge badge-muted">{{ seller_request.get_status_display }}</span>
         {% else %}
-            <span class="badge badge-muted">لا يوجد طلب</span>
+            <span class="badge badge-muted">Not submitted</span>
         {% endif %}
     </div>
 
-    {% if request.user.is_seller %}
-        <div class="status-panel status-approved">
-            <p>تم اعتماد هذا الحساب كبائع مع الاحتفاظ بوصول المشتري أيضاً.</p>
-        </div>
-    {% elif seller_request %}
+    {% if seller_request %}
         <div class="status-panel status-{{ seller_request.status }}">
-            <p>الحالة الحالية: {{ seller_request.get_status_display }}</p>
-            <p>آخر تحديث: {{ seller_request.updated_at }}</p>
+            <p>Status: {{ seller_request.get_status_display }}</p>
+            <p>Last updated: {{ seller_request.updated_at }}</p>
             {% if seller_request.review_notes %}
-                <p>ملاحظات الإدارة: {{ seller_request.review_notes }}</p>
+                <p>Reviewer notes: {{ seller_request.review_notes }}</p>
             {% endif %}
         </div>
     {% else %}
         <div class="status-panel status-unverified">
-            <p>لم يتم إرسال طلب ترقية إلى بائع لهذا الحساب بعد.</p>
+            <p>No seller request submitted yet.</p>
         </div>
     {% endif %}
 </section>
 
-{% if not request.user.is_seller %}
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>بيانات النشاط التجاري</h2>
-            <p class="subtle-copy">قدّم معلومات النشاط بشكل مختصر وواضح حتى تتم مراجعته لاحقاً بسهولة.</p>
+            <h2>Company information</h2>
+            <p class="subtle-copy">Provide company details to request seller access.</p>
         </div>
     </div>
 
@@ -78,13 +71,12 @@
         {% endfor %}
 
         <button type="submit" class="button">
-            {% if seller_request and seller_request.status == "rejected" %}
-                إعادة إرسال الطلب
+            {% if seller_request %}
+                Update seller request
             {% else %}
-                حفظ وإرسال الطلب
+                Submit seller request
             {% endif %}
         </button>
     </form>
 </section>
-{% endif %}
 {% endblock account_content %}

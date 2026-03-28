@@ -1,24 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}من نحن | floos33{% endblock title %}
+{% block title %}About | floos33{% endblock title %}
 
 {% block content %}
 <section class="content-card">
-    <p class="eyebrow">About</p>
-    <h1>عن مشروع floos33</h1>
-    <p class="lead">
-        floos33 يتم تأسيسه كمنصة B2B لإدارة وعرض فرص الستوكات بشكل منظم وقابل للتوسع.
-        في هذه المرحلة نحن نبني الأساس فقط: مشروع Django مرتب، صفحات أولية قابلة للتصفح،
-        ونقطة انطلاق مناسبة لإضافة التطبيقات الأساسية لاحقاً.
+    <div class="panel-header">
+        <div>
+            <h1>About floos33</h1>
+            <p class="subtle-copy">A prototype B2B marketplace for liquidation and overstock lots.</p>
+        </div>
+    </div>
+    <p>
+        floos33 is a focused prototype to test how sellers can publish liquidation or overstock lots and how buyers can quickly assess them.
+        We emphasize clear listing data, trustworthy seller profiles, and a simple navigation experience.
     </p>
-</section>
-
-<section class="content-card">
-    <h2>اتجاه البناء القادم</h2>
-    <ul class="feature-list">
-        <li>تطوير حسابات المستخدمين بنظام دخول يعتمد على البريد الإلكتروني</li>
-        <li>إضافة الشركات والمخزون والاستفسارات كتطبيقات مستقلة</li>
-        <li>الحفاظ على تنظيم واضح بين الإعدادات والصفحات والمنطق التجاري</li>
-    </ul>
+    <p>
+        This demo is static and does not process real transactions. It is designed to validate flows for listing creation, browsing,
+        and contact readiness before building a production system.
+    </p>
 </section>
 {% endblock content %}

@@ -1,0 +1,132 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags %}
+
+{% block title %}Inquiry details | floos33{% endblock title %}
+{% block account_eyebrow %}Inquiries{% endblock account_eyebrow %}
+{% block account_title %}Inquiry details{% endblock account_title %}
+{% block account_intro %}View and reply to this inquiry thread.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">Deal status</div>
+            <div class="detail-value">
+                {% if deal %}
+                    {{ deal.get_status_display }}
+                    {% if deal.status == "pending" %}
+                        <span class="badge badge-muted">Waiting for confirmation</span>
+                    {% elif deal.status == "mutual_acceptance" %}
+                        <span class="badge badge-muted">Waiting for admin approval</span>
+                    {% elif deal.status == "approved" %}
+                        <span class="badge badge-success">Deal approved</span>
+                        <span class="badge badge-secondary">Progress: {{ deal.get_progress_status_display }}</span>
+                    {% elif deal.status == "rejected" %}
+                        <span class="badge badge-muted">Rejected</span>
+                    {% elif deal.status == "cancelled" %}
+                        <span class="badge badge-muted">Cancelled</span>
+                    {% endif %}
+                {% else %}
+                    No agreement yet.
+                {% endif %}
+            </div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Actions</div>
+            <div class="detail-value">
+                {% if inquiry.buyer_id == request.user.id or inquiry.seller_company.owner_id == request.user.id or request.user.is_staff %}
+                    <form method="post" action="{% url 'inquiries:deal_accept' inquiry.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button">Accept deal</button>
+                    </form>
+                    {% if deal and deal.status != "approved" and deal.status != "rejected" %}
+                        <form method="post" action="{% url 'inquiries:deal_cancel' inquiry.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Cancel</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="content-card">
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">Stocklot</div>
+            <div class="detail-value"><a href="{{ inquiry.stocklot.get_absolute_url }}">{{ inquiry.stocklot.title }}</a></div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Seller company</div>
+            <div class="detail-value">{% display_company inquiry.seller_company %}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Buyer</div>
+            <div class="detail-value">{% display_user inquiry.buyer 'buyer' %}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">{{ inquiry.get_status_display }}</div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Created</div>
+            <div class="detail-value">{{ inquiry.created_at|date:"Y-m-d H:i" }}</div>
+        </article>
+    </div>
+
+    {% if show_inquiry_message %}
+        <section class="content-subsection">
+            <h3>{{ inquiry.display_subject }}</h3>
+            <p class="body-text">{{ inquiry.message|linebreaksbr }}</p>
+            {% if inquiry.moderation_status == "pending_review" and inquiry.buyer_id == request.user.id %}
+                <span class="badge badge-muted">Pending admin review</span>
+            {% elif inquiry.moderation_status == "rejected" and request.user.is_staff %}
+                <span class="badge badge-muted">Rejected</span>
+            {% endif %}
+        </section>
+    {% else %}
+        <section class="content-subsection">
+            <h3>{{ inquiry.display_subject }}</h3>
+            <p class="subtle-copy">Message is pending admin approval.</p>
+        </section>
+    {% endif %}
+
+    {% if visible_replies %}
+        <section class="content-subsection">
+            <h3>Thread</h3>
+            <div class="reply-list">
+                {% for reply in visible_replies %}
+                    {% include "inquiries/_reply_item.html" with reply=reply %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="content-subsection">
+        <h3>Reply</h3>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {% if reply_form.non_field_errors %}
+                <ul class="form-errors">
+                    {% for error in reply_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="field-group">
+                {{ reply_form.message.label_tag }}
+                {{ reply_form.message }}
+                {% if reply_form.message.errors %}
+                    <ul class="field-errors">
+                        {% for error in reply_form.message.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <button type="submit" class="button">Send reply</button>
+        </form>
+    </section>
+</section>
+{% endblock account_content %}

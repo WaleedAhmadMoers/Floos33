@@ -32,17 +32,17 @@ class CompanyForm(BaseStyledFormMixin, forms.ModelForm):
             "vat_number",
         )
         labels = {
-            "name": "اسم الشركة",
-            "legal_name": "الاسم القانوني",
-            "description": "وصف مختصر للشركة",
-            "phone": "رقم الهاتف",
-            "email": "البريد الإلكتروني التجاري",
-            "country": "الدولة",
-            "city": "المدينة",
-            "address": "العنوان",
-            "website": "الموقع الإلكتروني",
-            "registration_number": "رقم السجل التجاري",
-            "vat_number": "الرقم الضريبي أو VAT",
+            "name": "Company name",
+            "legal_name": "Legal name",
+            "description": "Description",
+            "phone": "Phone",
+            "email": "Email",
+            "country": "Country",
+            "city": "City",
+            "address": "Address",
+            "website": "Website",
+            "registration_number": "Registration number",
+            "vat_number": "VAT number",
         }
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),

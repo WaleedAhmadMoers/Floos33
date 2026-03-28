@@ -5,8 +5,8 @@ from .models import Company
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "owner", "email", "phone", "country", "city", "created_at")
-    list_filter = ("country", "city", "created_at")
+    list_display = ("name", "owner", "identity_status", "email", "phone", "country", "city", "created_at")
+    list_filter = ("identity_status", "country", "city", "created_at")
     search_fields = (
         "name",
         "legal_name",
@@ -17,19 +17,20 @@ class CompanyAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at",)
     fieldsets = (
-        ("الحساب المرتبط", {"fields": ("owner", "created_at")}),
+        ("Ownership", {"fields": ("owner", "created_at")}),
         (
-            "البيانات الأساسية",
+            "Basic company details",
             {
                 "fields": (
                     "name",
                     "legal_name",
                     "description",
+                    "identity_status",
                 )
             },
         ),
         (
-            "بيانات التواصل",
+            "Contact information",
             {
                 "fields": (
                     "phone",
@@ -42,7 +43,7 @@ class CompanyAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "البيانات القانونية",
+            "Registration",
             {
                 "fields": (
                     "registration_number",

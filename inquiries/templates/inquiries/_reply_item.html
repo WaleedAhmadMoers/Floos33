@@ -1,0 +1,23 @@
+{% load identity_tags %}
+<div class="reply-item">
+    <div class="reply-meta">
+        <span class="reply-sender">
+            {% if reply.sender_company %}
+                {% display_company reply.sender_company %}
+            {% else %}
+                {% display_user reply.sender_user 'buyer' %}
+            {% endif %}
+        </span>
+        <span class="reply-date">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+        {% if reply.moderation_status == "pending_review" and request.user.is_staff %}
+            <span class="badge badge-muted">Pending admin review</span>
+        {% elif reply.moderation_status == "pending_review" and reply.sender_user_id == request.user.id %}
+            <span class="badge badge-muted">Pending admin review</span>
+        {% elif reply.moderation_status == "rejected" and request.user.is_staff %}
+            <span class="badge badge-muted">Rejected</span>
+        {% endif %}
+    </div>
+    <div class="reply-message">
+        {{ reply.message|linebreaksbr }}
+    </div>
+</div>

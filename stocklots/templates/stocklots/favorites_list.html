@@ -1,0 +1,42 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags %}
+
+{% block title %}Saved listings | floos33{% endblock title %}
+{% block account_eyebrow %}Saved{% endblock account_eyebrow %}
+{% block account_title %}Saved listings{% endblock account_title %}
+{% block account_intro %}Stocklots you bookmarked to review later.{% endblock account_intro %}
+
+{% block account_content %}
+{% if favorites %}
+    <section class="stocklot-grid">
+        {% for favorite in favorites %}
+            {% with stocklot=favorite.stocklot %}
+            <article class="stocklot-card">
+                <div class="stocklot-card-header">
+                    <div>
+                        <p class="eyebrow">{{ stocklot.category.full_name }}</p>
+                        <h2><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h2>
+                    </div>
+                    <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
+                </div>
+                <p class="subtle-copy">{{ stocklot.description|truncatechars:180 }}</p>
+                <div class="stocklot-meta">
+                    <span>{% display_company stocklot.company %}</span>
+                    <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
+                    <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+                </div>
+                <div class="stocklot-card-footer">
+                    <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
+                    <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
+                </div>
+            </article>
+            {% endwith %}
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="content-card empty-state">
+        <h2>No saved listings</h2>
+        <p class="subtle-copy">Save a stocklot to see it here.</p>
+    </section>
+{% endif %}
+{% endblock account_content %}

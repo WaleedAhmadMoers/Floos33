@@ -1,9 +1,9 @@
 {% extends "accounts/auth_shell.html" %}
 
-{% block title %}تسجيل الدخول | floos33{% endblock title %}
+{% block title %}Log in | floos33{% endblock title %}
 {% block auth_eyebrow %}Login{% endblock auth_eyebrow %}
-{% block auth_title %}تسجيل الدخول{% endblock auth_title %}
-{% block auth_intro %}استخدم بريدك الإلكتروني وكلمة المرور للوصول إلى حسابك ومتابعة إدارة هويتك وطلبات التحقق بسهولة.{% endblock auth_intro %}
+{% block auth_title %}Log in to your account{% endblock auth_title %}
+{% block auth_intro %}Enter your email and password to access your dashboard and listings.{% endblock auth_intro %}
 
 {% block auth_content %}
 <form method="post" class="auth-form">
@@ -38,17 +38,17 @@
         <input type="hidden" name="next" value="{{ request.GET.next }}">
     {% endif %}
 
-    <button type="submit" class="button">دخول</button>
+    <button type="submit" class="button">Log in</button>
 </form>
 
 <div class="stack-sm">
     <p class="auth-footer">
-        نسيت كلمة المرور؟
-        <a href="{% url 'accounts:password_reset' %}">ابدأ استعادة كلمة المرور</a>
+        Forgot your password?
+        <a href="{% url 'accounts:password_reset' %}">Reset your password</a>
     </p>
     <p class="auth-footer">
-        لا تملك حساباً بعد؟
-        <a href="{% url 'accounts:signup' %}">أنشئ حساباً جديداً</a>
+        Don't have an account yet?
+        <a href="{% url 'accounts:signup' %}">Create a new account</a>
     </p>
 </div>
 {% endblock auth_content %}

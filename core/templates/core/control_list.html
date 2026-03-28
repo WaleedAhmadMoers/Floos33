@@ -1,0 +1,69 @@
+{% extends "accounts/account_shell.html" %}
+{% load control_tags %}
+{% block account_title %}{{ title }}{% endblock account_title %}
+{% block account_intro %}{{ description }}{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <div class="list-header">
+        <div>
+            <h2>{{ title }}</h2>
+            <p class="subtle-copy">{{ description }}</p>
+        </div>
+        <div class="actions">
+            <form method="get" class="inline-form" aria-label="search">
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search…" />
+                <button type="submit" class="button button-secondary">Search</button>
+            </form>
+            {% if create_url %}
+                <a href="{{ create_url }}" class="button">Add new</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if items %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    {% for label,attr in columns %}
+                        <th>{{ label }}</th>
+                    {% endfor %}
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    {% for label,attr in columns %}
+                        <td>
+                            {% if attr == "full_name" %}
+                                {{ item.full_name|default:item.email }}
+                            {% elif attr == "roles" %}
+                                {% if item.is_buyer %}Buyer{% endif %}{% if item.is_seller %}{% if item.is_buyer %} / {% endif %}Seller{% endif %}
+                            {% elif attr == "identity_status" %}
+                                {{ item.get_identity_status_display }}
+                            {% elif attr == "company" %}
+                                {{ item.company }}
+                            {% elif attr == "status" %}
+                                {{ item.get_status_display|default:item.status }}
+                            {% elif attr == "moderation_status" %}
+                                {{ item.get_moderation_status_display|default:item.moderation_status }}
+                            {% else %}
+                                {{ item|attr:attr }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                    <td class="table-actions">
+                        <a href="{{ request.path }}{{ item.pk }}/" class="button button-small">Open</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="subtle-copy">Nothing to show yet.</p>
+    {% endif %}
+</section>
+{% endblock account_content %}

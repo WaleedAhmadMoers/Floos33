@@ -2,75 +2,134 @@
 
 {% block title %}{{ stocklot.title }} | floos33{% endblock title %}
 
+{% load identity_tags %}
 {% block content %}
 <section class="hero-card">
     <p class="eyebrow">{{ stocklot.category.full_name }}</p>
     <h1>{{ stocklot.title }}</h1>
-    <p class="lead">عرض ستوك منشور من شركة {{ stocklot.company.name }} ضمن سوق floos33.</p>
+    <p class="lead">Stocklot offered by {% display_company stocklot.company %} on floos33.</p>
+    {% if stocklot.is_admin_verified %}
+        <div class="badge-row">
+            <span class="badge badge-success">Admin verified</span>
+        </div>
+    {% endif %}
+    <div class="stack-sm">
+        <a class="button" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+        {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}" style="display:inline;">
+                {% csrf_token %}
+                {% if is_favorited %}
+                    <button type="submit" class="button button-secondary">Unsave</button>
+                {% else %}
+                    <button type="submit" class="button button-secondary">Save</button>
+                {% endif %}
+            </form>
+        {% else %}
+            <a class="button button-secondary" href="{% url 'accounts:login' %}?next={{ request.path }}">Save</a>
+        {% endif %}
+    </div>
 </section>
 
-<div class="detail-layout">
-    <section class="content-card">
+<div class="detail-layout two-col">
+    <section class="content-card main-column">
         <div class="panel-header">
             <div>
-                <h2>تفاصيل العرض</h2>
-                <p class="subtle-copy">نظرة واضحة على المواصفات الأساسية لهذا الستوك.</p>
+                <h2>Stocklot overview</h2>
+                <p class="subtle-copy">Key commercial details buyers need before reaching out.</p>
             </div>
             <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
         </div>
 
         <div class="detail-grid">
             <article class="detail-item">
-                <div class="detail-label">التصنيف</div>
+                <div class="detail-label">Company</div>
+                <div class="detail-value">{% display_company stocklot.company %}</div>
+            </article>
+            <article class="detail-item">
+                <div class="detail-label">Category</div>
                 <div class="detail-value">{{ stocklot.category.full_name }}</div>
             </article>
             <article class="detail-item">
-                <div class="detail-label">الحالة</div>
+                <div class="detail-label">Condition</div>
                 <div class="detail-value">{{ stocklot.get_condition_display }}</div>
             </article>
             <article class="detail-item">
-                <div class="detail-label">الكمية</div>
+                <div class="detail-label">Quantity</div>
                 <div class="detail-value">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
             </article>
             <article class="detail-item">
-                <div class="detail-label">الحد الأدنى للطلب</div>
+                <div class="detail-label">Minimum order quantity</div>
                 <div class="detail-value">{{ stocklot.moq }} {{ stocklot.get_unit_type_display }}</div>
             </article>
             <article class="detail-item">
-                <div class="detail-label">السعر</div>
+                <div class="detail-label">Price</div>
                 <div class="detail-value">{{ stocklot.price }} {{ stocklot.currency }}</div>
             </article>
             <article class="detail-item">
-                <div class="detail-label">الموقع</div>
+                <div class="detail-label">Location</div>
                 <div class="detail-value">{{ stocklot.location_country }} - {{ stocklot.location_city }}</div>
             </article>
-            <article class="detail-item detail-item-wide">
-                <div class="detail-label">الوصف</div>
-                <div class="detail-value">{{ stocklot.description|linebreaksbr }}</div>
-            </article>
         </div>
+
+        <section class="content-subsection">
+            <h3>Description</h3>
+            <p class="body-text">{{ stocklot.description|linebreaksbr }}</p>
+        </section>
+
     </section>
 
-    <aside class="content-card sidebar-card">
-        <h2>الشركة المالكة</h2>
-        <p class="subtle-copy">الستوكات في المنصة تعود إلى الشركات، وليس إلى الحسابات الفردية مباشرة.</p>
-        <div class="detail-grid">
-            <article class="detail-item">
-                <div class="detail-label">اسم الشركة</div>
-                <div class="detail-value">{{ stocklot.company.name }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">المدينة</div>
-                <div class="detail-value">{{ stocklot.company.city }}</div>
-            </article>
-            <article class="detail-item detail-item-wide">
-                <div class="detail-label">الوصف التجاري</div>
-                <div class="detail-value">{{ stocklot.company.description }}</div>
-            </article>
+    <aside class="content-card media-column">
+        <div class="media-primary">
+            {% with main_image=stocklot.images.all|first %}
+                {% if main_image %}
+                    <img src="{{ main_image.file.url }}" alt="{{ stocklot.title }}">
+                {% else %}
+                    <div class="subtle-copy no-media">No images available.</div>
+                {% endif %}
+            {% endwith %}
         </div>
-        <div class="actions">
-            <a class="button button-secondary" href="{% url 'stocklots:list' %}">العودة إلى السوق</a>
-        </div>
+        {% if stocklot.images.all|length > 1 %}
+            <div class="thumb-strip">
+                {% for image in stocklot.images.all %}
+                    <a href="{{ image.file.url }}" class="thumb" onclick="event.preventDefault(); document.querySelector('.media-primary img').src='{{ image.file.url }}';">
+                        <img src="{{ image.file.url }}" alt="{{ stocklot.title }}">
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% with main_video=stocklot.videos.all|first %}
+            {% if main_video %}
+                <section class="content-subsection">
+                    <h3>Video</h3>
+                    <video controls playsinline style="width:100%; max-height:320px; border-radius:12px;">
+                        <source src="{{ main_video.file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        {% if stocklot.documents.all|length %}
+            <section class="content-subsection">
+                <h3>Documents</h3>
+                <div class="doc-list">
+                    {% for doc in stocklot.documents.all %}
+                        <div class="doc-row">
+                            <div>
+                                <div class="doc-title">{{ doc.file.name|slice:"-60:" }}</div>
+                                <div class="doc-meta">
+                                    {% if doc.doc_type == "pdf" %}PDF{% elif doc.doc_type == "excel" %}Excel / CSV{% else %}Document{% endif %}
+                                </div>
+                            </div>
+                            <div class="doc-actions">
+                                <a class="button button-secondary" href="{{ doc.file.url }}" download>Download</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
     </aside>
 </div>
 {% endblock content %}

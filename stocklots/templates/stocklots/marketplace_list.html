@@ -1,25 +1,26 @@
 {% extends "base.html" %}
+{% load identity_tags %}
 
-{% block title %}الستوكات | floos33{% endblock title %}
+{% block title %}Marketplace | floos33{% endblock title %}
 
 {% block content %}
 <section class="hero-card">
     <p class="eyebrow">Marketplace</p>
-    <h1>سوق الستوكات</h1>
-    <p class="lead">استعرض عروض الشركات المنشورة، وابحث حسب العنوان أو التصفية حسب التصنيف للوصول بسرعة إلى الستوك المناسب.</p>
+    <h1>Browse published stocklots</h1>
+    <p class="lead">Search and filter verified seller listings. Use category and keyword filters to find the right lots quickly.</p>
 </section>
 
 <section class="content-card">
     <form method="get" class="filter-form">
         <div class="filter-grid">
             <div class="field-group">
-                <label for="id_q">بحث بالعنوان</label>
-                <input id="id_q" type="text" name="q" value="{{ search_query }}" class="form-input" placeholder="مثال: شواحن، أدوات، ملابس">
+                <label for="id_q">Search</label>
+                <input id="id_q" type="text" name="q" value="{{ search_query }}" class="form-input" placeholder="Example: phones, pallets, apparel">
             </div>
             <div class="field-group">
-                <label for="id_category">التصنيف</label>
+                <label for="id_category">Category</label>
                 <select id="id_category" name="category" class="form-input">
-                    <option value="">كل التصنيفات</option>
+                    <option value="">All categories</option>
                     {% for parent in marketplace_categories %}
                         <option value="{{ parent.slug }}" {% if selected_category and selected_category.slug == parent.slug %}selected{% endif %}>{{ parent.name }}</option>
                         {% for child in parent.children.all %}
@@ -30,10 +31,10 @@
             </div>
         </div>
         <div class="actions">
-            <button type="submit" class="button">تطبيق التصفية</button>
-            <a class="button button-secondary" href="{% url 'stocklots:list' %}">إعادة الضبط</a>
+            <button type="submit" class="button">Apply filters</button>
+            <a class="button button-secondary" href="{% url 'stocklots:list' %}">Reset</a>
             {% if request.user.is_authenticated and request.user.is_seller %}
-                <a class="button button-secondary" href="{% url 'stocklots:create' %}">إضافة ستوك</a>
+                <a class="button button-secondary" href="{% url 'stocklots:create' %}">Add stocklot</a>
             {% endif %}
         </div>
     </form>
@@ -52,21 +53,21 @@
                 </div>
                 <p class="subtle-copy">{{ stocklot.description|truncatechars:180 }}</p>
                 <div class="stocklot-meta">
-                    <span>{{ stocklot.company.name }}</span>
+                    <span>{% display_company stocklot.company %}</span>
                     <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
                     <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
                 </div>
                 <div class="stocklot-card-footer">
                     <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
-                    <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">عرض التفاصيل</a>
+                    <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
                 </div>
             </article>
         {% endfor %}
     </section>
 {% else %}
     <section class="content-card empty-state">
-        <h2>لا توجد نتائج حالياً</h2>
-        <p class="subtle-copy">لم يتم العثور على ستوكات مطابقة لبحثك أو للتصنيف المحدد. جرّب تعديل التصفية أو العودة لكل الستوكات المنشورة.</p>
+        <h2>No listings found</h2>
+        <p class="subtle-copy">Try adjusting your search or filters to find available stocklots.</p>
     </section>
 {% endif %}
 {% endblock content %}

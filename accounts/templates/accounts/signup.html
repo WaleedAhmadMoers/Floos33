@@ -1,9 +1,9 @@
 {% extends "accounts/auth_shell.html" %}
 
-{% block title %}إنشاء حساب | floos33{% endblock title %}
+{% block title %}Create account | floos33{% endblock title %}
 {% block auth_eyebrow %}Signup{% endblock auth_eyebrow %}
-{% block auth_title %}إنشاء حساب جديد{% endblock auth_title %}
-{% block auth_intro %}يبدأ كل حساب جديد كمشتري بشكل افتراضي، مع بقاء التحقق والترقيات متاحة لاحقاً من داخل مساحة الحساب.{% endblock auth_intro %}
+{% block auth_title %}Create a new account{% endblock auth_title %}
+{% block auth_intro %}Sign up to start browsing the marketplace and managing your stocklots.{% endblock auth_intro %}
 
 {% block auth_content %}
 <form method="post" class="auth-form">
@@ -38,11 +38,11 @@
         <input type="hidden" name="next" value="{{ request.GET.next }}">
     {% endif %}
 
-    <button type="submit" class="button">إنشاء الحساب</button>
+    <button type="submit" class="button">Create account</button>
 </form>
 
 <p class="auth-footer">
-    لديك حساب بالفعل؟
-    <a href="{% url 'accounts:login' %}">سجّل الدخول من هنا</a>
+    Already have an account?
+    <a href="{% url 'accounts:login' %}">Log in instead</a>
 </p>
 {% endblock auth_content %}

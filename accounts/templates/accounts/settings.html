@@ -1,16 +1,16 @@
 {% extends "accounts/account_shell.html" %}
 
-{% block title %}إعدادات الحساب | floos33{% endblock title %}
+{% block title %}Account settings | floos33{% endblock title %}
 {% block account_eyebrow %}Settings{% endblock account_eyebrow %}
-{% block account_title %}إعدادات الحساب{% endblock account_title %}
-{% block account_intro %}حدّث بيانات الهوية الأساسية للحساب مع إبقاء الأدوار والتحقق وملف الشركة في مسارات واضحة ومنفصلة.{% endblock account_intro %}
+{% block account_title %}Account settings{% endblock account_title %}
+{% block account_intro %}Update your personal information and keep your account details current.{% endblock account_intro %}
 
 {% block account_content %}
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>البيانات الأساسية</h2>
-            <p class="subtle-copy">يمكنك تعديل الاسم والبريد واللغة المفضلة فقط في هذه المرحلة.</p>
+            <h2>Profile information</h2>
+            <p class="subtle-copy">Edit your name, email address, and preferred language.</p>
         </div>
     </div>
 
@@ -42,56 +42,56 @@
             </div>
         {% endfor %}
 
-        <button type="submit" class="button">حفظ التعديلات</button>
+        <button type="submit" class="button">Save changes</button>
     </form>
 </section>
 
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>الحالة الحالية</h2>
-            <p class="subtle-copy">ملخص سريع لوضع التحقق والأدوار والشركة المرتبطة بالحساب.</p>
+            <h2>Account status</h2>
+            <p class="subtle-copy">Quick view of your account type, verification, and company status.</p>
         </div>
     </div>
 
     <div class="account-summary-grid">
         <article class="summary-item">
-            <div class="summary-label">نوع الحساب</div>
+            <div class="summary-label">Account type</div>
             <div class="summary-value">{{ request.user.account_type_label }}</div>
         </article>
         <article class="summary-item">
-            <div class="summary-label">تحقق المشتري</div>
+            <div class="summary-label">Buyer verification</div>
             <div class="summary-value">{{ request.user.buyer_verification_status_label }}</div>
         </article>
         <article class="summary-item">
-            <div class="summary-label">حالة طلب البائع</div>
+            <div class="summary-label">Seller request</div>
             <div class="summary-value">
                 {% if seller_request %}
                     {{ seller_request.get_status_display }}
                 {% else %}
-                    لا يوجد طلب
+                    Not submitted
                 {% endif %}
             </div>
         </article>
         <article class="summary-item">
-            <div class="summary-label">الشركة المرتبطة</div>
+            <div class="summary-label">Company profile</div>
             <div class="summary-value">
                 {% if user_company %}
                     {{ user_company.name }}
                 {% else %}
-                    لا توجد شركة بعد
+                    Not set
                 {% endif %}
             </div>
         </article>
     </div>
 
     <div class="actions">
-        <a class="button button-secondary" href="{% url 'accounts:buyer_verification' %}">إدارة تحقق المشتري</a>
-        <a class="button button-secondary" href="{% url 'accounts:seller_request' %}">إدارة طلب البائع</a>
+        <a class="button button-secondary" href="{% url 'accounts:buyer_verification' %}">Buyer verification</a>
+        <a class="button button-secondary" href="{% url 'accounts:seller_request' %}">Seller request</a>
         {% if user_company %}
-            <a class="button button-secondary" href="{% url 'companies:profile' %}">عرض ملف الشركة</a>
+            <a class="button button-secondary" href="{% url 'companies:profile' %}">View company profile</a>
         {% else %}
-            <a class="button button-secondary" href="{% url 'companies:create' %}">إنشاء ملف الشركة</a>
+            <a class="button button-secondary" href="{% url 'companies:create' %}">Create company profile</a>
         {% endif %}
     </div>
 </section>

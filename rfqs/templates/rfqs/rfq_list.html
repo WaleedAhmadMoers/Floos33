@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load identity_tags %}
+
+{% block title %}Browse RFQs | floos33{% endblock title %}
+
+{% block content %}
+<section class="hero-card">
+    <p class="eyebrow">RFQs marketplace</p>
+    <h1>Active requests for quotation</h1>
+    <p class="lead">Buyers are looking for stocklots. Respond privately with a quote.</p>
+    {% if request.user.is_authenticated %}
+        <a class="button" href="{% url 'rfqs:create' %}">Create RFQ</a>
+    {% else %}
+        <a class="button" href="{% url 'accounts:login' %}?next={% url 'rfqs:create' %}">Create RFQ</a>
+    {% endif %}
+</section>
+
+{% if rfqs %}
+<section class="stocklot-grid">
+    {% for rfq in rfqs %}
+    <article class="stocklot-card">
+        <div class="stocklot-card-header">
+            <div>
+                <p class="eyebrow">{{ rfq.category.full_name }}</p>
+                <h2><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></h2>
+            </div>
+            <span class="badge badge-success">{{ rfq.get_status_display }}</span>
+        </div>
+        <p class="subtle-copy">{{ rfq.description|truncatechars:160 }}</p>
+        <div class="stocklot-meta">
+            <span>{{ rfq.quantity }} {{ rfq.get_unit_type_display }}</span>
+            <span>{{ rfq.location_country }} - {{ rfq.location_city }}</span>
+        </div>
+        <div class="stocklot-card-footer">
+            <span class="subtle-copy">Buyer: {% display_user rfq.buyer 'buyer' %}</span>
+            <a class="button button-secondary" href="{% url 'rfqs:detail' rfq.pk %}">View RFQ</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<section class="content-card empty-state">
+    <h2>No RFQs yet</h2>
+    <p class="subtle-copy">Be the first to post a request or check back later.</p>
+{% endif %}
+{% endblock content %}

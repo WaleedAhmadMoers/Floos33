@@ -1,6 +1,22 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
-from .models import Category, Stocklot
+from .models import Category, Favorite, Stocklot, StocklotDocument, StocklotImage, StocklotVideo
+
+
+class StocklotImageInline(admin.TabularInline):
+    model = StocklotImage
+    extra = 1
+
+
+class StocklotDocumentInline(admin.TabularInline):
+    model = StocklotDocument
+    extra = 1
+
+
+class StocklotVideoInline(admin.TabularInline):
+    model = StocklotVideo
+    extra = 1
 
 
 @admin.register(Category)
@@ -18,20 +34,22 @@ class StocklotAdmin(admin.ModelAdmin):
         "company",
         "category",
         "status",
+        "is_admin_verified",
         "is_active",
         "price",
         "currency",
         "quantity",
         "updated_at",
     )
-    list_filter = ("status", "is_active", "condition", "currency", "category")
+    list_filter = ("status", "is_admin_verified", "is_active", "condition", "currency", "category")
     search_fields = ("title", "slug", "company__name", "company__owner__email")
     readonly_fields = ("created_at", "updated_at")
     prepopulated_fields = {"slug": ("title",)}
+    inlines = (StocklotImageInline, StocklotVideoInline, StocklotDocumentInline)
     fieldsets = (
-        ("الملكية", {"fields": ("company", "category", "title", "slug")}),
+        (_("Listing info"), {"fields": ("company", "category", "title", "slug")}),
         (
-            "تفاصيل العرض",
+            _("Stocklot details"),
             {
                 "fields": (
                     "description",
@@ -45,15 +63,16 @@ class StocklotAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "الموقع والحالة",
-            {
-                "fields": (
-                    "location_country",
-                    "location_city",
-                    "status",
-                    "is_active",
-                )
-            },
+            _("Location & status"),
+            {"fields": ("location_country", "location_city", "status", "is_admin_verified", "is_active")},
         ),
-        ("التواريخ", {"fields": ("created_at", "updated_at")}),
+        (_("Timestamps"), {"fields": ("created_at", "updated_at")}),
     )
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ("user", "stocklot", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__email", "stocklot__title")
+    raw_id_fields = ("user", "stocklot")

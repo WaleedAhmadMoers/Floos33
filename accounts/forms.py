@@ -19,8 +19,8 @@ class BaseStyledFormMixin:
 
 
 class AdminUserCreationForm(BaseStyledFormMixin, forms.ModelForm):
-    password1 = forms.CharField(label="كلمة المرور", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="تأكيد كلمة المرور", widget=forms.PasswordInput)
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
 
     class Meta:
         model = User
@@ -29,14 +29,14 @@ class AdminUserCreationForm(BaseStyledFormMixin, forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("هذا البريد الإلكتروني مستخدم بالفعل.")
+            raise forms.ValidationError("This email address is already registered.")
         return email
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("كلمتا المرور غير متطابقتين.")
+            raise forms.ValidationError("Passwords do not match.")
         return password2
 
     def save(self, commit=True):
@@ -52,8 +52,8 @@ class AdminUserCreationForm(BaseStyledFormMixin, forms.ModelForm):
 
 class AdminUserChangeForm(BaseStyledFormMixin, forms.ModelForm):
     password = ReadOnlyPasswordHashField(
-        label="كلمة المرور",
-        help_text="لا يمكن عرض كلمة المرور الأصلية لأن النظام يخزنها بشكل مشفر.",
+        label="Password",
+        help_text="You can change the password using the dedicated form.",
     )
 
     class Meta:
@@ -65,27 +65,27 @@ class AdminUserChangeForm(BaseStyledFormMixin, forms.ModelForm):
 
 
 class SignupForm(BaseStyledFormMixin, forms.ModelForm):
-    password1 = forms.CharField(label="كلمة المرور", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="تأكيد كلمة المرور", widget=forms.PasswordInput)
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
 
     class Meta:
         model = User
         fields = ("full_name", "email")
         labels = {
-            "full_name": "الاسم الكامل",
-            "email": "البريد الإلكتروني",
+            "full_name": "Full name",
+            "email": "Email address",
         }
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("هذا البريد الإلكتروني مستخدم بالفعل.")
+            raise forms.ValidationError("This email address is already registered.")
         return email
 
     def clean_full_name(self):
         full_name = self.cleaned_data["full_name"].strip()
         if not full_name:
-            raise forms.ValidationError("الاسم الكامل مطلوب.")
+            raise forms.ValidationError("Full name is required.")
         return full_name
 
     def clean(self):
@@ -93,7 +93,7 @@ class SignupForm(BaseStyledFormMixin, forms.ModelForm):
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            self.add_error("password2", "كلمتا المرور غير متطابقتين.")
+            self.add_error("password2", "Passwords do not match.")
         return cleaned_data
 
     def save(self, commit=True):
@@ -108,8 +108,8 @@ class SignupForm(BaseStyledFormMixin, forms.ModelForm):
 
 
 class LoginForm(BaseStyledFormMixin, forms.Form):
-    email = forms.EmailField(label="البريد الإلكتروني")
-    password = forms.CharField(label="كلمة المرور", widget=forms.PasswordInput)
+    email = forms.EmailField(label="Email address")
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
 
     def __init__(self, *args, request=None, **kwargs):
         self.request = request
@@ -127,7 +127,7 @@ class LoginForm(BaseStyledFormMixin, forms.Form):
         if email and password:
             self.user = authenticate(self.request, email=email, password=password)
             if self.user is None:
-                raise forms.ValidationError("البريد الإلكتروني أو كلمة المرور غير صحيحة.")
+                raise forms.ValidationError("Invalid email or password.")
 
         return cleaned_data
 
@@ -140,22 +140,22 @@ class AccountSettingsForm(BaseStyledFormMixin, forms.ModelForm):
         model = User
         fields = ("full_name", "email", "preferred_language")
         labels = {
-            "full_name": "الاسم الكامل",
-            "email": "البريد الإلكتروني",
-            "preferred_language": "اللغة المفضلة",
+            "full_name": "Full name",
+            "email": "Email address",
+            "preferred_language": "Preferred language",
         }
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         qs = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
         if qs.exists():
-            raise forms.ValidationError("هذا البريد الإلكتروني مستخدم بالفعل.")
+            raise forms.ValidationError("This email address is already registered.")
         return email
 
     def clean_full_name(self):
         full_name = self.cleaned_data["full_name"].strip()
         if not full_name:
-            raise forms.ValidationError("الاسم الكامل مطلوب.")
+            raise forms.ValidationError("Full name is required.")
         return full_name
 
 
@@ -177,18 +177,18 @@ class SellerVerificationRequestForm(BaseStyledFormMixin, forms.ModelForm):
             "supporting_document",
         )
         labels = {
-            "company_name": "اسم الشركة",
-            "contact_person_name": "اسم مسؤول التواصل",
-            "phone_number": "رقم الهاتف",
-            "company_email": "البريد الإلكتروني للشركة",
-            "company_address": "عنوان الشركة",
-            "country": "الدولة",
-            "city": "المدينة",
-            "business_type": "نوع النشاط التجاري",
-            "business_description": "وصف مختصر للنشاط",
-            "registration_number": "رقم السجل التجاري",
-            "vat_number": "الرقم الضريبي أو رقم VAT",
-            "supporting_document": "مستند داعم",
+            "company_name": "Company name",
+            "contact_person_name": "Contact person name",
+            "phone_number": "Phone number",
+            "company_email": "Company email",
+            "company_address": "Company address",
+            "country": "Country",
+            "city": "City",
+            "business_type": "Business type",
+            "business_description": "Business description",
+            "registration_number": "Registration number",
+            "vat_number": "VAT or tax number",
+            "supporting_document": "Supporting document",
         }
         widgets = {
             "business_description": forms.Textarea(attrs={"rows": 4}),
@@ -228,14 +228,14 @@ class BuyerVerificationRequestForm(BaseStyledFormMixin, forms.ModelForm):
             "selfie_document",
         )
         labels = {
-            "legal_full_name": "الاسم القانوني الكامل",
-            "phone_number": "رقم الهاتف",
-            "country": "الدولة",
-            "city": "المدينة",
-            "address": "العنوان",
-            "identity_document_type": "نوع وثيقة الهوية",
-            "identity_document": "رفع وثيقة الهوية",
-            "selfie_document": "رفع صورة سيلفي أو صورة وجه",
+            "legal_full_name": "Legal full name",
+            "phone_number": "Phone number",
+            "country": "Country",
+            "city": "City",
+            "address": "Address",
+            "identity_document_type": "Identity document type",
+            "identity_document": "Identity document",
+            "selfie_document": "Selfie or face photo",
         }
 
     def clean(self):
@@ -248,15 +248,15 @@ class BuyerVerificationRequestForm(BaseStyledFormMixin, forms.ModelForm):
 
 
 class AccountPasswordResetForm(BaseStyledFormMixin, PasswordResetForm):
-    email = forms.EmailField(label="البريد الإلكتروني")
+    email = forms.EmailField(label="Email address")
 
 
 class AccountPasswordChangeForm(BaseStyledFormMixin, DjangoPasswordChangeForm):
-    old_password = forms.CharField(label="كلمة المرور الحالية", widget=forms.PasswordInput)
-    new_password1 = forms.CharField(label="كلمة المرور الجديدة", widget=forms.PasswordInput)
-    new_password2 = forms.CharField(label="تأكيد كلمة المرور الجديدة", widget=forms.PasswordInput)
+    old_password = forms.CharField(label="Current password", widget=forms.PasswordInput)
+    new_password1 = forms.CharField(label="New password", widget=forms.PasswordInput)
+    new_password2 = forms.CharField(label="Confirm new password", widget=forms.PasswordInput)
 
 
 class AccountSetPasswordForm(BaseStyledFormMixin, SetPasswordForm):
-    new_password1 = forms.CharField(label="كلمة المرور الجديدة", widget=forms.PasswordInput)
-    new_password2 = forms.CharField(label="تأكيد كلمة المرور الجديدة", widget=forms.PasswordInput)
+    new_password1 = forms.CharField(label="New password", widget=forms.PasswordInput)
+    new_password2 = forms.CharField(label="Confirm new password", widget=forms.PasswordInput)

@@ -1,0 +1,28 @@
+{% extends "accounts/account_shell.html" %}
+{% load control_tags %}
+{% block account_title %}{{ title }}{% endblock account_title %}
+{% block account_intro %}A quick, plain-language summary and actions.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <div class="detail-header">
+        <h2>{{ title }}</h2>
+        <div class="actions">
+            {% if edit_url_name %}<a class="button button-secondary" href="{% url edit_url_name object.pk %}">Edit</a>{% endif %}
+            {% if delete_url_name %}<a class="button button-danger" href="{% url delete_url_name object.pk %}">Delete</a>{% endif %}
+        </div>
+    </div>
+    <div class="detail-grid">
+        {% for label,attr in fields %}
+            <article class="detail-item">
+                <div class="detail-label">{{ label }}</div>
+                <div class="detail-value">
+                    {% with val=object|attr:attr %}
+                        {% if val == True %}Yes{% elif val == False %}No{% else %}{{ val }}{% endif %}
+                    {% endwith %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock account_content %}

@@ -1,0 +1,26 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}Save changes{% endblock account_title %}
+{% block account_intro %}Fields are grouped in plain language. Required items are marked with *.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-grid">
+            {% for field in form %}
+                <label class="form-field">
+                    <span class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+                    {{ field }}
+                    {% if field.help_text %}<small class="subtle-copy">{{ field.help_text }}</small>{% endif %}
+                    {{ field.errors }}
+                </label>
+            {% endfor %}
+        </div>
+        <div class="actions">
+            <button type="submit" class="button">Save</button>
+            <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock account_content %}

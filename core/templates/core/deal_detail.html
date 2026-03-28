@@ -1,0 +1,54 @@
+{% extends "accounts/account_shell.html" %}
+{% load control_tags %}
+{% block account_title %}Deal #{{ object.id }}{% endblock account_title %}
+{% block account_intro %}Clear summary of parties, source, approval, and progress.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <div class="detail-header">
+        <h2>Deal summary</h2>
+        <div class="badge-row">
+            <span class="badge">{{ object.get_status_display }}</span>
+            <span class="badge badge-secondary">{{ object.get_progress_status_display }}</span>
+        </div>
+    </div>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Type</div><div class="detail-value">{{ object.get_deal_type_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Buyer</div><div class="detail-value">{{ object.buyer }}</div></article>
+        <article class="detail-item"><div class="detail-label">Seller user</div><div class="detail-value">{{ object.seller_user|default:"-" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Seller company</div><div class="detail-value">{{ object.seller_company|default:"-" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Inquiry</div><div class="detail-value">{% if object.inquiry %}<a href="{{ object.inquiry.get_absolute_url }}">Inquiry #{{ object.inquiry.id }}</a>{% else %}-{% endif %}</div></article>
+        <article class="detail-item"><div class="detail-label">RFQ conversation</div><div class="detail-value">{% if object.rfq_conversation %}<a href="{% url 'rfqs:conversation_detail' object.rfq_conversation.id %}">Conversation #{{ object.rfq_conversation.id }}</a>{% else %}-{% endif %}</div></article>
+        <article class="detail-item"><div class="detail-label">Buyer accepted</div><div class="detail-value">{% if object.buyer_accepted %}Yes{% else %}No{% endif %}</div></article>
+        <article class="detail-item"><div class="detail-label">Seller accepted</div><div class="detail-value">{% if object.seller_accepted %}Yes{% else %}No{% endif %}</div></article>
+        <article class="detail-item"><div class="detail-label">Created</div><div class="detail-value">{{ object.created_at|date:"Y-m-d H:i" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Updated</div><div class="detail-value">{{ object.updated_at|date:"Y-m-d H:i" }}</div></article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Next steps</h2>
+    <p class="subtle-copy">Move the deal forward or cancel. Admin controls only.</p>
+    <div class="button-row">
+        <form method="post" action="{% url 'core:control_deal_progress' object.id 'start' %}">{% csrf_token %}<button class="button">Mark in progress</button></form>
+        <form method="post" action="{% url 'core:control_deal_progress' object.id 'ready' %}">{% csrf_token %}<button class="button button-secondary">Mark ready</button></form>
+        <form method="post" action="{% url 'core:control_deal_progress' object.id 'complete' %}">{% csrf_token %}<button class="button button-secondary">Mark completed</button></form>
+        <form method="post" action="{% url 'core:control_deal_progress' object.id 'cancel' %}">{% csrf_token %}<button class="button button-danger">Cancel deal</button></form>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>History</h2>
+    {% if object.history.all %}
+        <ul class="compact-list">
+            {% for h in object.history.all %}
+                <li>
+                    <strong>{{ h.action }}</strong> — {{ h.note }} <span class="subtle-copy">by {{ h.actor|default:"system" }} at {{ h.created_at|date:"Y-m-d H:i" }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="subtle-copy">No history yet.</p>
+    {% endif %}
+</section>
+{% endblock account_content %}

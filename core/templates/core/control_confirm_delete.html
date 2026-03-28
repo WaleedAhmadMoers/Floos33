@@ -1,0 +1,14 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}Please confirm{% endblock account_title %}
+{% block account_intro %}Deleting removes this record. Related content may stay but links will break. Proceed carefully.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <p>Are you sure you want to delete: <strong>{{ object }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button button-danger">Yes, delete</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="button button-secondary">Cancel</a>
+    </form>
+</section>
+{% endblock account_content %}

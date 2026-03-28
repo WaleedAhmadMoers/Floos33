@@ -1,0 +1,41 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}My RFQs | floos33{% endblock title %}
+{% block account_eyebrow %}Buyer{% endblock account_eyebrow %}
+{% block account_title %}My RFQs{% endblock account_title %}
+{% block account_intro %}Requests you created.{% endblock account_intro %}
+
+{% block account_content %}
+{% if rfqs %}
+    <section class="content-card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rfq in rfqs %}
+                <tr>
+                    <td><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></td>
+                    <td>{{ rfq.category.full_name }}</td>
+                    <td>{{ rfq.quantity }} {{ rfq.get_unit_type_display }}</td>
+                    <td>{{ rfq.get_status_display }}</td>
+                    <td>{{ rfq.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% else %}
+    <section class="content-card empty-state">
+        <h2>No RFQs yet</h2>
+        <p class="subtle-copy">Create your first RFQ to receive quotes.</p>
+        <a class="button" href="{% url 'rfqs:create' %}">Create RFQ</a>
+    </section>
+{% endif %}
+{% endblock account_content %}

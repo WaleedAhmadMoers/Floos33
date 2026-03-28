@@ -1,0 +1,41 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags %}
+
+{% block title %}Received inquiries | floos33{% endblock title %}
+{% block account_eyebrow %}Inquiries{% endblock account_eyebrow %}
+{% block account_title %}Inquiries to your stocklots{% endblock account_title %}
+{% block account_intro %}Buyers who contacted your company about your listings.{% endblock account_intro %}
+
+{% block account_content %}
+{% if inquiries %}
+    <section class="content-card">
+        <div class="table-responsive">
+            <table class="simple-table">
+                <thead>
+                    <tr>
+                        <th>Stocklot</th>
+                        <th>Buyer</th>
+                        <th>Status</th>
+                        <th>Received</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inquiry in inquiries %}
+                        <tr>
+                            <td><a href="{% url 'inquiries:detail' inquiry.pk %}">{{ inquiry.stocklot.title }}</a></td>
+                            <td>{% display_user inquiry.buyer 'buyer' %}</td>
+                            <td>{{ inquiry.get_status_display }}</td>
+                            <td>{{ inquiry.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% else %}
+    <section class="content-card empty-state">
+        <h2>No inquiries received</h2>
+        <p class="subtle-copy">Your listings have not received inquiries yet.</p>
+    </section>
+{% endif %}
+{% endblock account_content %}

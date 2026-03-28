@@ -9,12 +9,12 @@
 <section class="account-panel">
     <div class="panel-header">
         <div>
-            <h2>بيانات الستوك</h2>
-            <p class="subtle-copy">الستوكات ترتبط بالشركة الحالية: {{ user_company.name }}. حافظنا على النموذج بسيطاً وواضحاً ليتوسع لاحقاً بسهولة.</p>
+            <h2>Stocklot details</h2>
+            <p class="subtle-copy">Listings are created under your company: {{ user_company.name }}. Provide clear, complete info for faster approvals.</p>
         </div>
     </div>
 
-    <form method="post" class="auth-form">
+    <form method="post" class="auth-form" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -28,7 +28,7 @@
         <div class="form-sections">
             <section class="form-section">
                 <div>
-                    <h3>المعلومات الأساسية</h3>
+                    <h3>Basic listing info</h3>
                 </div>
                 <div class="form-section-grid">
                     {% for field in form %}
@@ -54,7 +54,7 @@
 
             <section class="form-section">
                 <div>
-                    <h3>الكمية والتسعير</h3>
+                    <h3>Quantity & pricing</h3>
                 </div>
                 <div class="form-section-grid">
                     {% for field in form %}
@@ -80,11 +80,11 @@
 
             <section class="form-section">
                 <div>
-                    <h3>الموقع والنشر</h3>
+                    <h3>Location & status</h3>
                 </div>
                 <div class="form-section-grid">
                     {% for field in form %}
-                        {% if field.name == "location_country" or field.name == "location_city" or field.name == "status" or field.name == "is_active" %}
+                        {% if field.name == "location_country" or field.name == "location_city" or field.name == "is_active" %}
                             <div class="field-group">
                                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                                 {{ field }}
@@ -103,11 +103,72 @@
                     {% endfor %}
                 </div>
             </section>
+
+            <section class="form-section">
+                <div>
+                    <h3>Media & documents</h3>
+                    <p class="helptext">Upload photos, videos, Excel/CSV, and PDF files so buyers can review the lot before contacting you. Multiple files are allowed.</p>
+                </div>
+                <div class="media-upload-grid">
+                    <div class="field-group">
+                        <label for="id_media_images">Listing photos (JPEG/PNG)</label>
+                        <input id="id_media_images" name="media_images" type="file" class="form-input" accept="image/*" multiple>
+                        <p class="helptext">Up to 8 images, max 10MB each.</p>
+                    </div>
+                    <div class="field-group">
+                        <label for="id_media_videos">Listing videos (MP4/WebM)</label>
+                        <input id="id_media_videos" name="media_videos" type="file" class="form-input" accept="video/*" multiple>
+                        <p class="helptext">Up to 3 videos, each under 120 seconds.</p>
+                    </div>
+                    <div class="field-group">
+                        <label for="id_media_excel">Excel / CSV</label>
+                        <input id="id_media_excel" name="media_excel" type="file" class="form-input" accept=".xlsx,.xls,.csv" multiple>
+                        <p class="helptext">Upload stock/manifest sheets or pricing tables.</p>
+                    </div>
+                    <div class="field-group">
+                        <label for="id_media_pdf">PDF files</label>
+                        <input id="id_media_pdf" name="media_pdf" type="file" class="form-input" accept=".pdf" multiple>
+                        <p class="helptext">Specs, certifications, or brochures up to 20MB each.</p>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <div class="actions">
             <button type="submit" class="button">{{ submit_label }}</button>
-            <a class="button button-secondary" href="{% url 'stocklots:mine' %}">العودة إلى ستوكاتي</a>
+            <a class="button button-secondary" href="{% url 'stocklots:mine' %}">Back to my listings</a>
+            {% if object.pk %}
+                {% if object.status == "archived" %}
+                    <form method="post" action="{% url 'stocklots:restore' object.slug %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-secondary">Undo sold</button>
+                    </form>
+                    <form method="post" action="{% url 'stocklots:activate' object.slug %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button button-secondary">Activate</button>
+                    </form>
+                {% else %}
+                    {% if object.is_active %}
+                        <form method="post" action="{% url 'stocklots:deactivate' object.slug %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Deactivate</button>
+                        </form>
+                        <form method="post" action="{% url 'stocklots:mark_sold' object.slug %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Mark as sold</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'stocklots:activate' object.slug %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-secondary">Activate</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+                <form method="post" action="{% url 'stocklots:delete' object.slug %}" style="display:inline;" onsubmit="return confirm('Delete this listing?');">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-secondary">Delete</button>
+                </form>
+            {% endif %}
         </div>
     </form>
 </section>

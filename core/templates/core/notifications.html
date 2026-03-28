@@ -1,0 +1,60 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}Notifications | floos33{% endblock title %}
+{% block account_eyebrow %}Notifications{% endblock account_eyebrow %}
+{% block account_title %}Notifications{% endblock account_title %}
+{% block account_intro %}In-app notifications about inquiries, RFQs, approvals, and system updates.{% endblock account_intro %}
+
+{% block account_content %}
+<div class="actions stack-sm">
+    <form method="get" action="" class="inline-form">
+        <label class="subtle-copy">Filter:</label>
+        <select name="filter" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="unread" {% if request.GET.filter == 'unread' %}selected{% endif %}>Unread</option>
+        </select>
+    </form>
+    <form method="post" action="{% url 'core:notification_read_all' %}">
+        {% csrf_token %}
+        <button type="submit" class="button button-secondary">Mark all as read</button>
+    </form>
+</div>
+
+{% if notifications %}
+<section class="content-card">
+    <ul class="notification-list">
+        {% for n in notifications %}
+        <li class="notification-item {% if not n.is_read %}is-unread{% endif %}">
+            <div class="notification-header">
+                <div>
+                    <p class="eyebrow">{{ n.get_notification_type_display }}</p>
+                    <h3>{{ n.title }}</h3>
+                    <p class="subtle-copy">{{ n.body }}</p>
+                </div>
+                <span class="subtle-copy">{{ n.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="notification-actions">
+                {% if n.url %}
+                    <a class="button button-secondary" href="{{ n.url }}">Open</a>
+                {% endif %}
+                {% if not n.is_read %}
+                    <form method="post" action="{% url 'core:notification_read' n.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="button button-ghost">Mark read</button>
+                    </form>
+                {% else %}
+                    <span class="badge badge-muted">Read</span>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% else %}
+<section class="content-card empty-state">
+    <h2>No notifications</h2>
+    <p class="subtle-copy">You’re all caught up.</p>
+</section>
+{% endif %}
+{% endblock account_content %}
