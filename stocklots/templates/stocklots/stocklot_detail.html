@@ -14,7 +14,11 @@
         </div>
     {% endif %}
     <div class="stack-sm">
-        <a class="button" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+        {% if can_contact %}
+            <a class="button" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+        {% else %}
+            <button class="button" disabled>Contact seller (verification required)</button>
+        {% endif %}
         {% if request.user.is_authenticated %}
             <form method="post" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}" style="display:inline;">
                 {% csrf_token %}

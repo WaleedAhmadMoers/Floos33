@@ -9,7 +9,8 @@ from django.db.models import Q
 from companies.models import Company
 from rfqs.forms import ConversationStartForm, MessageReplyForm, RFQForm
 from rfqs.models import RFQ, RFQConversation, RFQMessage
-from core.utils.deals import accept_deal, cancel_deal, get_or_create_for_rfq_conversation
+from core.utils.deals import accept_deal, cancel_deal, reject_deal, get_or_create_for_rfq_conversation
+from core.utils.verification import enforce_verified
 from django.views import View
 
 
@@ -21,7 +22,7 @@ class RFQListView(ListView):
 
     def get_queryset(self):
         return (
-            RFQ.objects.filter(status=RFQ.Status.OPEN)
+            RFQ.objects.filter(status=RFQ.Status.OPEN, moderation_status=RFQ.ModerationStatus.APPROVED)
             .select_related("category", "buyer")
             .order_by("-created_at")
         )
@@ -32,6 +33,23 @@ class RFQDetailView(DetailView):
     template_name = "rfqs/rfq_detail.html"
     context_object_name = "rfq"
 
+    def dispatch(self, request, *args, **kwargs):
+        rfq = self.get_object()
+        if rfq.moderation_status != RFQ.ModerationStatus.APPROVED or rfq.status != RFQ.Status.OPEN:
+            if not (request.user.is_staff or request.user == rfq.buyer):
+                raise Http404("RFQ not available")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ok_seller = False
+        if self.request.user.is_authenticated:
+            from core.utils.verification import enforce_verified
+
+            ok_seller, _ = enforce_verified(self.request, role="seller")
+        ctx["can_quote"] = ok_seller
+        return ctx
+
 
 class RFQCreateView(LoginRequiredMixin, CreateView):
     model = RFQ
@@ -39,8 +57,28 @@ class RFQCreateView(LoginRequiredMixin, CreateView):
     template_name = "rfqs/rfq_form.html"
 
     def form_valid(self, form):
+        ok, msg = enforce_verified(self.request, role="buyer")
+        if not ok:
+            messages.error(self.request, msg)
+            return redirect("accounts:dashboard")
         form.instance.buyer = self.request.user
-        messages.success(self.request, "RFQ created successfully.")
+        form.instance.moderation_status = RFQ.ModerationStatus.PENDING_REVIEW
+        form.instance.status = RFQ.Status.OPEN
+        messages.success(self.request, "RFQ submitted and waiting for admin approval.")
+        # notify admins
+        from core.utils.notifications import create_notification
+        from core.models import Notification
+        from django.contrib.auth import get_user_model
+
+        for admin in get_user_model().objects.filter(is_staff=True):
+            create_notification(
+                recipient=admin,
+                actor=self.request.user,
+                notification_type=Notification.Type.RFQ_NEW_RESPONSE,
+                title="New RFQ pending approval",
+                body=form.instance.title,
+                url="",
+            )
         return super().form_valid(form)
 
 
@@ -78,6 +116,11 @@ class ConversationDetailView(LoginRequiredMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
+        rfq = self.object.rfq
+        if rfq.moderation_status != RFQ.ModerationStatus.APPROVED or rfq.status != RFQ.Status.OPEN:
+            if not (request.user.is_staff or request.user in [self.object.buyer, self.object.seller_user]):
+                messages.error(request, "This RFQ is not available.")
+                return redirect("rfqs:list")
         if not (
             request.user.is_staff
             or request.user == self.object.buyer
@@ -102,12 +145,49 @@ class ConversationDetailView(LoginRequiredMixin, DetailView):
         context["form"] = MessageReplyForm()
         from core.models import DealTrigger
 
-        context["deal"] = DealTrigger.objects.filter(rfq_conversation=self.object).first()
+        context["deal"] = get_or_create_for_rfq_conversation(self.object)
+        deal = context["deal"]
+        if deal:
+            from core.utils.deals import _identity_status
+
+            buyer_status = _identity_status(deal, "buyer")
+            seller_status = _identity_status(deal, "seller")
+            is_buyer = self.request.user.id == self.object.buyer_id
+            is_seller = self.request.user.id == self.object.seller_user_id
+            buyer_real = deal.buyer.full_name or deal.buyer.email
+            seller_real = deal.seller_company.name
+            staff = self.request.user.is_staff
+            # what viewer can see
+            if is_buyer or staff:
+                display_buyer = buyer_real
+            elif buyer_status == "revealed":
+                display_buyer = buyer_real
+            else:
+                display_buyer = f"Buyer ID #{deal.buyer_id}"
+
+            if is_seller or staff:
+                display_seller = seller_real
+            elif seller_status == "revealed":
+                display_seller = seller_real
+            else:
+                display_seller = f"Seller ID #{deal.seller_user_id}"
+            context["identity_status"] = {"buyer": buyer_status, "seller": seller_status}
+            context["identity_labels"] = {"buyer": display_buyer, "seller": display_seller}
+        context["can_interact"], _ = enforce_verified(self.request, role="buyer" if self.request.user == self.object.buyer else "seller")
+        user = self.request.user
+        context["can_deal_actions"] = (
+            context["can_interact"] and (user.is_staff or user.id in [self.object.buyer_id, self.object.seller_user_id])
+        )
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        form = MessageReplyForm(request.POST)
+        role = "buyer" if request.user.id == self.object.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("rfqs:conversation_detail", pk=self.object.pk)
+        form = MessageReplyForm(request.POST, request.FILES)
         if form.is_valid():
             msg = form.save(commit=False)
             msg.conversation = self.object
@@ -143,6 +223,10 @@ class ConversationStartView(LoginRequiredMixin, CreateView):
         if not hasattr(request.user, "company"):
             messages.error(request, "You need an active company profile to respond.")
             return redirect("companies:create")
+        ok, msg = enforce_verified(request, role="seller")
+        if not ok:
+            messages.error(request, msg)
+            return redirect("rfqs:list")
         self.rfq_obj = get_object_or_404(RFQ, pk=kwargs["pk"], status=RFQ.Status.OPEN)
         return super().dispatch(request, *args, **kwargs)
 
@@ -189,6 +273,11 @@ class ConversationDealAcceptView(LoginRequiredMixin, View):
         if request.user.id not in [convo.buyer_id, convo.seller_user_id] and not request.user.is_staff:
             messages.error(request, "Not allowed.")
             return redirect("rfqs:conversation_detail", pk=convo.pk)
+        role = "buyer" if request.user.id == convo.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("rfqs:conversation_detail", pk=convo.pk)
         deal = get_or_create_for_rfq_conversation(convo)
         accept_deal(deal, request.user)
         messages.info(request, "Deal acceptance recorded.")
@@ -201,7 +290,29 @@ class ConversationDealCancelView(LoginRequiredMixin, View):
         if request.user.id not in [convo.buyer_id, convo.seller_user_id] and not request.user.is_staff:
             messages.error(request, "Not allowed.")
             return redirect("rfqs:conversation_detail", pk=convo.pk)
+        role = "buyer" if request.user.id == convo.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("rfqs:conversation_detail", pk=convo.pk)
         deal = get_or_create_for_rfq_conversation(convo)
         cancel_deal(deal, request.user)
         messages.info(request, "Deal cancelled.")
+        return redirect("rfqs:conversation_detail", pk=convo.pk)
+
+
+class ConversationDealRejectView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        convo = get_object_or_404(RFQConversation, pk=kwargs["pk"])
+        if request.user.id not in [convo.buyer_id, convo.seller_user_id] and not request.user.is_staff:
+            messages.error(request, "Not allowed.")
+            return redirect("rfqs:conversation_detail", pk=convo.pk)
+        role = "buyer" if request.user.id == convo.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("rfqs:conversation_detail", pk=convo.pk)
+        deal = get_or_create_for_rfq_conversation(convo)
+        reject_deal(deal, request.user)
+        messages.info(request, "Deal rejected.")
         return redirect("rfqs:conversation_detail", pk=convo.pk)

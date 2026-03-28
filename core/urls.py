@@ -42,13 +42,22 @@ from .views import (
     RFQCreateView,
     RFQUpdateView,
     RFQDeleteView,
+    RFQStatusView,
     InquiryListView,
     InquiryDetailView,
     InquiryCreateView,
     InquiryUpdateView,
     InquiryDeleteView,
     InquiryReplyListView,
+    InquiryReplyDetailView,
+    InquiryReplyUpdateView,
+    InquiryReplyDeleteView,
     RFQMessageListView,
+    RFQMessageDetailView,
+    RFQMessageUpdateView,
+    RFQMessageDeleteView,
+    DealStatusView,
+    DealIdentityRequestView,
 )
 
 app_name = "core"
@@ -100,6 +109,7 @@ urlpatterns = [
     path("control/rfqs/<int:pk>/", RFQDetailView.as_view(), name="control_rfq_detail"),
     path("control/rfqs/<int:pk>/edit/", RFQUpdateView.as_view(), name="control_rfq_edit"),
     path("control/rfqs/<int:pk>/delete/", RFQDeleteView.as_view(), name="control_rfq_delete"),
+    path("control/rfqs/<int:pk>/<str:action>/", RFQStatusView.as_view(), name="control_rfq_status"),
 
     path("control/inquiries/", InquiryListView.as_view(), name="control_inquiries"),
     path("control/inquiries/create/", InquiryCreateView.as_view(), name="control_inquiry_create"),
@@ -108,5 +118,15 @@ urlpatterns = [
     path("control/inquiries/<int:pk>/delete/", InquiryDeleteView.as_view(), name="control_inquiry_delete"),
 
     path("control/inquiry-replies/", InquiryReplyListView.as_view(), name="control_inquiry_replies_list"),
+    path("control/inquiry-replies/<int:pk>/", InquiryReplyDetailView.as_view(), name="control_inquiry_reply_detail"),
+    path("control/inquiry-replies/<int:pk>/edit/", InquiryReplyUpdateView.as_view(), name="control_inquiry_reply_edit"),
+    path("control/inquiry-replies/<int:pk>/delete/", InquiryReplyDeleteView.as_view(), name="control_inquiry_reply_delete"),
     path("control/rfq-messages/", RFQMessageListView.as_view(), name="control_rfq_messages_list"),
+    path("control/rfq-messages/<int:pk>/", RFQMessageDetailView.as_view(), name="control_rfq_message_detail"),
+    path("control/rfq-messages/<int:pk>/edit/", RFQMessageUpdateView.as_view(), name="control_rfq_message_edit"),
+    path("control/rfq-messages/<int:pk>/delete/", RFQMessageDeleteView.as_view(), name="control_rfq_message_delete"),
+    # deal status polling
+    path("deal-status/<int:pk>/", DealStatusView.as_view(), name="deal_status"),
+    # deal identity requests
+    path("deal-identity/<int:pk>/<str:action>/<str:target>/", DealIdentityRequestView.as_view(), name="deal_identity_request"),
 ]

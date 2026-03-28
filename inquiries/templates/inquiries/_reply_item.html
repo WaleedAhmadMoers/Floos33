@@ -19,5 +19,10 @@
     </div>
     <div class="reply-message">
         {{ reply.message|linebreaksbr }}
+        {% if reply.attachment %}
+            <p class="subtle-copy">
+                Attachment: <a href="{{ reply.attachment.url }}" target="_blank">Download / view</a>
+            </p>
+        {% endif %}
     </div>
 </div>

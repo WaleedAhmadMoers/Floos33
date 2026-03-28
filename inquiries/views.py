@@ -9,7 +9,8 @@ from django.views.generic import CreateView, DetailView, ListView, View
 from companies.models import Company
 from stocklots.models import Stocklot
 
-from core.utils.deals import accept_deal, cancel_deal, get_or_create_for_inquiry
+from core.utils.deals import accept_deal, cancel_deal, get_or_create_for_inquiry, reject_deal
+from core.utils.verification import enforce_verified
 from .forms import InquiryForm
 from .forms_reply import InquiryReplyForm
 from .models import Inquiry, InquiryReply
@@ -26,6 +27,10 @@ class InquiryCreateView(LoginRequiredMixin, CreateView):
             Stocklot.objects.select_related("company"),
             slug=kwargs.get("stocklot_slug"),
         )
+        ok, msg = enforce_verified(request, role="buyer")
+        if not ok:
+            messages.error(request, msg)
+            return redirect(self.stocklot.get_absolute_url())
         if self.stocklot.company.owner_id == request.user.id:
             messages.info(request, "You cannot send an inquiry to your own listing.")
             return redirect(self.stocklot.get_absolute_url())
@@ -130,14 +135,39 @@ class InquiryDetailView(LoginRequiredMixin, DetailView):
         context["reply_form"] = InquiryReplyForm()
         context["visible_replies"] = self._get_visible_replies(self.request.user)
         context["show_inquiry_message"] = self._can_see_message(self.object, self.request.user)
+        context["can_interact"], _ = enforce_verified(self.request, role="buyer" if self.request.user == self.object.buyer else "seller")
         from core.models import DealTrigger
 
-        context["deal"] = DealTrigger.objects.filter(inquiry=self.object).first()
+        context["deal"] = get_or_create_for_inquiry(self.object)
+        deal = context["deal"]
+        if deal:
+            from core.utils.deals import _identity_status
+
+            buyer_status = _identity_status(deal, "buyer")
+            seller_status = _identity_status(deal, "seller")
+            is_buyer = self.request.user.id == self.object.buyer_id
+            is_seller = self.request.user.id == self.object.seller_company.owner_id
+            buyer_real = deal.buyer.full_name or deal.buyer.email
+            seller_real = deal.seller_company.name
+            # Viewer-facing labels
+            if is_buyer:
+                display_buyer = buyer_real
+                display_seller = seller_real if seller_status == "revealed" or self.request.user.is_staff else f"Seller ID #{deal.seller_user_id}"
+            else:
+                display_seller = seller_real
+                display_buyer = buyer_real if buyer_status == "revealed" or self.request.user.is_staff else f"Buyer ID #{deal.buyer_id}"
+            context["identity_status"] = {"buyer": buyer_status, "seller": seller_status}
+            context["identity_labels"] = {"buyer": display_buyer, "seller": display_seller}
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        form = InquiryReplyForm(request.POST)
+        role = "buyer" if request.user == self.object.buyer else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("inquiries:detail", pk=self.object.pk)
+        form = InquiryReplyForm(request.POST, request.FILES)
         if not self._can_reply(request.user, self.object):
             raise PermissionDenied("You cannot reply to this inquiry.")
         if form.is_valid():
@@ -208,6 +238,11 @@ class InquiryDealAcceptView(LoginRequiredMixin, View):
         inquiry = get_object_or_404(Inquiry, pk=kwargs["pk"])
         if request.user.id not in [inquiry.buyer_id, inquiry.seller_company.owner_id] and not request.user.is_staff:
             raise PermissionDenied("Not allowed.")
+        role = "buyer" if request.user.id == inquiry.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("inquiries:detail", pk=inquiry.pk)
         deal = get_or_create_for_inquiry(inquiry)
         accept_deal(deal, request.user)
         messages.info(request, "Deal acceptance recorded.")
@@ -219,7 +254,28 @@ class InquiryDealCancelView(LoginRequiredMixin, View):
         inquiry = get_object_or_404(Inquiry, pk=kwargs["pk"])
         if request.user.id not in [inquiry.buyer_id, inquiry.seller_company.owner_id] and not request.user.is_staff:
             raise PermissionDenied("Not allowed.")
+        role = "buyer" if request.user.id == inquiry.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("inquiries:detail", pk=inquiry.pk)
         deal = get_or_create_for_inquiry(inquiry)
         cancel_deal(deal, request.user)
         messages.info(request, "Deal cancelled.")
+        return redirect("inquiries:detail", pk=inquiry.pk)
+
+
+class InquiryDealRejectView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        inquiry = get_object_or_404(Inquiry, pk=kwargs["pk"])
+        if request.user.id not in [inquiry.buyer_id, inquiry.seller_company.owner_id] and not request.user.is_staff:
+            raise PermissionDenied("Not allowed.")
+        role = "buyer" if request.user.id == inquiry.buyer_id else "seller"
+        ok, msg = enforce_verified(request, role=role)
+        if not ok:
+            messages.error(request, msg)
+            return redirect("inquiries:detail", pk=inquiry.pk)
+        deal = get_or_create_for_inquiry(inquiry)
+        reject_deal(deal, request.user)
+        messages.info(request, "Deal rejected.")
         return redirect("inquiries:detail", pk=inquiry.pk)

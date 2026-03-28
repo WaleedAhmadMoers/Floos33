@@ -173,6 +173,10 @@ class DealTrigger(models.Model):
     )
     buyer_accepted = models.BooleanField(default=False)
     seller_accepted = models.BooleanField(default=False)
+    buyer_rejected = models.BooleanField(default=False)
+    seller_rejected = models.BooleanField(default=False)
+    buyer_identity_revealed = models.BooleanField(default=False)
+    seller_identity_revealed = models.BooleanField(default=False)
     status = models.CharField("status", max_length=20, choices=Status.choices, default=Status.PENDING)
     progress_status = models.CharField(
         "progress",

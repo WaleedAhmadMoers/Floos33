@@ -7,6 +7,7 @@ from .views import (
     SentInquiryListView,
     InquiryDealAcceptView,
     InquiryDealCancelView,
+    InquiryDealRejectView,
 )
 
 app_name = "inquiries"
@@ -17,5 +18,6 @@ urlpatterns = [
     path("received/", ReceivedInquiryListView.as_view(), name="received"),
     path("<int:pk>/deal/accept/", InquiryDealAcceptView.as_view(), name="deal_accept"),
     path("<int:pk>/deal/cancel/", InquiryDealCancelView.as_view(), name="deal_cancel"),
+    path("<int:pk>/deal/reject/", InquiryDealRejectView.as_view(), name="deal_reject"),
     path("<int:pk>/", InquiryDetailView.as_view(), name="detail"),
 ]

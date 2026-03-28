@@ -72,14 +72,14 @@
             <tr>
                 <td>{{ deal.deal_type }}</td>
                 <td>
-                    {% if deal.inquiry %}<a href="{{ deal.inquiry.get_absolute_url }}">Inquiry #{{ deal.inquiry.id }}</a>
-                    {% elif deal.rfq_conversation %}<a href="{% url 'rfqs:conversation_detail' deal.rfq_conversation.id %}">RFQ convo #{{ deal.rfq_conversation.id }}</a>{% endif %}
+                    {% if deal.inquiry %}<a href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}">Inquiry #{{ deal.inquiry.id }}</a>
+                    {% elif deal.rfq_conversation %}<a href="{% url 'core:control_deal_detail' deal.id %}">RFQ convo #{{ deal.rfq_conversation.id }}</a>{% endif %}
                 </td>
                 <td>{{ deal.buyer.email }}</td>
                 <td>{{ deal.seller_company.name }}</td>
                 <td>{{ deal.created_at|date:"Y-m-d H:i" }}</td>
                 <td>
-                    <a class="button button-secondary button-small" href="{% url 'core:control_deal_detail' deal.id %}">Open</a>
+                    <a class="button button-secondary button-small" href="{% url 'core:control_deal_detail' deal.id %}">View details</a>
                     <form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
                     <form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
                 </td>
@@ -101,8 +101,9 @@
                 <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
                 <td>{{ m.message|truncatechars:80 }}</td>
                 <td>
-                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+                    <a class="button button-secondary button-small" href="{% url 'core:control_rfq_message_detail' m.id %}">View details</a>
+                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
                 </td>
             </tr>
         {% endfor %}
@@ -122,8 +123,9 @@
                 <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
                 <td>{{ r.message|truncatechars:80 }}</td>
                 <td>
-                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+                    <a class="button button-secondary button-small" href="{% url 'core:control_inquiry_reply_detail' r.id %}">View details</a>
+                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
                 </td>
             </tr>
         {% endfor %}
@@ -151,6 +153,66 @@
         </tbody>
     </table>
     {% else %}<p class="subtle-copy">No listings pending approval.</p>{% endif %}
+</section>
+
+<section class="content-card" id="identity-requests">
+    <h2>Identity requests</h2>
+    {% if identity_requests %}
+    <table class="table">
+        <thead><tr><th>Deal</th><th>Requested by</th><th>Target</th><th>Note</th><th>When</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for h in identity_requests %}
+            {% with note_lower=h.note|lower %}
+                {% if "seller identity" in note_lower %}
+                    {% with target="seller" target_label="Seller identity" %}
+                        <tr>
+                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
+                            <td>{{ h.actor|default:"User" }}</td>
+                            <td>{{ target_label }}</td>
+                            <td>{{ h.note }}</td>
+                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+                            </td>
+                        </tr>
+                    {% endwith %}
+                {% elif "buyer identity" in note_lower %}
+                    {% with target="buyer" target_label="Buyer identity" %}
+                        <tr>
+                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
+                            <td>{{ h.actor|default:"User" }}</td>
+                            <td>{{ target_label }}</td>
+                            <td>{{ h.note }}</td>
+                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+                            </td>
+                        </tr>
+                    {% endwith %}
+                {% else %}
+                    {% with target="buyer" target_label="Buyer identity" %}
+                        <tr>
+                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
+                            <td>{{ h.actor|default:"User" }}</td>
+                            <td>{{ target_label }}</td>
+                            <td>{{ h.note }}</td>
+                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+                            </td>
+                        </tr>
+                    {% endwith %}
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="subtle-copy">No identity requests pending.</p>
+    {% endif %}
 </section>
 
 <section class="content-card" id="users">

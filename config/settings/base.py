@@ -1,5 +1,6 @@
 """Base Django settings shared across environments."""
 
+import os
 from pathlib import Path
 
 from .env import env, env_bool, env_list, load_env
@@ -30,9 +31,26 @@ LOCAL_APPS = [
     "stocklots",
     "inquiries",
     "rfqs",
+    "channels",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
+
+ASGI_APPLICATION = "config.asgi.application"
+
+# Live layer: prefer Redis if REDIS_URL is provided; otherwise fall back to in-memory
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

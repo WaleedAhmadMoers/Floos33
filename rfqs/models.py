@@ -6,6 +6,11 @@ from stocklots.models import Category, Stocklot
 
 
 class RFQ(models.Model):
+    class ModerationStatus(models.TextChoices):
+        PENDING_REVIEW = "pending_review", "Pending review"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
     class Status(models.TextChoices):
         OPEN = "open", "Open"
         CLOSED = "closed", "Closed"
@@ -30,6 +35,12 @@ class RFQ(models.Model):
     currency = models.CharField("currency", max_length=10, choices=Stocklot.Currency.choices, default=Stocklot.Currency.EUR)
     location_country = models.CharField("country", max_length=120)
     location_city = models.CharField("city", max_length=120)
+    moderation_status = models.CharField(
+        "moderation status",
+        max_length=20,
+        choices=ModerationStatus.choices,
+        default=ModerationStatus.PENDING_REVIEW,
+    )
     status = models.CharField("status", max_length=20, choices=Status.choices, default=Status.OPEN)
     created_at = models.DateTimeField("created at", auto_now_add=True)
     updated_at = models.DateTimeField("updated at", auto_now=True)
@@ -109,6 +120,13 @@ class RFQMessage(models.Model):
         blank=True,
     )
     message = models.TextField("message")
+    attachment = models.FileField(
+        "attachment",
+        upload_to="attachments/rfq_messages/",
+        null=True,
+        blank=True,
+        help_text="Optional image or video file.",
+    )
     price = models.DecimalField("price", max_digits=12, decimal_places=2, null=True, blank=True)
     currency = models.CharField(
         "currency",

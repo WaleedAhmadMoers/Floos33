@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant, Notification, DealTrigger
+from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant, Notification, DealTrigger, DealHistory
 from core.utils.notifications import create_notification
 
 
@@ -87,3 +87,11 @@ class DealTriggerAdmin(admin.ModelAdmin):
 
     approve_deals.short_description = "Approve selected deals"
     reject_deals.short_description = "Reject selected deals"
+
+
+@admin.register(DealHistory)
+class DealHistoryAdmin(admin.ModelAdmin):
+    list_display = ("deal", "action", "note", "actor", "created_at")
+    list_filter = ("action", "created_at")
+    search_fields = ("note", "deal__id", "actor__email")
+    raw_id_fields = ("deal", "actor")

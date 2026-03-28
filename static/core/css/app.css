@@ -588,6 +588,41 @@ h3 {
     gap: 0.65rem;
 }
 
+/* Live deal/status blocks */
+.deal-live {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: var(--surface-soft);
+    box-shadow: var(--shadow-soft);
+    margin-top: 10px;
+}
+.deal-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 12px 0 4px;
+}
+.deal-status-item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+.deal-status-item .label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+.deal-status-item .value {
+    font-weight: 700;
+}
+.badge-success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+.badge-warning { background: var(--warning-bg); color: var(--warning-text); border-color: var(--warning-border); }
+.badge-danger { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+.badge-muted { background: #e9ecef; color: #495057; }
+
 .status-pending {
     background: var(--warning-bg);
     border-color: var(--warning-border);

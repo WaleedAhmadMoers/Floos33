@@ -24,7 +24,10 @@
                     <td><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></td>
                     <td>{{ rfq.category.full_name }}</td>
                     <td>{{ rfq.quantity }} {{ rfq.get_unit_type_display }}</td>
-                    <td>{{ rfq.get_status_display }}</td>
+                    <td>
+                        <span class="badge">{{ rfq.get_moderation_status_display }}</span>
+                        <span class="badge badge-secondary">{{ rfq.get_status_display }}</span>
+                    </td>
                     <td>{{ rfq.created_at|date:"Y-m-d" }}</td>
                 </tr>
                 {% endfor %}

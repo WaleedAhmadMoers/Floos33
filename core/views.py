@@ -1,9 +1,10 @@
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
+from django.http import JsonResponse
 
 from stocklots.models import Stocklot
 from core.models import Notification, DealTrigger
@@ -12,8 +13,11 @@ from inquiries.models import InquiryReply, Inquiry
 from companies.models import Company
 from accounts.models import User
 from core.utils.notifications import create_notification
+from core.utils.deals import _broadcast_deal, _identity_status
+from core.utils.verification import enforce_verified
 from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant
 from core import forms_admin
+from core.models import DealHistory
 
 
 class HomeView(TemplateView):
@@ -119,6 +123,12 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         )[:50]
         ctx["hidden_companies"] = Company.objects.filter(identity_status=Company.IdentityStatus.HIDDEN)[:30]
         ctx["hidden_users"] = User.objects.filter(identity_status=User.IdentityStatus.HIDDEN)[:30]
+        # Pending identity requests (deal history entries)
+        ctx["identity_requests"] = (
+            DealHistory.objects.filter(action="identity_request")
+            .select_related("deal__buyer", "deal__seller_user", "deal__inquiry", "deal__rfq_conversation", "actor")
+            .order_by("-created_at")[:50]
+        )
 
         # Monitoring lists with filters
         listing_status = self.request.GET.get("listing_status")
@@ -209,6 +219,7 @@ class ModerateDealView(StaffRequiredMixin, View):
                         url=url,
                     )
             messages.info(request, "Deal rejected.")
+        _broadcast_deal(deal)
         return redirect("core:control")
 
 
@@ -437,6 +448,20 @@ class UserDetailView(PlainDetailMixin, DetailView):
     edit_url_name = "core:control_user_edit"
     delete_url_name = "core:control_user_delete"
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = self.object
+        ctx["stats"] = {
+            "listings": user.company.stocklots.count() if user.company else 0,
+            "rfqs": getattr(user, "rfqs", []).count() if hasattr(user, "rfqs") else 0,
+            "inquiries": user.sent_inquiries.count(),
+            "conversations": user.rfq_conversations_as_buyer.count() + user.rfq_conversations_as_seller.count()
+            if hasattr(user, "rfq_conversations_as_seller")
+            else user.rfq_conversations_as_buyer.count(),
+            "deals": user.deals_as_buyer.count() + user.deals_as_seller.count(),
+        }
+        return ctx
+
 
 class UserCreateView(StaffRequiredMixin, CreateView):
     model = User
@@ -507,6 +532,17 @@ class CompanyDetailView(PlainDetailMixin, DetailView):
     )
     edit_url_name = "core:control_company_edit"
     delete_url_name = "core:control_company_delete"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        company = self.object
+        ctx["stats"] = {
+            "listings": company.stocklots.count(),
+            "inquiries": company.received_inquiries.count(),
+            "conversations": company.rfqconversation_set.count(),
+            "deals": company.deals.count(),
+        }
+        return ctx
 
 
 class CompanyCreateView(StaffRequiredMixin, CreateView):
@@ -691,6 +727,7 @@ class DealProgressView(StaffRequiredMixin, View):
                     url=url,
                 )
         messages.success(request, note)
+        _broadcast_deal(deal)
         return redirect(reverse("core:control_deal_detail", args=[deal.pk]))
 
 
@@ -721,6 +758,7 @@ class StocklotListView(PlainListMixin, ListView):
 
 class StocklotDetailView(PlainDetailMixin, DetailView):
     model = Stocklot
+    template_name = "core/stocklot_control_detail.html"
     title = "Listing detail"
     fields = (
         ("Title", "title"),
@@ -777,6 +815,7 @@ class RFQListView(PlainListMixin, ListView):
     title = "RFQs"
     description = "Open buyer requests and their status."
     create_url = reverse_lazy("core:control_rfq_create")
+    template_name = "core/rfq_control_list.html"
     columns = (
         ("Title", "title"),
         ("Buyer", "buyer"),
@@ -791,26 +830,50 @@ class RFQListView(PlainListMixin, ListView):
         status = self.request.GET.get("status")
         if status:
             qs = qs.filter(status=status)
+        mod = self.request.GET.get("moderation_status")
+        if mod:
+            qs = qs.filter(moderation_status=mod)
+        if self.request.GET.get("has_conversations") == "1":
+            qs = qs.filter(conversations__isnull=False).distinct()
+        if self.request.GET.get("has_pending_messages") == "1":
+            qs = qs.filter(conversations__messages__moderation_status=RFQMessage.ModerationStatus.PENDING_REVIEW).distinct()
+        if self.request.GET.get("has_deal") == "1":
+            qs = qs.filter(conversations__deal_trigger__isnull=False).distinct()
         return qs
 
 
 class RFQDetailView(PlainDetailMixin, DetailView):
     model = RFQ
+    template_name = "core/rfq_control_detail.html"
     title = "RFQ detail"
-    fields = (
-        ("Title", "title"),
-        ("Buyer", "buyer"),
-        ("Status", "status"),
-        ("Quantity", "quantity"),
-        ("Unit", "unit_type"),
-        ("Target price", "target_price"),
-        ("Currency", "currency"),
-        ("Country", "location_country"),
-        ("City", "location_city"),
-        ("Updated", "updated_at"),
-    )
     edit_url_name = "core:control_rfq_edit"
     delete_url_name = "core:control_rfq_delete"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        rfq = self.object
+        conversations = rfq.conversations.select_related("buyer", "seller_company", "seller_user").prefetch_related(
+            "messages", "deal_trigger"
+        )
+        convo_data = []
+        for c in conversations:
+            messages = list(c.messages.all())
+            pending = [m for m in messages if m.moderation_status == RFQMessage.ModerationStatus.PENDING_REVIEW]
+            convo_data.append(
+                {
+                    "conversation": c,
+                    "messages_count": len(messages),
+                    "pending_count": len(pending),
+                    "deal": getattr(c, "deal_trigger", None),
+                }
+            )
+        ctx["conversations"] = convo_data
+        ctx["messages_count"] = RFQMessage.objects.filter(conversation__rfq=rfq).count()
+        ctx["messages_pending"] = RFQMessage.objects.filter(
+            conversation__rfq=rfq, moderation_status=RFQMessage.ModerationStatus.PENDING_REVIEW
+        ).count()
+        ctx["deal_count"] = DealTrigger.objects.filter(rfq_conversation__rfq=rfq).count()
+        return ctx
 
 
 class RFQCreateView(StaffRequiredMixin, CreateView):
@@ -843,6 +906,46 @@ class RFQDeleteView(StaffRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.warning(request, "RFQ deleted.")
         return super().delete(request, *args, **kwargs)
+
+
+class RFQStatusView(StaffRequiredMixin, View):
+    """Approve/Reject or Close/Reopen RFQ."""
+
+    def post(self, request, *args, **kwargs):
+        rfq = get_object_or_404(RFQ, pk=kwargs["pk"])
+        action = kwargs.get("action")
+        if action == "approve":
+            rfq.moderation_status = RFQ.ModerationStatus.APPROVED
+            note = "RFQ approved"
+        elif action == "reject":
+            rfq.moderation_status = RFQ.ModerationStatus.REJECTED
+            note = "RFQ rejected"
+        elif action == "close":
+            rfq.status = RFQ.Status.CLOSED
+            note = "RFQ closed"
+        elif action == "open":
+            rfq.status = RFQ.Status.OPEN
+            note = "RFQ reopened"
+        else:
+            messages.error(request, "Unknown action.")
+            return redirect("core:control_rfqs")
+        rfq.save(update_fields=["status", "moderation_status", "updated_at"])
+        # Notify owner on approval/rejection
+        from core.models import Notification
+        from core.utils.notifications import create_notification
+
+        if action in ["approve", "reject"]:
+            notif_type = Notification.Type.RFQ_APPROVED if action == "approve" else Notification.Type.SYSTEM
+            create_notification(
+                recipient=rfq.buyer,
+                actor=request.user,
+                notification_type=notif_type,
+                title=note,
+                body=f"Your RFQ '{rfq.title}' was {note.lower()}.",
+                url=rfq.get_absolute_url(),
+            )
+        messages.success(request, note)
+        return redirect("core:control_rfq_detail", rfq.pk)
 
 
 # Inquiries (readable moderation / CRUD)
@@ -932,6 +1035,51 @@ class InquiryReplyListView(PlainListMixin, ListView):
         return InquiryReply.objects.select_related("inquiry", "sender_user").order_by("-created_at")
 
 
+class InquiryReplyDetailView(StaffRequiredMixin, DetailView):
+    model = InquiryReply
+    template_name = "core/inquiry_reply_detail.html"
+    context_object_name = "reply"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        reply = self.object
+        inquiry = reply.inquiry
+        ctx["inquiry"] = inquiry
+        ctx["thread"] = inquiry.replies.select_related("sender_user", "sender_company").order_by("created_at")
+        ctx["deal"] = getattr(inquiry, "deal_trigger", None)
+        timeline = [
+            ("Inquiry created", inquiry.created_at),
+            ("Reply submitted", reply.created_at),
+        ]
+        if ctx["deal"]:
+            deal = ctx["deal"]
+            timeline.append((f"Deal status: {deal.get_status_display()}", deal.updated_at))
+            timeline.append((f"Progress: {deal.get_progress_status_display()}", deal.updated_at))
+        ctx["timeline"] = timeline
+        return ctx
+
+
+class InquiryReplyUpdateView(StaffRequiredMixin, UpdateView):
+    model = InquiryReply
+    form_class = forms_admin.AdminInquiryReplyForm
+    template_name = "core/inquiry_reply_form.html"
+    success_url = reverse_lazy("core:control_inquiry_replies_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Inquiry reply updated.")
+        return super().form_valid(form)
+
+
+class InquiryReplyDeleteView(StaffRequiredMixin, DeleteView):
+    model = InquiryReply
+    template_name = "core/control_confirm_delete.html"
+    success_url = reverse_lazy("core:control_inquiry_replies_list")
+
+    def delete(self, request, *args, **kwargs):
+        messages.warning(request, "Inquiry reply deleted.")
+        return super().delete(request, *args, **kwargs)
+
+
 class RFQMessageListView(PlainListMixin, ListView):
     model = RFQMessage
     paginate_by = 50
@@ -947,3 +1095,288 @@ class RFQMessageListView(PlainListMixin, ListView):
 
     def get_queryset(self):
         return RFQMessage.objects.select_related("conversation", "sender_user").order_by("-created_at")
+
+
+class RFQMessageDetailView(StaffRequiredMixin, DetailView):
+    model = RFQMessage
+    template_name = "core/rfqmessage_detail.html"
+    context_object_name = "message"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        msg = self.object
+        convo = msg.conversation
+        rfq = convo.rfq
+        ctx["conversation"] = convo
+        ctx["rfq"] = rfq
+        ctx["messages"] = convo.messages.select_related("sender_user", "sender_company").order_by("created_at")
+        ctx["deal"] = getattr(convo, "deal_trigger", None)
+        timeline = [
+            ("RFQ created", rfq.created_at),
+            ("Conversation started", convo.created_at),
+            ("Message submitted", msg.created_at),
+        ]
+        if ctx["deal"]:
+            deal = ctx["deal"]
+            timeline.append((f"Deal status: {deal.get_status_display()}", deal.updated_at))
+            timeline.append((f"Progress: {deal.get_progress_status_display()}", deal.updated_at))
+        ctx["timeline"] = timeline
+        return ctx
+
+
+class RFQMessageUpdateView(StaffRequiredMixin, UpdateView):
+    model = RFQMessage
+    form_class = forms_admin.AdminRFQMessageForm
+    template_name = "core/rfqmessage_form.html"
+    success_url = reverse_lazy("core:control_rfq_messages_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "RFQ message updated.")
+        return super().form_valid(form)
+
+
+class RFQMessageDeleteView(StaffRequiredMixin, DeleteView):
+    model = RFQMessage
+    template_name = "core/control_confirm_delete.html"
+    success_url = reverse_lazy("core:control_rfq_messages_list")
+
+    def delete(self, request, *args, **kwargs):
+        messages.warning(request, "RFQ message deleted.")
+        return super().delete(request, *args, **kwargs)
+
+
+# ------------------- Deal live status API -------------------
+
+
+def _deal_state_dict(deal, viewer):
+    """Serialize deal state for polling and live block."""
+
+    def decision(accepted, rejected):
+        if accepted:
+            return "accepted"
+        if rejected:
+            return "rejected"
+        return "pending"
+
+    buyer_dec = decision(deal.buyer_accepted, deal.buyer_rejected)
+    seller_dec = decision(deal.seller_accepted, deal.seller_rejected)
+    admin_dec = (
+        "approved"
+        if deal.status == DealTrigger.Status.APPROVED
+        else "rejected"
+        if deal.status == DealTrigger.Status.REJECTED
+        else "pending"
+    )
+
+    if deal.status == DealTrigger.Status.PENDING:
+        overall = "Waiting for both sides"
+    elif deal.status == DealTrigger.Status.MUTUAL:
+        overall = "Both sides accepted – waiting for admin"
+    elif deal.status == DealTrigger.Status.APPROVED:
+        overall = "Deal approved"
+    elif deal.status == DealTrigger.Status.REJECTED:
+        overall = "Deal rejected"
+    elif deal.status == DealTrigger.Status.CANCELLED:
+        overall = "Deal cancelled"
+    else:
+        overall = deal.get_status_display()
+
+    next_action = ""
+    if deal.status == DealTrigger.Status.PENDING:
+        if not deal.buyer_accepted and not deal.buyer_rejected:
+            next_action = "Buyer must accept or reject"
+        elif not deal.seller_accepted and not deal.seller_rejected:
+            next_action = "Seller must accept or reject"
+        else:
+            next_action = "Waiting for the other side"
+    elif deal.status == DealTrigger.Status.MUTUAL:
+        next_action = "Admin approval required"
+    elif deal.status == DealTrigger.Status.APPROVED:
+        if deal.progress_status == DealTrigger.Progress.NOT_STARTED:
+            next_action = "Move to in progress"
+        elif deal.progress_status == DealTrigger.Progress.IN_PROGRESS:
+            next_action = "Work in progress"
+        elif deal.progress_status == DealTrigger.Progress.READY:
+            next_action = "Mark completed when done"
+        elif deal.progress_status == DealTrigger.Progress.COMPLETED:
+            next_action = "Deal completed"
+    elif deal.status == DealTrigger.Status.REJECTED:
+        next_action = "Deal stopped (can be restarted)"
+    elif deal.status == DealTrigger.Status.CANCELLED:
+        next_action = "Deal cancelled (can be restarted)"
+
+    can_accept = False
+    can_reject = False
+    can_cancel = False
+    # Allow restarting even after cancelled/rejected; block only if fully approved
+    if viewer == deal.buyer and not deal.buyer_accepted and deal.status != DealTrigger.Status.APPROVED:
+        can_accept = True
+        can_reject = True
+    if viewer == deal.seller_user and not deal.seller_accepted and deal.status != DealTrigger.Status.APPROVED:
+        can_accept = True
+        can_reject = True
+    if viewer in [deal.buyer, deal.seller_user] or getattr(viewer, "is_staff", False):
+        can_cancel = deal.status not in [DealTrigger.Status.APPROVED, DealTrigger.Status.REJECTED]
+
+    history = []
+    for h in deal.history.all()[:6]:
+        actor = h.actor
+        if actor is None:
+            actor_label = "System"
+        elif getattr(actor, "is_staff", False):
+            actor_label = "Admin"
+        else:
+            if actor == deal.buyer:
+                actor_label = f"Buyer ID #{actor.id}"
+            elif actor == deal.seller_user:
+                actor_label = f"Seller ID #{actor.id}"
+            else:
+                actor_label = f"User #{actor.id}"
+        history.append(
+            {
+                "text": f"{actor_label}: {h.action} {h.note}".strip(),
+                "ts": h.created_at.strftime("%Y-%m-%d %H:%M"),
+            }
+        )
+
+    latest_event = history[0]["text"] if history else ""
+
+    # Identity state per viewer
+    buyer_status = _identity_status(deal, "buyer")
+    seller_status = _identity_status(deal, "seller")
+    buyer_real = deal.buyer.full_name or deal.buyer.email
+    seller_real = deal.seller_company.name
+    buyer_masked = f"Buyer ID #{deal.buyer_id}"
+    seller_masked = f"Seller ID #{deal.seller_user_id}"
+    is_buyer = viewer == deal.buyer
+    is_seller = viewer == deal.seller_user
+    staff = getattr(viewer, "is_staff", False)
+    if is_buyer or staff:
+        buyer_label = buyer_real
+    elif buyer_status == "revealed":
+        buyer_label = buyer_real
+    else:
+        buyer_label = buyer_masked
+
+    if is_seller or staff:
+        seller_label = seller_real
+    elif seller_status == "revealed":
+        seller_label = seller_real
+    else:
+        seller_label = seller_masked
+
+    from core.utils.verification import is_verified
+    can_reveal_buyer = is_buyer and buyer_status == "hidden" and is_verified(viewer, "buyer")
+    can_reveal_seller = is_seller and seller_status == "hidden" and is_verified(viewer, "seller")
+    # Allow requesting counterparty identity until it is actually revealed (pending requests stay visible)
+    can_request_buyer = is_seller and buyer_status != "revealed" and is_verified(viewer, "seller")
+    can_request_seller = is_buyer and seller_status != "revealed" and is_verified(viewer, "buyer")
+
+    return {
+        "overall_status": overall,
+        "status": deal.status,
+        "status_display": deal.get_status_display(),
+        "progress": deal.get_progress_status_display(),
+        "buyer_decision": buyer_dec,
+        "seller_decision": seller_dec,
+        "admin_decision": admin_dec,
+        "next_action": next_action,
+        "can_accept": can_accept,
+        "can_reject": can_reject,
+        "can_cancel": can_cancel,
+        "buyer_identity_status": buyer_status,
+        "seller_identity_status": seller_status,
+        "buyer_label": buyer_label,
+        "seller_label": seller_label,
+        "can_reveal_buyer": can_reveal_buyer,
+        "can_reveal_seller": can_reveal_seller,
+        "can_request_buyer": can_request_buyer,
+        "can_request_seller": can_request_seller,
+        "latest_event": latest_event,
+        "updated_at": deal.updated_at.isoformat(),
+        "history": history,
+    }
+
+
+class DealStatusView(LoginRequiredMixin, View):
+    """JSON status for polling; only participants or staff."""
+
+    def get(self, request, *args, **kwargs):
+        deal = get_object_or_404(DealTrigger, pk=kwargs["pk"])
+        if not (request.user.is_staff or request.user in [deal.buyer, deal.seller_user]):
+            return JsonResponse({"error": "forbidden"}, status=403)
+        return JsonResponse(_deal_state_dict(deal, request.user))
+
+
+class DealIdentityRequestView(LoginRequiredMixin, View):
+    """Participant requests to reveal or hide counterparty identity; admin approves manually."""
+
+    def post(self, request, *args, **kwargs):
+        deal = get_object_or_404(DealTrigger, pk=kwargs["pk"])
+        action = kwargs.get("action")  # 'reveal', 'hide', 'approve', 'reject'
+        target = kwargs.get("target")  # 'buyer' or 'seller'
+        if not (request.user.is_staff or request.user in [deal.buyer, deal.seller_user]):
+            messages.error(request, "Not allowed.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        if target not in ("buyer", "seller") or action not in ("reveal", "hide", "approve", "reject"):
+            messages.error(request, "Invalid request.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        url = ""
+        try:
+            url = deal.inquiry.get_absolute_url()
+        except Exception:
+            try:
+                url = reverse("rfqs:conversation_detail", args=[deal.rfq_conversation_id])
+            except Exception:
+                url = ""
+
+        # Participant request
+        if action in ("reveal", "hide") and not request.user.is_staff:
+            role = "buyer" if request.user == deal.buyer else "seller"
+            ok, msg = enforce_verified(request, role=role)
+            if not ok:
+                messages.error(request, msg)
+                return redirect(request.META.get("HTTP_REFERER", "/"))
+            role = "Buyer" if request.user == deal.buyer else "Seller"
+            note = f"{role} requested to {action} {target} identity"
+            DealHistory.objects.create(deal=deal, actor=request.user, action="identity_request", note=note)
+            for admin in User.objects.filter(is_staff=True):
+                create_notification(
+                    recipient=admin,
+                    actor=request.user,
+                    notification_type=Notification.Type.IDENTITY_REVEALED,
+                    title="Identity request",
+                    body=note,
+                    url=url,
+                )
+            _broadcast_deal(deal)
+            messages.info(request, "Request sent to admin for approval.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        # Admin approval/rejection
+        if request.user.is_staff and action in ("approve", "reject"):
+            if target == "buyer":
+                deal.buyer_identity_revealed = action == "approve"
+            else:
+                deal.seller_identity_revealed = action == "approve"
+            deal.save(update_fields=["buyer_identity_revealed", "seller_identity_revealed", "updated_at"])
+            note = f"Admin {action}d identity for {target}"
+            DealHistory.objects.create(deal=deal, actor=request.user, action="identity_decision", note=note)
+            for recipient in [deal.buyer, deal.seller_user]:
+                if recipient:
+                    create_notification(
+                        recipient=recipient,
+                        actor=request.user,
+                        notification_type=Notification.Type.IDENTITY_REVEALED,
+                        title="Identity decision",
+                        body=note,
+                        url=url,
+                    )
+            _broadcast_deal(deal)
+            messages.success(request, f"Identity {action}d.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        messages.error(request, "Invalid identity action.")
+        return redirect(request.META.get("HTTP_REFERER", "/"))

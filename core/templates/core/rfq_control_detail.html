@@ -1,0 +1,74 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}RFQ details{% endblock account_title %}
+{% block account_intro %}Full RFQ context, conversations, and actions.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <h2>RFQ basics</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Title</div><div class="detail-value">{{ object.title }}</div></article>
+        <article class="detail-item"><div class="detail-label">Moderation</div><div class="detail-value">{{ object.get_moderation_status_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ object.get_status_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Category</div><div class="detail-value">{{ object.category }}</div></article>
+        <article class="detail-item"><div class="detail-label">Quantity</div><div class="detail-value">{{ object.quantity }} {{ object.unit_type }}</div></article>
+        <article class="detail-item"><div class="detail-label">Target price</div><div class="detail-value">{{ object.target_price }} {{ object.currency }}</div></article>
+        <article class="detail-item"><div class="detail-label">Location</div><div class="detail-value">{{ object.location_country }} {{ object.location_city }}</div></article>
+        <article class="detail-item"><div class="detail-label">Created</div><div class="detail-value">{{ object.created_at|date:"Y-m-d H:i" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Updated</div><div class="detail-value">{{ object.updated_at|date:"Y-m-d H:i" }}</div></article>
+    </div>
+    <p class="subtle-copy">{{ object.description|linebreaksbr }}</p>
+    <div class="button-row">
+        <a class="button button-secondary" href="{% url 'core:control_rfq_edit' object.id %}">Edit RFQ</a>
+        {% if object.moderation_status == 'pending_review' %}
+            <form method="post" action="{% url 'core:control_rfq_status' object.id 'approve' %}">{% csrf_token %}<button class="button button-small">Approve</button></form>
+            <form method="post" action="{% url 'core:control_rfq_status' object.id 'reject' %}">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+        {% endif %}
+        {% if object.status == 'open' %}
+            <form method="post" action="{% url 'core:control_rfq_status' object.id 'close' %}">{% csrf_token %}<button class="button button-small">Close RFQ</button></form>
+        {% else %}
+            <form method="post" action="{% url 'core:control_rfq_status' object.id 'open' %}">{% csrf_token %}<button class="button button-small">Reopen RFQ</button></form>
+        {% endif %}
+        <a class="button button-danger" href="{% url 'core:control_rfq_delete' object.id %}">Delete</a>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Buyer</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Buyer</div><div class="detail-value"><a href="{% url 'core:control_user_detail' object.buyer.id %}">{{ object.buyer }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Email</div><div class="detail-value">{{ object.buyer.email }}</div></article>
+        <article class="detail-item"><div class="detail-label">Identity</div><div class="detail-value">{{ object.buyer.get_identity_status_display }}</div></article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Activity</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Conversations</div><div class="detail-value">{{ conversations|length }}</div></article>
+        <article class="detail-item"><div class="detail-label">Messages</div><div class="detail-value">{{ messages_count }}</div></article>
+        <article class="detail-item"><div class="detail-label">Pending messages</div><div class="detail-value">{{ messages_pending }}</div></article>
+        <article class="detail-item"><div class="detail-label">Deals</div><div class="detail-value">{{ deal_count }}</div></article>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Conversations</h2>
+    {% if conversations %}
+        <ul class="compact-list">
+            {% for item in conversations %}
+                {% with c=item.conversation %}
+                <li>
+                    Seller: {{ c.seller_user|default:"-" }} / {{ c.seller_company|default:"-" }},
+                    Messages: {{ item.messages_count }},
+                    Pending: {{ item.pending_count }},
+                    Deal: {% if item.deal %}<a href="{% url 'core:control_deal_detail' item.deal.id %}">{{ item.deal.get_status_display }}</a>{% else %}None{% endif %},
+                    <a class="pill" href="{% url 'rfqs:conversation_detail' c.id %}">Open conversation</a>
+                </li>
+                {% endwith %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="subtle-copy">No conversations yet.</p>
+    {% endif %}
+</section>
+{% endblock account_content %}

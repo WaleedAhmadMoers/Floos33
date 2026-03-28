@@ -11,7 +11,7 @@
     <p class="subtle-copy">{{ rfq.quantity }} {{ rfq.get_unit_type_display }} — {{ rfq.location_country }} / {{ rfq.location_city }}</p>
 </section>
 
-<form method="post" class="auth-form">
+<form method="post" class="auth-form" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
         <div class="field-group">

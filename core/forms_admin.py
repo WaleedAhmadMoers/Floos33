@@ -94,6 +94,7 @@ class AdminRFQForm(forms.ModelForm):
             "currency",
             "location_country",
             "location_city",
+            "moderation_status",
             "status",
         ]
 

@@ -28,8 +28,11 @@ class RFQForm(forms.ModelForm):
 class ConversationStartForm(forms.ModelForm):
     class Meta:
         model = RFQMessage
-        fields = ["price", "currency", "message"]
-        widgets = {"message": forms.Textarea(attrs={"rows": 4})}
+        fields = ["price", "currency", "message", "attachment"]
+        widgets = {
+            "message": forms.Textarea(attrs={"rows": 4}),
+            "attachment": forms.ClearableFileInput(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,8 +42,11 @@ class ConversationStartForm(forms.ModelForm):
 class MessageReplyForm(forms.ModelForm):
     class Meta:
         model = RFQMessage
-        fields = ["message", "price"]
-        widgets = {"message": forms.Textarea(attrs={"rows": 3})}
+        fields = ["message", "price", "attachment"]
+        widgets = {
+            "message": forms.Textarea(attrs={"rows": 3}),
+            "attachment": forms.ClearableFileInput(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

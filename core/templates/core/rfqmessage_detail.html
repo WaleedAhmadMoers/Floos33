@@ -1,0 +1,59 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}RFQ message review{% endblock account_title %}
+{% block account_intro %}Read the message, see its conversation and deal context, then decide.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <h2>Message</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Text</div><div class="detail-value">{{ message.message|linebreaksbr }}</div></article>
+        <article class="detail-item"><div class="detail-label">Sender</div><div class="detail-value">{{ message.sender_user }}</div></article>
+        <article class="detail-item"><div class="detail-label">Company</div><div class="detail-value">{{ message.sender_company|default:"-" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ message.get_moderation_status_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Created</div><div class="detail-value">{{ message.created_at|date:"Y-m-d H:i" }}</div></article>
+    </div>
+    <div class="button-row">
+        <form method="post" action="{% url 'core:control_rfq_message' message.id 'approve' %}">{% csrf_token %}<button class="button">Approve</button></form>
+        <form method="post" action="{% url 'core:control_rfq_message' message.id 'reject' %}">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+        <a class="button button-secondary" href="{% url 'core:control_rfq_message_edit' message.id %}">Edit</a>
+        <a class="button button-danger" href="{% url 'core:control_rfq_message_delete' message.id %}">Delete</a>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Conversation context</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">RFQ</div><div class="detail-value"><a href="{% url 'core:control_rfq_detail' rfq.id %}">{{ rfq.title }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Buyer</div><div class="detail-value"><a href="{% url 'core:control_user_detail' rfq.buyer.id %}">{{ rfq.buyer }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Conversation</div><div class="detail-value"><a href="{% url 'core:control_rfqs' %}">Conversation #{{ conversation.id }}</a></div></article>
+    </div>
+    <h3>Thread</h3>
+    <ul class="compact-list">
+        {% for m in messages %}
+            <li>
+                <strong>{{ m.sender_user }}</strong> — {{ m.created_at|date:"Y-m-d H:i" }} — <span class="badge">{{ m.get_moderation_status_display }}</span><br>
+                {{ m.message|truncatewords:30 }}
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="content-card">
+    <h2>Deal context</h2>
+    {% if deal %}
+        <p>Status: {{ deal.get_status_display }} · Progress: {{ deal.get_progress_status_display }}</p>
+        <p><a class="button button-secondary" href="{% url 'core:control_deal_detail' deal.id %}">Open deal</a></p>
+    {% else %}
+        <p class="subtle-copy">No deal created yet.</p>
+    {% endif %}
+</section>
+
+<section class="content-card">
+    <h2>Flow / timeline</h2>
+    <ul class="compact-list">
+        {% for label,ts in timeline %}
+            <li>{{ label }} — {{ ts|date:"Y-m-d H:i" }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock account_content %}

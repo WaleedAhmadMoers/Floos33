@@ -1,5 +1,7 @@
 {% extends "accounts/account_shell.html" %}
-{% load identity_tags %}
+{% load identity_tags static %}
+
+{% block extra_head %}<script src="{% static 'js/live.js' %}"></script>{% endblock extra_head %}
 
 {% block title %}RFQ conversation | floos33{% endblock title %}
 {% block account_eyebrow %}RFQ conversation{% endblock account_eyebrow %}
@@ -21,40 +23,87 @@
             <div class="detail-label">Seller</div>
             <div class="detail-value">{% display_company conversation.seller_company %}</div>
         </article>
-        <article class="detail-item">
-            <div class="detail-label">Deal status</div>
-            <div class="detail-value">
-                {% if deal %}
-                    {{ deal.get_status_display }}
-                    {% if deal.status == "pending" %}<span class="badge badge-muted">Waiting for confirmation</span>{% endif %}
-                    {% if deal.status == "mutual_acceptance" %}<span class="badge badge-muted">Waiting for admin approval</span>{% endif %}
-                    {% if deal.status == "approved" %}
-                        <span class="badge badge-success">Deal approved</span>
-                        <span class="badge badge-secondary">Progress: {{ deal.get_progress_status_display }}</span>
-                    {% endif %}
-                    {% if deal.status == "rejected" %}<span class="badge badge-muted">Rejected</span>{% endif %}
-                    {% if deal.status == "cancelled" %}<span class="badge badge-muted">Cancelled</span>{% endif %}
-                {% else %}
-                    No agreement yet.
-                {% endif %}
-            </div>
-        </article>
-        <article class="detail-item">
-            <div class="detail-label">Actions</div>
-            <div class="detail-value">
-                {% if request.user.id == conversation.buyer_id or request.user.id == conversation.seller_user_id or request.user.is_staff %}
-                    <form method="post" action="{% url 'rfqs:conversation_deal_accept' conversation.pk %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="button">Accept deal</button>
-                    </form>
-                    {% if deal and deal.status != "approved" and deal.status != "rejected" %}
-                        <form method="post" action="{% url 'rfqs:conversation_deal_cancel' conversation.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Cancel</button>
-                        </form>
-                    {% endif %}
-                {% endif %}
-            </div>
+        <article class="detail-item" style="grid-column:1/-1;">
+            {% if deal %}
+                <div id="deal-live"
+                     data-deal-id="{{ deal.id }}"
+                     data-status-url="{% url 'core:deal_status' deal.id %}"
+                     data-buyer="{{ conversation.buyer.full_name|default:conversation.buyer.email }}"
+                     data-seller="{{ conversation.seller_company.owner.full_name|default:conversation.seller_company.owner.email }}">
+                    <div class="badge-row">
+                        <span class="badge" id="deal-overall">{{ deal.get_status_display }}</span>
+                        <span class="badge badge-secondary" id="deal-progress">{{ deal.get_progress_status_display }}</span>
+                    </div>
+                    <div class="deal-status-grid">
+                        <div class="deal-status-item">
+                            <span class="label">Buyer decision</span>
+                            <span class="value" id="deal-buyer">...</span>
+                        </div>
+                        <div class="deal-status-item">
+                            <span class="label">Seller decision</span>
+                            <span class="value" id="deal-seller">...</span>
+                        </div>
+                        <div class="deal-status-item">
+                            <span class="label">Admin</span>
+                            <span class="value" id="deal-admin">...</span>
+                        </div>
+                        <div class="deal-status-item">
+                            <span class="label">Next action</span>
+                            <span class="value" id="deal-next">...</span>
+                        </div>
+                    </div>
+                    <p class="subtle-copy" id="deal-latest"></p>
+                    <div class="button-row" id="deal-actions">
+                        {% if can_deal_actions %}
+                            <form method="post" class="deal-accept-form" action="{% url 'rfqs:conversation_deal_accept' conversation.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="button">Accept</button></form>
+                            <form method="post" class="deal-reject-form" action="{% url 'rfqs:conversation_deal_reject' conversation.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="button button-secondary">Reject</button></form>
+                            <form method="post" class="deal-cancel-form" action="{% url 'rfqs:conversation_deal_cancel' conversation.pk %}" style="display:inline;">{% csrf_token %}<button type="submit" class="button button-secondary">Cancel</button></form>
+                        {% endif %}
+                    </div>
+                    <div class="content-subsection">
+                        <h4>Recent activity</h4>
+                        <ul id="deal-history-list" class="compact-list"></ul>
+                    </div>
+                    <div class="content-subsection">
+                        <h4>Identity</h4>
+                        <p>Seller: <span id="identity-seller-status" class="badge {% if identity_status.seller == 'revealed' %}badge-success{% elif identity_status.seller == 'pending' %}badge-muted{% endif %}">
+                            {% if identity_status.seller == "revealed" %}Identity revealed{% elif identity_status.seller == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
+                        </span>
+                        <span id="identity-seller-label" class="subtle-copy">{{ identity_labels.seller }}</span></p>
+                        <p>Buyer: <span id="identity-buyer-status" class="badge {% if identity_status.buyer == 'revealed' %}badge-success{% elif identity_status.buyer == 'pending' %}badge-muted{% endif %}">
+                            {% if identity_status.buyer == "revealed" %}Identity revealed{% elif identity_status.buyer == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
+                        </span>
+                        <span id="identity-buyer-label" class="subtle-copy">{{ identity_labels.buyer }}</span></p>
+                        {% if can_interact %}
+                            <div class="button-row">
+                                {% if request.user.id == conversation.buyer_id %}
+                                    {% if identity_status.buyer == "hidden" %}
+                                        <form method="post" class="btn-reveal-buyer" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'buyer' %}">{% csrf_token %}<button type="submit" class="button button-secondary button-small">Reveal my identity to seller</button></form>
+                                    {% endif %}
+                                    {% if identity_status.seller != "revealed" %}
+                                        <form method="post" class="btn-request-seller" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'seller' %}">{% csrf_token %}<button type="submit" class="button button-ghost button-small">Request seller identity</button></form>
+                                    {% endif %}
+                                {% endif %}
+                                {% if request.user.id == conversation.seller_user_id %}
+                                    {% if identity_status.seller == "hidden" %}
+                                        <form method="post" class="btn-reveal-seller" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'seller' %}">{% csrf_token %}<button type="submit" class="button button-secondary button-small">Reveal my company to buyer</button></form>
+                                    {% endif %}
+                                    {% if identity_status.buyer != "revealed" %}
+                                        <form method="post" class="btn-request-buyer" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'buyer' %}">{% csrf_token %}<button type="submit" class="button button-ghost button-small">Request buyer identity</button></form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="subtle-copy">Verification required to manage identity reveal.</p>
+                        {% endif %}
+                        {% if identity_status.seller == "pending" or identity_status.buyer == "pending" %}
+                            <p class="subtle-copy">Waiting for admin approval.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p class="subtle-copy">No agreement yet. Start by sending a quote.</p>
+            {% endif %}
         </article>
     </div>
 </section>
@@ -81,6 +130,9 @@
                     <div class="reply-message">
                         {% if msg.price %}<p class="subtle-copy">Offer: {{ msg.price }} {{ msg.currency }}</p>{% endif %}
                         <p>{{ msg.message|linebreaksbr }}</p>
+                        {% if msg.attachment %}
+                            <p class="subtle-copy">Attachment: <a href="{{ msg.attachment.url }}" target="_blank">Download / view</a></p>
+                        {% endif %}
                     </div>
                 </article>
             {% endfor %}
@@ -89,19 +141,23 @@
         <p class="subtle-copy">No messages yet.</p>
     {% endif %}
 
-    <form method="post" class="auth-form">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="field-group">
-                {{ field.label_tag }}{{ field }}
-                {% if field.errors %}
-                    <ul class="field-errors">
-                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-        {% endfor %}
-        <button type="submit" class="button">Send reply</button>
-    </form>
+    {% if can_interact %}
+        <form method="post" class="auth-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="field-group">
+                    {{ field.label_tag }}{{ field }}
+                    {% if field.errors %}
+                        <ul class="field-errors">
+                            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="button">Send reply</button>
+        </form>
+    {% else %}
+        <p class="subtle-copy">Verification required. Complete verification to send messages or quotes.</p>
+    {% endif %}
 </section>
 {% endblock account_content %}

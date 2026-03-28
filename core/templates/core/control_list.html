@@ -55,7 +55,8 @@
                         </td>
                     {% endfor %}
                     <td class="table-actions">
-                        <a href="{{ request.path }}{{ item.pk }}/" class="button button-small">Open</a>
+                        <a href="{{ request.path }}{{ item.pk }}/" class="button button-small">View details</a>
+                        {% if create_url %}{% endif %}
                     </td>
                 </tr>
                 {% endfor %}

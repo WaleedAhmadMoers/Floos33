@@ -6,7 +6,7 @@ from .models import InquiryReply
 class InquiryReplyForm(forms.ModelForm):
     class Meta:
         model = InquiryReply
-        fields = ["message"]
+        fields = ["message", "attachment"]
         widgets = {
             "message": forms.Textarea(
                 attrs={
@@ -14,6 +14,7 @@ class InquiryReplyForm(forms.ModelForm):
                     "rows": 4,
                     "placeholder": "Write your reply...",
                 }
-            )
+            ),
+            "attachment": forms.ClearableFileInput(attrs={"class": "form-input"}),
         }
         labels = {"message": "Reply"}

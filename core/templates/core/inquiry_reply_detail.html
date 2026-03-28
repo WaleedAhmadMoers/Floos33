@@ -1,0 +1,58 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}Inquiry reply review{% endblock account_title %}
+{% block account_intro %}See the full inquiry thread and deal context before deciding.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <h2>Reply</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Message</div><div class="detail-value">{{ reply.message|linebreaksbr }}</div></article>
+        <article class="detail-item"><div class="detail-label">Sender</div><div class="detail-value">{{ reply.sender_user }}</div></article>
+        <article class="detail-item"><div class="detail-label">Company</div><div class="detail-value">{{ reply.sender_company|default:"-" }}</div></article>
+        <article class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ reply.get_moderation_status_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Created</div><div class="detail-value">{{ reply.created_at|date:"Y-m-d H:i" }}</div></article>
+    </div>
+    <div class="button-row">
+        <form method="post" action="{% url 'core:control_inquiry_reply' reply.id 'approve' %}">{% csrf_token %}<button class="button">Approve</button></form>
+        <form method="post" action="{% url 'core:control_inquiry_reply' reply.id 'reject' %}">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+        <a class="button button-secondary" href="{% url 'core:control_inquiry_reply_edit' reply.id %}">Edit</a>
+        <a class="button button-danger" href="{% url 'core:control_inquiry_reply_delete' reply.id %}">Delete</a>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Inquiry context</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Inquiry</div><div class="detail-value"><a href="{% url 'core:control_inquiry_detail' inquiry.id %}">{{ inquiry.display_subject }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Stocklot</div><div class="detail-value"><a href="{% url 'core:control_stocklot_detail' inquiry.stocklot.id %}">{{ inquiry.stocklot.title }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Buyer</div><div class="detail-value"><a href="{% url 'core:control_user_detail' inquiry.buyer.id %}">{{ inquiry.buyer }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Seller company</div><div class="detail-value"><a href="{% url 'core:control_company_detail' inquiry.seller_company.id %}">{{ inquiry.seller_company }}</a></div></article>
+    </div>
+    <h3>Thread</h3>
+    <ul class="compact-list">
+        <li><strong>Original inquiry</strong> — {{ inquiry.created_at|date:"Y-m-d H:i" }}<br>{{ inquiry.message|truncatewords:30 }}</li>
+        {% for r in thread %}
+            <li><strong>{{ r.sender_user }}</strong> — {{ r.created_at|date:"Y-m-d H:i" }} — <span class="badge">{{ r.get_moderation_status_display }}</span><br>{{ r.message|truncatewords:30 }}</li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="content-card">
+    <h2>Deal context</h2>
+    {% if deal %}
+        <p>Status: {{ deal.get_status_display }} · Progress: {{ deal.get_progress_status_display }}</p>
+        <p><a class="button button-secondary" href="{% url 'core:control_deal_detail' deal.id %}">Open deal</a></p>
+    {% else %}
+        <p class="subtle-copy">No deal created yet.</p>
+    {% endif %}
+</section>
+
+<section class="content-card">
+    <h2>Flow / timeline</h2>
+    <ul class="compact-list">
+        {% for label,ts in timeline %}
+            <li>{{ label }} — {{ ts|date:"Y-m-d H:i" }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock account_content %}

@@ -9,8 +9,10 @@
     <h1>{{ rfq.title }}</h1>
     <p class="lead">Buyer: {% display_user rfq.buyer 'buyer' %}</p>
     <div class="stack-sm">
-        {% if rfq.status == "open" and request.user.is_authenticated %}
+        {% if rfq.status == "open" and request.user.is_authenticated and can_quote %}
             <a class="button" href="{% url 'rfqs:start_conversation' rfq.pk %}">Send quote</a>
+        {% elif rfq.status == "open" and request.user.is_authenticated and not can_quote %}
+            <button class="button" disabled>Send quote (verification required)</button>
         {% elif rfq.status == "open" %}
             <a class="button" href="{% url 'accounts:login' %}?next={% url 'rfqs:start_conversation' rfq.pk %}">Send quote</a>
         {% else %}

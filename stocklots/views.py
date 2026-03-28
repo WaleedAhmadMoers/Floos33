@@ -10,6 +10,7 @@ from django.views import View
 
 from .forms import StocklotForm
 from .models import Category, Favorite, Stocklot, StocklotDocument, StocklotImage, StocklotVideo
+from core.utils.verification import enforce_verified
 
 
 class MarketplaceListView(ListView):
@@ -83,6 +84,11 @@ class StocklotDetailView(DetailView):
             ).exists()
         else:
             context["is_favorited"] = False
+        if self.request.user.is_authenticated:
+            ok_buyer, _ = enforce_verified(self.request, role="buyer")
+            context["can_contact"] = ok_buyer
+        else:
+            context["can_contact"] = False
         return context
 
 
@@ -103,6 +109,11 @@ class SellerCompanyRequiredMixin(LoginRequiredMixin):
         if self.get_user_company() is None:
             messages.info(request, "Create a company profile before posting stocklots.")
             return redirect("companies:create")
+
+        ok, msg = enforce_verified(request, role="seller")
+        if not ok:
+            messages.error(request, msg)
+            return redirect("accounts:dashboard")
 
         return super().dispatch(request, *args, **kwargs)
 

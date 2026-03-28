@@ -1,0 +1,64 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}RFQs{% endblock account_title %}
+{% block account_intro %}Manage requests: inspect, edit, close/reopen, delete.{% endblock account_intro %}
+{% block account_content %}
+<section class="content-card">
+    <form method="get" class="inline-form">
+        <select name="status">
+            <option value="">Status: any</option>
+            <option value="open" {% if request.GET.status == "open" %}selected{% endif %}>Open</option>
+            <option value="closed" {% if request.GET.status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+        <select name="moderation_status">
+            <option value="">Moderation: any</option>
+            <option value="pending_review" {% if request.GET.moderation_status == "pending_review" %}selected{% endif %}>Pending review</option>
+            <option value="approved" {% if request.GET.moderation_status == "approved" %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if request.GET.moderation_status == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
+        <label><input type="checkbox" name="has_conversations" value="1" {% if request.GET.has_conversations %}checked{% endif %}> Has conversations</label>
+        <label><input type="checkbox" name="has_pending_messages" value="1" {% if request.GET.has_pending_messages %}checked{% endif %}> Pending messages</label>
+        <label><input type="checkbox" name="has_deal" value="1" {% if request.GET.has_deal %}checked{% endif %}> Has deal</label>
+        <button class="button button-secondary" type="submit">Filter</button>
+        {% if request.GET %}<a class="button button-ghost" href="{% url 'core:control_rfqs' %}">Clear</a>{% endif %}
+    </form>
+</section>
+
+<section class="content-card">
+    <div class="list-header">
+        <h2>RFQs</h2>
+        <a class="button" href="{% url 'core:control_rfq_create' %}">Create RFQ</a>
+    </div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead><tr><th>Title</th><th>Buyer</th><th>Moderation</th><th>Status</th><th>Quantity</th><th>Country</th><th>Updated</th><th></th></tr></thead>
+            <tbody>
+                {% for rfq in object_list %}
+                <tr>
+                    <td>{{ rfq.title }}</td>
+                    <td>{{ rfq.buyer }}</td>
+                    <td><span class="badge">{{ rfq.get_moderation_status_display }}</span></td>
+                    <td>{{ rfq.get_status_display }}</td>
+                    <td>{{ rfq.quantity }} {{ rfq.unit_type }}</td>
+                    <td>{{ rfq.location_country }}</td>
+                    <td>{{ rfq.updated_at|date:"Y-m-d H:i" }}</td>
+                    <td class="table-actions">
+                        <a class="button button-small" href="{% url 'core:control_rfq_detail' rfq.id %}">View</a>
+                        <a class="button button-secondary button-small" href="{% url 'core:control_rfq_edit' rfq.id %}">Edit</a>
+                        {% if rfq.moderation_status == 'pending_review' %}
+                            <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
+                            <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+                        {% endif %}
+                        {% if rfq.status == 'open' %}
+                            <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'close' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Close</button></form>
+                        {% else %}
+                            <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'open' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Reopen</button></form>
+                        {% endif %}
+                        <a class="button button-danger button-small" href="{% url 'core:control_rfq_delete' rfq.id %}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock account_content %}

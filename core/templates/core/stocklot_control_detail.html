@@ -1,0 +1,36 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}Listing review{% endblock account_title %}
+{% block account_intro %}Check the listing details before approving or rejecting.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="content-card">
+    <h2>Listing</h2>
+    <div class="detail-grid">
+        <article class="detail-item"><div class="detail-label">Title</div><div class="detail-value">{{ object.title }}</div></article>
+        <article class="detail-item"><div class="detail-label">Company</div><div class="detail-value"><a href="{% url 'core:control_company_detail' object.company.id %}">{{ object.company }}</a></div></article>
+        <article class="detail-item"><div class="detail-label">Category</div><div class="detail-value">{{ object.category }}</div></article>
+        <article class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">{{ object.condition }}</div></article>
+        <article class="detail-item"><div class="detail-label">Quantity / MOQ</div><div class="detail-value">{{ object.quantity }} / {{ object.moq }}</div></article>
+        <article class="detail-item"><div class="detail-label">Price</div><div class="detail-value">{{ object.price }} {{ object.currency }}</div></article>
+        <article class="detail-item"><div class="detail-label">Location</div><div class="detail-value">{{ object.location_country }} {{ object.location_city }}</div></article>
+        <article class="detail-item"><div class="detail-label">Status</div><div class="detail-value">{{ object.get_status_display }}</div></article>
+        <article class="detail-item"><div class="detail-label">Verified</div><div class="detail-value">{% if object.is_admin_verified %}Yes{% else %}No{% endif %}</div></article>
+    </div>
+    <p class="subtle-copy">{{ object.description|linebreaksbr }}</p>
+    <div class="button-row">
+        <form method="post" action="{% url 'core:control_stocklot' object.id 'approve' %}">{% csrf_token %}<button class="button">Approve</button></form>
+        <form method="post" action="{% url 'core:control_stocklot' object.id 'reject' %}">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
+        <a class="button button-secondary" href="{% url 'core:control_stocklot_edit' object.id %}">Edit</a>
+        <a class="button button-danger" href="{% url 'core:control_stocklot_delete' object.id %}">Delete</a>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Related links</h2>
+    <div class="pill-grid">
+        <a class="pill" href="{% url 'core:control_company_detail' object.company.id %}">Seller company</a>
+        <a class="pill" href="{% url 'core:control_inquiries' %}?stocklot={{ object.id }}">Inquiries</a>
+        <a class="pill" href="{{ object.get_absolute_url }}">Public preview</a>
+    </div>
+</section>
+{% endblock account_content %}

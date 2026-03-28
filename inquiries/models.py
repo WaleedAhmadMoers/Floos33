@@ -92,6 +92,13 @@ class InquiryReply(models.Model):
         blank=True,
     )
     message = models.TextField("message")
+    attachment = models.FileField(
+        "attachment",
+        upload_to="attachments/inquiries/",
+        null=True,
+        blank=True,
+        help_text="Optional image or video file.",
+    )
     created_at = models.DateTimeField("created at", auto_now_add=True)
     moderation_status = models.CharField(
         "moderation status",

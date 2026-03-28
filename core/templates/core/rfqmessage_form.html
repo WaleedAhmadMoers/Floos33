@@ -1,0 +1,24 @@
+{% extends "accounts/account_shell.html" %}
+{% block account_title %}Edit RFQ message{% endblock account_title %}
+{% block account_content %}
+<section class="content-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <label class="form-field">
+            <span class="form-label">Message</span>
+            {{ form.message }}
+            {{ form.message.errors }}
+        </label>
+        <label class="form-field">
+            <span class="form-label">Moderation status</span>
+            {{ form.moderation_status }}
+            {{ form.moderation_status.errors }}
+        </label>
+        <div class="actions">
+            <button type="submit" class="button">Save</button>
+            <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="button button-secondary">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock account_content %}

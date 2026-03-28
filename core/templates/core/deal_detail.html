@@ -1,15 +1,35 @@
 {% extends "accounts/account_shell.html" %}
-{% load control_tags %}
+{% load control_tags static %}
+{% block extra_head %}<script src="{% static 'js/live.js' %}"></script>{% endblock extra_head %}
 {% block account_title %}Deal #{{ object.id }}{% endblock account_title %}
 {% block account_intro %}Clear summary of parties, source, approval, and progress.{% endblock account_intro %}
 
 {% block account_content %}
 <section class="content-card">
+    <div id="deal-live"
+         data-deal-id="{{ object.id }}"
+         data-status-url="{% url 'core:deal_status' object.id %}"
+         data-buyer="{{ object.buyer.full_name|default:object.buyer.email }}"
+         data-seller="{{ object.seller_user.full_name|default:object.seller_user.email|default:'Seller' }}">
     <div class="detail-header">
         <h2>Deal summary</h2>
         <div class="badge-row">
-            <span class="badge">{{ object.get_status_display }}</span>
-            <span class="badge badge-secondary">{{ object.get_progress_status_display }}</span>
+            <span class="badge" id="deal-overall">{{ object.get_status_display }}</span>
+            <span class="badge badge-secondary" id="deal-progress">{{ object.get_progress_status_display }}</span>
+        </div>
+        <div class="deal-status-grid">
+            <div class="deal-status-item"><span class="label">Buyer decision</span><span class="value" id="deal-buyer">...</span></div>
+            <div class="deal-status-item"><span class="label">Seller decision</span><span class="value" id="deal-seller">...</span></div>
+            <div class="deal-status-item"><span class="label">Admin</span><span class="value" id="deal-admin">...</span></div>
+            <div class="deal-status-item"><span class="label">Next action</span><span class="value" id="deal-next">...</span></div>
+        </div>
+        <div class="button-row">
+            <form method="post" class="deal-accept-form" action="{% url 'core:control_deal' object.id 'approve' %}">{% csrf_token %}<button class="button button-small">Approve</button></form>
+            <form method="post" class="deal-reject-form" action="{% url 'core:control_deal' object.id 'reject' %}">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
+            <form method="post" class="deal-accept-form" action="{% url 'core:control_deal_progress' object.id 'start' %}">{% csrf_token %}<button class="button button-small">Mark in progress</button></form>
+            <form method="post" class="deal-accept-form" action="{% url 'core:control_deal_progress' object.id 'ready' %}">{% csrf_token %}<button class="button button-small">Mark ready</button></form>
+            <form method="post" class="deal-accept-form" action="{% url 'core:control_deal_progress' object.id 'complete' %}">{% csrf_token %}<button class="button button-small">Mark completed</button></form>
+            <form method="post" class="deal-cancel-form" action="{% url 'core:control_deal_progress' object.id 'cancel' %}">{% csrf_token %}<button class="button button-danger button-small">Cancel</button></form>
         </div>
     </div>
     <div class="detail-grid">
@@ -24,6 +44,36 @@
         <article class="detail-item"><div class="detail-label">Created</div><div class="detail-value">{{ object.created_at|date:"Y-m-d H:i" }}</div></article>
         <article class="detail-item"><div class="detail-label">Updated</div><div class="detail-value">{{ object.updated_at|date:"Y-m-d H:i" }}</div></article>
     </div>
+    <div class="content-subsection">
+        <h4>Recent activity</h4>
+        <ul id="deal-history-list" class="compact-list"></ul>
+    </div>
+    </div>
+</section>
+
+<section class="content-card">
+    <h2>Identity controls (admin)</h2>
+    <div class="detail-grid">
+        <article class="detail-item">
+            <div class="detail-label">Seller identity</div>
+            <div class="detail-value">
+                {% if object.seller_identity_revealed %}<span class="badge badge-success">Revealed</span>{% else %}<span class="badge badge-muted">Hidden</span>{% endif %}
+            </div>
+        </article>
+        <article class="detail-item">
+            <div class="detail-label">Buyer identity</div>
+            <div class="detail-value">
+                {% if object.buyer_identity_revealed %}<span class="badge badge-success">Revealed</span>{% else %}<span class="badge badge-muted">Hidden</span>{% endif %}
+            </div>
+        </article>
+    </div>
+    <div class="button-row">
+        <form method="post" action="{% url 'core:deal_identity_request' object.id 'approve' 'seller' %}">{% csrf_token %}<button class="button button-small">Approve seller reveal</button></form>
+        <form method="post" action="{% url 'core:deal_identity_request' object.id 'reject' 'seller' %}">{% csrf_token %}<button class="button button-secondary button-small">Hide seller</button></form>
+        <form method="post" action="{% url 'core:deal_identity_request' object.id 'approve' 'buyer' %}">{% csrf_token %}<button class="button button-small">Approve buyer reveal</button></form>
+        <form method="post" action="{% url 'core:deal_identity_request' object.id 'reject' 'buyer' %}">{% csrf_token %}<button class="button button-secondary button-small">Hide buyer</button></form>
+    </div>
+    <p class="subtle-copy">Use these to reveal or hide identities on this deal without needing a pending request.</p>
 </section>
 
 <section class="content-card">
@@ -42,9 +92,25 @@
     {% if object.history.all %}
         <ul class="compact-list">
             {% for h in object.history.all %}
+                {% if h.actor %}
+                    {% if h.actor.is_staff %}
+                        {% with "Admin" as actor_label %}
+                    {% else %}
+                        {% if h.actor_id == object.buyer_id %}
+                            {% with "Buyer ID #"|add:h.actor_id as actor_label %}
+                        {% elif h.actor_id == object.seller_user_id %}
+                            {% with "Seller ID #"|add:h.actor_id as actor_label %}
+                        {% else %}
+                            {% with "User #"|add:h.actor_id as actor_label %}
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    {% with "System" as actor_label %}
+                {% endif %}
                 <li>
-                    <strong>{{ h.action }}</strong> — {{ h.note }} <span class="subtle-copy">by {{ h.actor|default:"system" }} at {{ h.created_at|date:"Y-m-d H:i" }}</span>
+                    <strong>{{ h.action }}</strong> — {{ h.note }} <span class="subtle-copy">by {{ actor_label }} at {{ h.created_at|date:"Y-m-d H:i" }}</span>
                 </li>
+                {% endwith %}
             {% endfor %}
         </ul>
     {% else %}
