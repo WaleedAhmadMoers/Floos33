@@ -11,10 +11,16 @@ def is_seller_verified(user):
     return req and req.status == SellerVerificationRequest.Status.APPROVED
 
 
+def is_admin_verified_user(user):
+    return getattr(user, "is_verified_user", False)
+
+
 def is_verified(user, role=None):
     """
     role: 'buyer', 'seller', or None (any).
     """
+    if is_admin_verified_user(user):
+        return True
     if role == "buyer":
         return is_buyer_verified(user)
     if role == "seller":

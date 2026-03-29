@@ -15,6 +15,8 @@ class AdminUserForm(forms.ModelForm):
         fields = [
             "email",
             "full_name",
+            "is_verified_user",
+            "verified_user_note",
             "is_buyer",
             "is_seller",
             "is_active",

@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant, Notification, DealTrigger, DealHistory
+from core.models import (
+    BuyerVisibilityGrant,
+    CompanyVisibilityGrant,
+    Notification,
+    DealTrigger,
+    DealHistory,
+    TickerNews,
+    TickerNewsTranslation,
+)
 from core.utils.notifications import create_notification
 
 
@@ -95,3 +103,25 @@ class DealHistoryAdmin(admin.ModelAdmin):
     list_filter = ("action", "created_at")
     search_fields = ("note", "deal__id", "actor__email")
     raw_id_fields = ("deal", "actor")
+
+
+class TickerNewsTranslationInline(admin.TabularInline):
+    model = TickerNewsTranslation
+    extra = 1
+    fields = ("language_code", "message")
+    min_num = 1
+    max_num = 3
+
+
+@admin.register(TickerNews)
+class TickerNewsAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "is_active", "news_type", "audience", "priority", "start_at", "end_at")
+    list_filter = ("is_active", "news_type", "audience")
+    search_fields = ("translations__message",)
+    ordering = ("-priority", "-created_at")
+    inlines = [TickerNewsTranslationInline]
+    fieldsets = (
+        (None, {"fields": ("is_active", "news_type", "audience", "priority")}),
+        ("Schedule", {"fields": ("start_at", "end_at")}),
+        ("Link", {"fields": ("link_url",)}),
+    )

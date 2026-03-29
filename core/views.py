@@ -5,8 +5,9 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse
+from django.utils import timezone
 
-from stocklots.models import Stocklot
+from stocklots.models import Stocklot, Category
 from core.models import Notification, DealTrigger
 from rfqs.models import RFQMessage, RFQ, RFQConversation
 from inquiries.models import InquiryReply, Inquiry
@@ -26,9 +27,63 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["homepage_stocklots"] = (
-            Stocklot.objects.select_related("company", "category", "category__parent")
+            Stocklot.objects.select_related("company", "company__owner", "category", "category__parent")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
             .order_by("-created_at")[:6]
+        )
+        context["homepage_feed"] = (
+            Stocklot.objects.select_related("company", "category")
+            .filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .order_by("-updated_at")[:5]
+        )
+        context["how_it_works_steps"] = [
+            {
+                "number": 1,
+                "title": "Browse or post",
+                "description": "Search approved stocklots or post an RFQ when you need specific specs or volume.",
+            },
+            {
+                "number": 2,
+                "title": "Connect privately",
+                "description": "Chat with verified users while identities stay masked until reveal is approved.",
+            },
+            {
+                "number": 3,
+                "title": "Negotiate with oversight",
+                "description": "All conversations and identity reveals are moderated; admins can approve key steps.",
+            },
+            {
+                "number": 4,
+                "title": "Confirm the deal",
+                "description": "Both sides accept, admin approves, and progress is tracked with status and history.",
+            },
+        ]
+        context["trust_safety_points"] = [
+            {"title": "Verified users", "description": "Admin-verified accounts plus buyer/seller checks before actions."},
+            {"title": "Approved listings & RFQs", "description": "Only admin-approved, active stocklots and RFQs are visible."},
+            {"title": "Identity protection", "description": "Buyer/seller identities stay masked until reveal requests are approved."},
+            {"title": "Controlled deal flow", "description": "Deals move in stages with admin oversight, history, and notifications."},
+        ]
+        context["recent_rfqs"] = (
+            RFQ.objects.select_related("buyer", "category")
+            .filter(moderation_status=RFQ.ModerationStatus.APPROVED, status=RFQ.Status.OPEN)
+            .order_by("-created_at")[:3]
+        )
+        # simple ribbon metrics
+        context["stats_ribbon"] = {
+            "avg_deal_size": "€12,450",
+            "countries": Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .values_list("location_country", flat=True)
+            .distinct()
+            .count(),
+            "active_listings": Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True).count(),
+            "open_deals": DealTrigger.objects.filter(status__in=[DealTrigger.Status.PENDING, DealTrigger.Status.MUTUAL]).count(),
+        }
+        # popular categories (by stock count)
+        context["popular_categories"] = (
+            Category.objects.filter(stocklots__status=Stocklot.Status.APPROVED, stocklots__is_active=True)
+            .annotate(cnt=models.Count("stocklots"))
+            .order_by("-cnt")[:8]
         )
         return context
 
@@ -83,8 +138,14 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         # Overview metrics
+        from accounts.models import BuyerVerificationRequest, SellerVerificationRequest
+        verified_any_q = models.Q(is_verified_user=True) | models.Q(
+            buyer_verification_request__status=BuyerVerificationRequest.Status.VERIFIED
+        ) | models.Q(seller_verification_request__status=SellerVerificationRequest.Status.APPROVED)
         ctx["metrics"] = {
             "users": User.objects.count(),
+            "users_verified": User.objects.filter(verified_any_q).count(),
+            "users_unverified": User.objects.exclude(verified_any_q).count(),
             "buyers": User.objects.filter(is_buyer=True).count(),
             "sellers": User.objects.filter(is_seller=True).count(),
             "companies": Company.objects.count(),
@@ -420,6 +481,7 @@ class UserListView(PlainListMixin, ListView):
     columns = (
         ("Name / Email", "full_name"),
         ("Roles", "roles"),
+        ("Verified", "is_verified_user"),
         ("Identity", "identity_status"),
         ("Active", "is_active"),
         ("Company", "company"),
@@ -430,7 +492,55 @@ class UserListView(PlainListMixin, ListView):
         search = self.request.GET.get("q")
         if search:
             qs = qs.filter(models.Q(email__icontains=search) | models.Q(full_name__icontains=search))
+        verification = self.request.GET.get("verification")
+        from accounts.models import BuyerVerificationRequest, SellerVerificationRequest
+
+        if verification == "verified_user":
+            qs = qs.filter(is_verified_user=True)
+        elif verification == "unverified":
+            qs = qs.filter(
+                models.Q(is_verified_user=False),
+                models.Q(buyer_verification_request__status__isnull=True)
+                | ~models.Q(buyer_verification_request__status=BuyerVerificationRequest.Status.VERIFIED),
+                models.Q(seller_verification_request__status__isnull=True)
+                | ~models.Q(seller_verification_request__status=SellerVerificationRequest.Status.APPROVED),
+            )
+        elif verification == "buyer_verified":
+            qs = qs.filter(buyer_verification_request__status=BuyerVerificationRequest.Status.VERIFIED)
+        elif verification == "seller_verified":
+            qs = qs.filter(seller_verification_request__status=SellerVerificationRequest.Status.APPROVED)
+        elif verification == "any_verified":
+            qs = qs.filter(
+                models.Q(is_verified_user=True)
+                | models.Q(buyer_verification_request__status=BuyerVerificationRequest.Status.VERIFIED)
+                | models.Q(seller_verification_request__status=SellerVerificationRequest.Status.APPROVED)
+            )
+        elif verification == "pending":
+            qs = qs.filter(
+                models.Q(buyer_verification_request__status=BuyerVerificationRequest.Status.PENDING)
+                | models.Q(seller_verification_request__status=SellerVerificationRequest.Status.PENDING)
+            )
+        elif verification == "rejected":
+            qs = qs.filter(
+                models.Q(buyer_verification_request__status=BuyerVerificationRequest.Status.REJECTED)
+                | models.Q(seller_verification_request__status=SellerVerificationRequest.Status.REJECTED)
+            )
         return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["verification"] = self.request.GET.get("verification") or ""
+        ctx["verification_filters"] = [
+            ("", "All"),
+            ("verified_user", "Verified users"),
+            ("unverified", "Unverified users"),
+            ("any_verified", "Any verified (global/buyer/seller)"),
+            ("buyer_verified", "Buyer verified"),
+            ("seller_verified", "Seller verified"),
+            ("pending", "Pending verification"),
+            ("rejected", "Rejected verification"),
+        ]
+        return ctx
 
 
 class UserDetailView(PlainDetailMixin, DetailView):
@@ -439,6 +549,10 @@ class UserDetailView(PlainDetailMixin, DetailView):
     fields = (
         ("Name", "full_name"),
         ("Email", "email"),
+        ("Verified user", "verified_user_label"),
+        ("Verified at", "verified_user_at"),
+        ("Verified by", "verified_user_by"),
+        ("Verification note", "verified_user_note"),
         ("Buyer", "is_buyer"),
         ("Seller", "is_seller"),
         ("Active", "is_active"),
@@ -470,8 +584,18 @@ class UserCreateView(StaffRequiredMixin, CreateView):
     success_url = reverse_lazy("core:control_users")
 
     def form_valid(self, form):
+        user = form.save(commit=False)
+        if user.is_verified_user:
+            user.verified_user_at = user.verified_user_at or timezone.now()
+            user.verified_user_by = user.verified_user_by or self.request.user
+        else:
+            user.verified_user_at = None
+            user.verified_user_by = None
+            user.verified_user_note = ""
+        user.save()
+        form.save_m2m()
         messages.success(self.request, "User created.")
-        return super().form_valid(form)
+        return redirect(self.success_url)
 
 
 class UserUpdateView(StaffRequiredMixin, UpdateView):
@@ -481,8 +605,46 @@ class UserUpdateView(StaffRequiredMixin, UpdateView):
     success_url = reverse_lazy("core:control_users")
 
     def form_valid(self, form):
+        user = form.save(commit=False)
+        if user.is_verified_user:
+            user.verified_user_at = user.verified_user_at or timezone.now()
+            user.verified_user_by = user.verified_user_by or self.request.user
+        else:
+            user.verified_user_at = None
+            user.verified_user_by = None
+            user.verified_user_note = ""
+        user.save()
+        form.save_m2m()
         messages.success(self.request, "User updated.")
-        return super().form_valid(form)
+        return redirect(self.success_url)
+
+
+class UserVerifyToggleView(StaffRequiredMixin, View):
+    """Allow staff to mark or unmark a user as admin-verified."""
+
+    def post(self, request, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs["pk"])
+        action = kwargs.get("action")
+        note = request.POST.get("note", "").strip()
+        if action == "verify":
+            user.is_verified_user = True
+            user.verified_user_at = timezone.now()
+            user.verified_user_by = request.user
+            if note:
+                user.verified_user_note = note
+            user.save(update_fields=["is_verified_user", "verified_user_at", "verified_user_by", "verified_user_note"])
+            messages.success(request, "User marked as verified.")
+        elif action == "unverify":
+            user.is_verified_user = False
+            user.verified_user_at = None
+            user.verified_user_by = None
+            user.verified_user_note = ""
+            user.save(update_fields=["is_verified_user", "verified_user_at", "verified_user_by", "verified_user_note"])
+            messages.info(request, "User verification removed.")
+        else:
+            messages.error(request, "Invalid verification action.")
+        next_url = request.META.get("HTTP_REFERER") or reverse("core:control_user_detail", args=[user.pk])
+        return redirect(next_url)
 
 
 class UserDeleteView(StaffRequiredMixin, DeleteView):

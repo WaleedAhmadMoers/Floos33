@@ -1,84 +1,213 @@
 {% extends "base.html" %}
 {% load identity_tags %}
 
-{% block title %}Home | floos33{% endblock title %}
+{% block extra_head %}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+{% endblock extra_head %}
+
+{% block title %}floos33 | Trusted B2B stocklots & RFQs{% endblock title %}
 
 {% block content %}
-<section class="hero-card">
-    <p class="eyebrow">floos33 marketplace preview</p>
-    <h1>Marketplace built to browse liquidation and overstock listings</h1>
-    <p class="lead">
-        A simple, focused experience to view approved seller listings and start deals faster. Browse featured lots below or jump straight to the marketplace to see active stock.
-    </p>
-    <div class="actions">
-        <a class="button" href="{% url 'stocklots:list' %}">View marketplace</a>
-        {% if request.user.is_authenticated and request.user.is_seller %}
-            <a class="button button-secondary" href="{% url 'stocklots:create' %}">Add new stocklot</a>
-        {% elif request.user.is_authenticated %}
-            <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">Go to dashboard</a>
-        {% else %}
-            <a class="button button-secondary" href="{% url 'accounts:signup' %}">Create account</a>
+<!-- Hero -->
+<section class="relative bg-gradient-to-br from-orange-50 via-white to-indigo-50 pt-12 pb-14">
+  <div class="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-10 items-center">
+    <div class="space-y-5">
+      <p class="text-amber-600 font-semibold">Trusted B2B stocklots, RFQs, and controlled deals</p>
+      <h1 class="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">The marketplace for EU overstock &amp; MENA demand.</h1>
+      <p class="text-lg text-slate-600">Browse approved listings, post RFQs, negotiate privately, and progress every deal under platform oversight with identity protection and verification.</p>
+      <div class="flex flex-wrap gap-3">
+        <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'stocklots:list' %}">Browse marketplace</a>
+        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'rfqs:create' %}">Post an RFQ</a>
+        {% if not request.user.is_authenticated %}
+          <a class="px-5 py-3 rounded-xl text-slate-600 font-semibold hover:text-amber-700" href="{% url 'accounts:signup' %}">Create account</a>
         {% endif %}
+      </div>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">Verified users</span>
+        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Admin-approved listings</span>
+        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Identity protection</span>
+        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Controlled deal flow</span>
+      </div>
     </div>
+    <aside class="bg-white border border-amber-100 shadow-lg rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-amber-500 text-white">
+        <span class="font-semibold">Live marketplace feed</span>
+        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">{{ stats_ribbon.active_listings }} active</span>
+      </div>
+      <div class="divide-y divide-amber-50">
+        {% for lot in homepage_feed %}
+        <article class="p-4 hover:bg-amber-50 transition flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-slate-900 leading-snug"><a href="{% url 'stocklots:detail' lot.slug %}">{{ lot.title }}</a></div>
+            <div class="text-sm text-slate-500">{{ lot.location_country }}{% if lot.location_city %} · {{ lot.location_city }}{% endif %} · {{ lot.get_condition_display }}</div>
+          </div>
+          <div class="text-right">
+            <div class="px-3 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">{{ lot.price }} {{ lot.currency }}</div>
+          </div>
+        </article>
+        {% empty %}
+        <div class="p-4 text-sm text-slate-500">No live items right now.</div>
+        {% endfor %}
+      </div>
+      <a class="block text-center text-amber-600 font-semibold py-3 hover:bg-amber-50" href="{% url 'stocklots:list' %}">View all listings →</a>
+    </aside>
+  </div>
 </section>
 
-<section class="content-card">
-    <div class="panel-header">
-        <div>
-            <h2>Why buyers like this preview</h2>
-            <p class="subtle-copy">Straightforward browsing, clear listings, and privacy-aware seller verification.</p>
-        </div>
-    </div>
-    <ul class="feature-list">
-        <li>Privacy-first listing cards: neutral seller labels unless admin grants reveal</li>
-        <li>Listing cards emphasize condition, quantity, and price for quick scanning</li>
-        <li>Direct access to seller-managed listings with consistent metadata</li>
-        <li>Workflow ready for offers, messaging, and deal follow-up</li>
-    </ul>
-</section>
-
-<section class="content-card">
-    <div class="panel-header">
-        <div>
-            <h2>Recent stocklots</h2>
-            <p class="subtle-copy">Newest published lots from vetted sellers.</p>
-        </div>
-        <div class="actions homepage-preview-actions">
-            <a class="button button-secondary" href="{% url 'stocklots:list' %}">Browse all listings</a>
-        </div>
+<!-- Marketplace preview -->
+<section id="marketplace" class="py-10 bg-white border-t border-slate-200">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900">Marketplace</h2>
+        <p class="text-slate-500">{{ stats_ribbon.active_listings }} verified listings from EU sellers</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a class="px-4 py-2 rounded-full bg-amber-500 text-white text-sm font-semibold" href="{% url 'stocklots:list' %}">All deals</a>
+        {% for cat in popular_categories %}
+          <a class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm" href="{% url 'stocklots:list' %}?category={{ cat.slug }}">{{ cat.name }}</a>
+        {% endfor %}
+      </div>
     </div>
 
     {% if homepage_stocklots %}
-        <section class="stocklot-grid">
-            {% for stocklot in homepage_stocklots %}
-                <article class="stocklot-card homepage-stocklot-card">
-                    <div class="stocklot-thumbnail">
-                        <span>Preview</span>
-                    </div>
-                    <div class="stocklot-card-header">
-                        <div>
-                            <p class="eyebrow">{{ stocklot.category.full_name }}</p>
-                            <h2><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h2>
-                        </div>
-                    </div>
-                    <p class="subtle-copy">{{ stocklot.description|truncatechars:150 }}</p>
-                    <div class="stocklot-meta">
-                        <span>{% display_company stocklot.company %}</span>
-                        <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
-                        <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
-                    </div>
-                    <div class="stocklot-card-footer">
-                        <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
-                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
-                    </div>
-                </article>
-            {% endfor %}
-        </section>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {% for stocklot in homepage_stocklots %}
+      <article class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition p-4 flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs text-slate-500">{{ stocklot.category.full_name }}</p>
+            <h3 class="text-lg font-semibold text-slate-900 leading-snug"><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h3>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">{{ stocklot.get_condition_display }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-amber-600 text-xl font-bold">{{ stocklot.price }} {{ stocklot.currency }}</div>
+            <div class="text-xs text-slate-500">per {{ stocklot.get_unit_type_display }}</div>
+          </div>
+          <div class="text-sm text-slate-600">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
+        </div>
+        <div class="text-sm text-slate-500 flex items-center gap-2">
+          <span>📍 {{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs">
+          {% if stocklot.is_admin_verified %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Admin approved</span>{% endif %}
+          {% if stocklot.company.owner.is_verified_user %}<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700">Verified user</span>{% endif %}
+        </div>
+        <a class="mt-auto inline-flex justify-center items-center px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
+      </article>
+      {% endfor %}
+    </div>
     {% else %}
-        <section class="empty-panel empty-state">
-            <h3>No listings yet</h3>
-            <p class="subtle-copy">Check back soon for newly published stocklots.</p>
-        </section>
+      <div class="text-sm text-slate-500">No listings yet.</div>
     {% endif %}
+  </div>
 </section>
+
+<!-- RFQ Section -->
+<section class="py-10 bg-slate-50" id="rfq">
+  <div class="max-w-6xl mx-auto px-4 flex flex-col gap-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900">Need something specific?</h2>
+        <p class="text-slate-600">Post an RFQ and invite verified sellers to respond privately.</p>
+      </div>
+      <div class="flex gap-3">
+        <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'rfqs:create' %}">Post an RFQ</a>
+        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'rfqs:list' %}">Explore RFQs</a>
+      </div>
+    </div>
+    {% if recent_rfqs %}
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for rfq in recent_rfqs %}
+      <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+        <h3 class="font-semibold text-slate-900"><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></h3>
+        <p class="text-sm text-slate-500 mt-1">{{ rfq.category.name }} · {{ rfq.quantity }} {{ rfq.get_unit_type_display }} · {{ rfq.location_country }}{% if rfq.location_city %} · {{ rfq.location_city }}{% endif %}</p>
+        {% if rfq.target_price %}<p class="text-sm text-amber-600 font-semibold mt-1">Target: {{ rfq.target_price }} {{ rfq.currency }}</p>{% endif %}
+        <a class="mt-3 inline-flex text-sm font-semibold text-amber-600 hover:text-amber-700" href="{% url 'rfqs:detail' rfq.pk %}">View RFQ →</a>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how" class="py-10 bg-white border-t border-slate-200">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-8">
+      <p class="text-amber-600 font-semibold text-sm uppercase">Simple process</p>
+      <h2 class="text-3xl font-bold text-slate-900 mt-1">How the marketplace works</h2>
+      <p class="text-slate-500">Four steps to start trading</p>
+    </div>
+    <div class="grid md:grid-cols-4 gap-4">
+      {% for step in how_it_works_steps %}
+      <article class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+        <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 font-bold flex items-center justify-center mb-3">{{ step.number }}</div>
+        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ step.title }}</h3>
+        <p class="text-sm text-slate-600">{{ step.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Trust & safety -->
+<section class="py-10 bg-slate-50">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-8">
+      <p class="text-amber-600 font-semibold text-sm uppercase">Trust &amp; safety</p>
+      <h2 class="text-3xl font-bold text-slate-900 mt-1">Verification and oversight built in</h2>
+    </div>
+    <div class="grid md:grid-cols-4 gap-4">
+      {% for point in trust_safety_points %}
+      <article class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ point.title }}</h3>
+        <p class="text-sm text-slate-600">{{ point.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="py-10 bg-white">
+  <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-amber-100 rounded-2xl shadow-sm p-6">
+    <div>
+      <h3 class="text-2xl font-bold text-slate-900">Ready to start?</h3>
+      <p class="text-slate-600">Browse the marketplace or create your account to trade with verification and oversight.</p>
+    </div>
+    <div class="flex gap-3">
+      <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'stocklots:list' %}">Start browsing</a>
+      {% if not request.user.is_authenticated %}
+        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'accounts:signup' %}">Create account</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-slate-200 py-8">
+  <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-slate-600">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center text-white text-xl">🛒</div>
+      <div>
+        <div class="font-bold text-slate-900">floos33</div>
+        <div class="text-xs text-slate-500">EU ↔ MENA overstock marketplace</div>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-4">
+      <a href="{% url 'core:home' %}" class="hover:text-amber-700">Home</a>
+      <a href="{% url 'stocklots:list' %}" class="hover:text-amber-700">Marketplace</a>
+      <a href="{% url 'rfqs:list' %}" class="hover:text-amber-700">RFQs</a>
+      <a href="{% url 'core:about' %}" class="hover:text-amber-700">About</a>
+      <a href="{% url 'core:contact' %}" class="hover:text-amber-700">Contact</a>
+    </div>
+  </div>
+</footer>
 {% endblock content %}

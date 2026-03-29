@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
+from decimal import Decimal, InvalidOperation
+
+from django.db.models import Q, OuterRef, Exists
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -10,6 +12,7 @@ from django.views import View
 
 from .forms import StocklotForm
 from .models import Category, Favorite, Stocklot, StocklotDocument, StocklotImage, StocklotVideo
+from accounts.models import SellerVerificationRequest
 from core.utils.verification import enforce_verified
 
 
@@ -28,8 +31,15 @@ class MarketplaceListView(ListView):
     def get_queryset(self):
         queryset = (
             Stocklot.objects.select_related("company", "category", "category__parent")
+            .select_related("company__owner")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
-            .order_by("-created_at")
+            .annotate(
+                seller_verified=Exists(
+                    SellerVerificationRequest.objects.filter(
+                        user=OuterRef("company__owner"), status=SellerVerificationRequest.Status.APPROVED
+                    )
+                )
+            )
         )
 
         search_query = self.request.GET.get("q", "").strip()
@@ -41,6 +51,54 @@ class MarketplaceListView(ListView):
             category_ids = [selected_category.id, *selected_category.get_descendant_ids()]
             queryset = queryset.filter(category_id__in=category_ids)
 
+        country = self.request.GET.get("country", "").strip()
+        if country:
+            queryset = queryset.filter(location_country__iexact=country)
+
+        condition = self.request.GET.get("condition", "").strip()
+        if condition:
+            queryset = queryset.filter(condition=condition)
+
+        def parse_decimal(name):
+            raw = self.request.GET.get(name, "").strip()
+            if not raw:
+                return None
+            try:
+                return Decimal(raw)
+            except (InvalidOperation, TypeError):
+                return None
+
+        price_min = parse_decimal("price_min")
+        price_max = parse_decimal("price_max")
+        if price_min is not None:
+            queryset = queryset.filter(price__gte=price_min)
+        if price_max is not None:
+            queryset = queryset.filter(price__lte=price_max)
+
+        def parse_int(name):
+            raw = self.request.GET.get(name, "").strip()
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                return None
+
+        qty_min = parse_int("quantity_min")
+        qty_max = parse_int("quantity_max")
+        if qty_min is not None:
+            queryset = queryset.filter(quantity__gte=qty_min)
+        if qty_max is not None:
+            queryset = queryset.filter(quantity__lte=qty_max)
+
+        sort = self.request.GET.get("sort", "newest")
+        ordering_map = {
+            "newest": "-created_at",
+            "oldest": "created_at",
+            "price_low": "price",
+            "price_high": "-price",
+            "quantity_high": "-quantity",
+        }
+        queryset = queryset.order_by(ordering_map.get(sort, "-created_at"))
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -50,6 +108,55 @@ class MarketplaceListView(ListView):
         )
         context["selected_category"] = self.get_selected_category()
         context["search_query"] = self.request.GET.get("q", "").strip()
+        context["selected_country"] = self.request.GET.get("country", "").strip()
+        context["selected_condition"] = self.request.GET.get("condition", "").strip()
+        context["price_min"] = self.request.GET.get("price_min", "").strip()
+        context["price_max"] = self.request.GET.get("price_max", "").strip()
+        context["quantity_min"] = self.request.GET.get("quantity_min", "").strip()
+        context["quantity_max"] = self.request.GET.get("quantity_max", "").strip()
+        context["sort"] = self.request.GET.get("sort", "newest")
+        context["condition_choices"] = Stocklot.Condition.choices
+        context["available_countries"] = (
+            Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .values_list("location_country", flat=True)
+            .distinct()
+            .order_by("location_country")
+        )
+        active_filters = []
+        if context["selected_category"]:
+            active_filters.append({"key": "category", "label": "Category", "value": context["selected_category"].full_name})
+        if context["selected_country"]:
+            active_filters.append({"key": "country", "label": "Country", "value": context["selected_country"]})
+        if context["selected_condition"]:
+            active_filters.append(
+                {
+                    "key": "condition",
+                    "label": "Condition",
+                    "value": dict(Stocklot.Condition.choices).get(
+                        context["selected_condition"], context["selected_condition"]
+                    ),
+                }
+            )
+        if context["price_min"] or context["price_max"]:
+            active_filters.append(
+                {
+                    "key": "price",
+                    "label": "Price",
+                    "value": f"{context['price_min'] or '0'} - {context['price_max'] or 'max'}",
+                    "remove_keys": ["price_min", "price_max"],
+                }
+            )
+        if context["quantity_min"] or context["quantity_max"]:
+            active_filters.append(
+                {
+                    "key": "quantity",
+                    "label": "Quantity",
+                    "value": f"{context['quantity_min'] or '0'} - {context['quantity_max'] or 'max'}",
+                    "remove_keys": ["quantity_min", "quantity_max"],
+                }
+            )
+        context["active_filters"] = active_filters
+        context["has_filters"] = bool(active_filters or context["search_query"])
         return context
 
 

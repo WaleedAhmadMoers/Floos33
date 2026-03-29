@@ -216,3 +216,48 @@ class DealHistory(models.Model):
 
     def __str__(self):
         return f"{self.deal_id}: {self.action}"
+
+
+class TickerNews(models.Model):
+    class NewsType(models.TextChoices):
+        INFO = "info", "Info"
+        UPDATE = "update", "Update"
+        ALERT = "alert", "Alert"
+
+    class Audience(models.TextChoices):
+        ALL = "all", "All users"
+        BUYERS = "buyers", "Buyers"
+        SELLERS = "sellers", "Sellers"
+        VERIFIED = "verified_users", "Verified users"
+
+    is_active = models.BooleanField(default=True)
+    priority = models.IntegerField(default=0)
+    news_type = models.CharField(max_length=10, choices=NewsType.choices, default=NewsType.INFO)
+    audience = models.CharField(max_length=20, choices=Audience.choices, default=Audience.ALL)
+    start_at = models.DateTimeField(blank=True, null=True)
+    end_at = models.DateTimeField(blank=True, null=True)
+    link_url = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-priority", "-created_at"]
+        verbose_name = "Ticker news"
+        verbose_name_plural = "Ticker news"
+
+    def __str__(self):
+        return f"TickerNews #{self.pk} ({self.news_type})"
+
+
+class TickerNewsTranslation(models.Model):
+    ticker_news = models.ForeignKey(TickerNews, on_delete=models.CASCADE, related_name="translations")
+    language_code = models.CharField(max_length=5)
+    message = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ("ticker_news", "language_code")
+        verbose_name = "Ticker news translation"
+        verbose_name_plural = "Ticker news translations"
+
+    def __str__(self):
+        return f"{self.ticker_news_id} [{self.language_code}]"

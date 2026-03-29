@@ -1,424 +1,739 @@
 {% extends "accounts/account_shell.html" %}
+{% load static %}
 
 {% block title %}Admin Control Panel | floos33{% endblock title %}
-{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
-{% block account_title %}Control Panel{% endblock account_title %}
-{% block account_intro %}Queues first, then users/companies/visibility, then monitors. All actions are one click.{% endblock account_intro %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       GEN-Z / GAMER ADMIN PANEL STYLES
+       For the 16yo website manager — clean, fast, fun
+    ============================================ */
+    :root {
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --bg-card-hover: #334155;
+        --accent-cyan: #06b6d4;
+        --accent-green: #10b981;
+        --accent-yellow: #f59e0b;
+        --accent-red: #ef4444;
+        --accent-purple: #8b5cf6;
+        --text-main: #f1f5f9;
+        --text-dim: #94a3b8;
+        --border-glow: rgba(6, 182, 212, 0.3);
+        --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.2);
+    }
+
+    body {
+        background: var(--bg-dark);
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    /* Dashboard container */
+    .admin-dashboard {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0.5rem;
+    }
+
+    /* Stats grid — big numbers, game-like */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        backdrop-filter: blur(4px);
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent-cyan);
+        box-shadow: var(--shadow-glow);
+        background: var(--bg-card-hover);
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        line-height: 1.2;
+    }
+
+    /* Command bar — quick actions */
+    .command-bar {
+        background: var(--bg-card);
+        border-radius: 2rem;
+        padding: 0.5rem 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        box-shadow: var(--shadow-glow);
+    }
+
+    .command-shortcut {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .cmd-btn {
+        background: rgba(6, 182, 212, 0.1);
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        color: var(--accent-cyan);
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        font-family: monospace;
+    }
+
+    .cmd-btn:hover {
+        background: var(--accent-cyan);
+        color: #0f172a;
+        transform: scale(0.98);
+    }
+
+    /* Cards */
+    .admin-card {
+        background: var(--bg-card);
+        border-radius: 1.5rem;
+        margin-bottom: 1.8rem;
+        border: 1px solid rgba(255,255,255,0.05);
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+
+    .admin-card:hover {
+        border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .admin-card-header {
+        padding: 1rem 1.5rem;
+        background: rgba(0,0,0,0.2);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+
+    .admin-card-header h2, 
+    .admin-card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .admin-card-body {
+        padding: 1.2rem;
+    }
+
+    /* Pill navigation — game-like chips */
+    .pill-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .pill {
+        background: rgba(255,255,255,0.05);
+        padding: 0.5rem 1.2rem;
+        border-radius: 2rem;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-main);
+        transition: all 0.15s;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pill:hover {
+        background: var(--accent-cyan);
+        color: #0f172a;
+        transform: translateY(-2px);
+        border-color: var(--accent-cyan);
+    }
+
+    /* Tables — clean and readable */
+    .table-wrapper {
+        overflow-x: auto;
+        border-radius: 1rem;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .admin-table th {
+        text-align: left;
+        padding: 0.8rem 1rem;
+        background: rgba(0,0,0,0.3);
+        color: var(--accent-cyan);
+        font-weight: 600;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .admin-table td {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        vertical-align: middle;
+        color: var(--text-dim);
+    }
+
+    .admin-table tr:hover td {
+        background: rgba(6, 182, 212, 0.05);
+        color: var(--text-main);
+    }
+
+    /* Badges — status indicators */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0.2rem 0.7rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-info { background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+    .badge-neutral { background: rgba(255,255,255,0.1); color: #cbd5e1; }
+
+    /* Buttons — BIG and clicky */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        border: none;
+        background: none;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.8rem;
+        font-size: 0.7rem;
+    }
+
+    .btn-primary {
+        background: var(--accent-cyan);
+        color: #0f172a;
+    }
+    .btn-primary:hover { background: #0891b2; transform: scale(0.97); }
+
+    .btn-success {
+        background: var(--accent-green);
+        color: #0f172a;
+    }
+    .btn-success:hover { background: #059669; transform: scale(0.97); }
+
+    .btn-danger {
+        background: var(--accent-red);
+        color: white;
+    }
+    .btn-danger:hover { background: #dc2626; transform: scale(0.97); }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--text-dim);
+        color: var(--text-dim);
+    }
+    .btn-outline:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+    /* Forms */
+    .inline-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0.8rem 0;
+    }
+
+    .form-input, .inline-form input, .inline-form select {
+        background: #0f172a;
+        border: 1px solid #334155;
+        padding: 0.5rem 0.8rem;
+        border-radius: 1rem;
+        color: white;
+        font-size: 0.8rem;
+    }
+
+    .form-input:focus, .inline-form input:focus {
+        outline: none;
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 2px rgba(6,182,212,0.2);
+    }
+
+    /* Activity feed */
+    .activity-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .activity-icon {
+        width: 2rem;
+        height: 2rem;
+        background: rgba(6,182,212,0.1);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-cyan);
+    }
+    .activity-title { font-weight: 600; color: white; }
+    .activity-meta { font-size: 0.7rem; color: var(--text-dim); }
+
+    /* Compact lists */
+    .compact-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .compact-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.8rem;
+    }
+
+    /* Detail grid */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    .detail-item {
+        background: rgba(0,0,0,0.3);
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .btn { font-size: 0.7rem; }
+        .admin-card-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 10px; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock extra_css %}
+
+{% block account_eyebrow %}
+<i class="fas fa-gamepad"></i> Admin • Level 99
+{% endblock account_eyebrow %}
+
+{% block account_title %}⚡ Control Panel{% endblock account_title %}
+{% block account_intro %}Fast actions, clean queues, full control. One-click moderation for everything.{% endblock account_intro %}
 
 {% block account_content %}
-
-<section class="content-card">
-    <h2>Quick nav</h2>
-    <div class="pill-grid">
-        <a class="pill" href="#queues">Moderation queues</a>
-        <a class="pill" href="{% url 'core:control_deals' %}">Deals manager</a>
-        <a class="pill" href="{% url 'core:control_users' %}">Users</a>
-        <a class="pill" href="{% url 'core:control_companies' %}">Companies</a>
-        <a class="pill" href="{% url 'core:control_stocklots' %}">Listings</a>
-        <a class="pill" href="{% url 'core:control_rfqs' %}">RFQs</a>
-        <a class="pill" href="#visibility">Visibility</a>
-        <a class="pill" href="#monitors">Monitors</a>
+<div class="admin-dashboard">
+    <!-- STATS DASHBOARD — big numbers for quick overview -->
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-users"></i> 👥 Users</div><div class="stat-value">{{ metrics.users|default:"0" }}</div></div>
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-building"></i> 🏢 Companies</div><div class="stat-value">{{ metrics.companies|default:"0" }}</div></div>
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-box"></i> 📦 Listings</div><div class="stat-value">{{ metrics.stocklots_approved|default:"0" }}</div></div>
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-clock"></i> ⏳ Pending</div><div class="stat-value">{{ metrics.deal_pending|default:"0" }}</div></div>
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-envelope"></i> ✉️ Inquiries</div><div class="stat-value">{{ metrics.inquiries|default:"0" }}</div></div>
+        <div class="stat-card"><div class="stat-label"><i class="fas fa-hourglass-half"></i> ⏱️ Pending replies</div><div class="stat-value">{{ metrics.inquiry_replies_pending|default:"0" }}</div></div>
     </div>
-</section>
 
-<section class="content-card">
-    <h2>Platform snapshot</h2>
-    <div class="detail-grid">
-        <article class="detail-item"><div class="detail-label">Users</div><div class="detail-value">{{ metrics.users }}</div></article>
-        <article class="detail-item"><div class="detail-label">Buyers</div><div class="detail-value">{{ metrics.buyers }}</div></article>
-        <article class="detail-item"><div class="detail-label">Sellers</div><div class="detail-value">{{ metrics.sellers }}</div></article>
-        <article class="detail-item"><div class="detail-label">Companies</div><div class="detail-value">{{ metrics.companies }}</div></article>
-        <article class="detail-item"><div class="detail-label">Stocklots (approved)</div><div class="detail-value">{{ metrics.stocklots_approved }}</div></article>
-        <article class="detail-item"><div class="detail-label">Stocklots (pending)</div><div class="detail-value">{{ metrics.stocklots_pending }}</div></article>
-        <article class="detail-item"><div class="detail-label">RFQs (open)</div><div class="detail-value">{{ metrics.rfqs_open }}</div></article>
-        <article class="detail-item"><div class="detail-label">Inquiries</div><div class="detail-value">{{ metrics.inquiries }}</div></article>
-        <article class="detail-item"><div class="detail-label">Pending inquiry replies</div><div class="detail-value">{{ metrics.inquiry_replies_pending }}</div></article>
-        <article class="detail-item"><div class="detail-label">Pending RFQ messages</div><div class="detail-value">{{ metrics.rfq_messages_pending }}</div></article>
-        <article class="detail-item"><div class="detail-label">Pending deal approvals</div><div class="detail-value">{{ metrics.deal_pending }}</div></article>
+    <!-- COMMAND BAR — like a game console -->
+    <div class="command-bar">
+        <div class="command-shortcut">
+            <button class="cmd-btn" onclick="window.location.href='#queues'"><i class="fas fa-tasks"></i> /queues</button>
+            <button class="cmd-btn" onclick="window.location.href='#users'"><i class="fas fa-users"></i> /users</button>
+            <button class="cmd-btn" onclick="window.location.href='#companies'"><i class="fas fa-building"></i> /companies</button>
+            <button class="cmd-btn" onclick="window.location.href='#monitors'"><i class="fas fa-chart-line"></i> /monitor</button>
+        </div>
+        <div class="command-shortcut">
+            <span class="cmd-btn" style="background:transparent;"><i class="fas fa-keyboard"></i> Ctrl+K</span>
+        </div>
     </div>
-</section>
 
-<section class="content-card">
-    <h2>Recent activity</h2>
-    {% if latest_activity %}
-        <ul class="notification-list">
-            {% for n in latest_activity %}
-            <li class="notification-item">
-                <div class="notification-content">
-                    <div class="notification-header">
-                        <span class="eyebrow">{{ n.get_notification_type_display }}</span>
-                        <span class="subtle-copy timestamp">{{ n.created_at|timesince }} ago</span>
+    <!-- QUICK NAV PILLS -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-compass"></i> 🧭 Quick Warp</h2>
+        </div>
+        <div class="admin-card-body">
+            <div class="pill-nav">
+                <a class="pill" href="#queues"><i class="fas fa-tasks"></i> Mod Queues</a>
+                <a class="pill" href="{% url 'core:control_deals' %}"><i class="fas fa-file-signature"></i> Deals</a>
+                <a class="pill" href="{% url 'core:control_users' %}"><i class="fas fa-user-cog"></i> Users Hub</a>
+                <a class="pill" href="{% url 'core:control_companies' %}"><i class="fas fa-building"></i> Companies Hub</a>
+                <a class="pill" href="{% url 'core:control_stocklots' %}"><i class="fas fa-boxes"></i> Listings</a>
+                <a class="pill" href="{% url 'core:control_rfqs' %}"><i class="fas fa-question-circle"></i> RFQs</a>
+                <a class="pill" href="#visibility"><i class="fas fa-eye"></i> Visibility</a>
+                <a class="pill" href="#monitors"><i class="fas fa-chart-line"></i> Monitors</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECENT ACTIVITY FEED -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-history"></i> 🔔 Latest moves</h2>
+        </div>
+        <div class="admin-card-body">
+            {% if latest_activity %}
+                <ul class="activity-list">
+                    {% for n in latest_activity %}
+                    <li class="activity-item">
+                        <div class="activity-icon"><i class="fas fa-bolt"></i></div>
+                        <div class="activity-content">
+                            <div class="activity-title">{{ n.title }}</div>
+                            <div class="activity-meta">{{ n.get_notification_type_display }} • {{ n.created_at|timesince }} ago</div>
+                            <p style="font-size:0.75rem; margin-top:4px;">{{ n.body|truncatewords:25 }}</p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="subtle-copy"><i class="fas fa-inbox"></i> No recent activity</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========== MODERATION QUEUES (one-click heaven) ========== -->
+    <div class="admin-card" id="queues">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-tasks"></i> 🎯 Moderation Queues</h2>
+            <span class="badge badge-info"><i class="fas fa-mouse-pointer"></i> One-click actions</span>
+        </div>
+        <div class="admin-card-body">
+            <!-- Pending Deals -->
+            <h3><i class="fas fa-handshake"></i> 🤝 Pending Deals</h3>
+            {% if pending_deals %}
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Type</th><th>Link</th><th>Buyer</th><th>Seller</th><th>When</th><th>⚡Action</th></tr></thead>
+                    <tbody>
+                    {% for deal in pending_deals %}
+                    <tr>
+                        <td><span class="badge badge-warning">{{ deal.deal_type }}</span></td>
+                        <td>{% if deal.inquiry %}<a href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}" style="color:#06b6d4;">Inquiry #{{ deal.inquiry.id }}</a>{% elif deal.rfq_conversation %}<a href="{% url 'core:control_deal_detail' deal.id %}" style="color:#06b6d4;">RFQ #{{ deal.rfq_conversation.id }}</a>{% endif %}</td>
+                        <td>{{ deal.buyer.email|truncatechars:20 }}</td>
+                        <td>{{ deal.seller_company.name|truncatechars:20 }}</td>
+                        <td>{{ deal.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_deal_detail' deal.id %}"><i class="fas fa-eye"></i></a>
+                                <form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i> ✅</button></form>
+                                <form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i> ❌</button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> All clear — no deals pending.</p>{% endif %}
+
+            <!-- RFQ Messages -->
+            <h3 style="margin-top:1.5rem;"><i class="fas fa-comment"></i> 💬 RFQ Messages</h3>
+            {% if pending_rfq_messages %}
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>RFQ</th><th>Sender</th><th>When</th><th>Message preview</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for m in pending_rfq_messages %}
+                    <tr>
+                        <td>{{ m.conversation.rfq.title|truncatechars:35 }}</td>
+                        <td>{{ m.sender_user.email }}</td>
+                        <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ m.message|truncatechars:50 }}</td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_rfq_message_detail' m.id %}"><i class="fas fa-eye"></i></a>
+                                <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
+                                <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No RFQ messages pending.</p>{% endif %}
+
+            <!-- Inquiry Replies -->
+            <h3 style="margin-top:1.5rem;"><i class="fas fa-reply-all"></i> 📨 Inquiry replies</h3>
+            {% if pending_inquiry_replies %}
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Inquiry</th><th>Sender</th><th>When</th><th>Snippet</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in pending_inquiry_replies %}
+                    <tr>
+                        <td>{{ r.inquiry.display_subject|truncatechars:35 }}</td>
+                        <td>{{ r.sender_user.email }}</td>
+                        <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ r.message|truncatechars:50 }}</td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_inquiry_reply_detail' r.id %}"><i class="fas fa-eye"></i></a>
+                                <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
+                                <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No inquiry replies pending.</p>{% endif %}
+
+            <!-- Pending Listings -->
+            <h3 style="margin-top:1.5rem;"><i class="fas fa-box"></i> 📦 Pending listings</h3>
+            {% if pending_stocklots %}
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>When</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for lot in pending_stocklots %}
+                    <tr>
+                        <td>{{ lot.title|truncatechars:45 }}</td>
+                        <td>{{ lot.company.name }}</td>
+                        <td>{{ lot.category.full_name }}</td>
+                        <td>{{ lot.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i> Approve</button></form>
+                                <form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i> Reject</button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No pending listings.</p>{% endif %}
+        </div>
+    </div>
+
+    <!-- IDENTITY REQUESTS -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-id-card"></i> 🆔 Identity requests</h2>
+        </div>
+        <div class="admin-card-body">
+            {% if identity_requests %}
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Deal</th><th>Requester</th><th>Target</th><th>Note</th><th>When</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for h in identity_requests %}
+                    <tr>
+                        <td><a href="{% url 'core:control_deal_detail' h.deal_id %}" style="color:#06b6d4;">Deal #{{ h.deal_id }}</a></td>
+                        <td>{{ h.actor|default:"User" }}</td>
+                        <td><span class="badge badge-info">{{ h.note|default:"Identity"|truncatechars:20 }}</span></td>
+                        <td>{{ h.note|truncatechars:30 }}</td>
+                        <td>{{ h.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' 'buyer' %}">{% csrf_token %}<button class="btn btn-sm btn-success">✅ Approve</button></form>
+                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' 'buyer' %}">{% csrf_token %}<button class="btn btn-sm btn-danger">❌ Reject</button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<p class="subtle-copy">✅ No identity requests pending.</p>{% endif %}
+        </div>
+    </div>
+
+    <!-- USERS SECTION (compact) -->
+    <div class="admin-card" id="users">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-users"></i> 👤 User control</h2>
+            <a class="btn btn-outline btn-sm" href="{% url 'core:control_users' %}"><i class="fas fa-external-link-alt"></i> Full manager</a>
+        </div>
+        <div class="admin-card-body">
+            <form method="get" action="" class="inline-form">
+                <i class="fas fa-search"></i>
+                <input type="text" name="user_search" placeholder="Search email..." value="{{ request.GET.user_search|default:'' }}">
+                <button class="btn btn-primary btn-sm" type="submit">🔍 Search</button>
+                {% if request.GET.user_search %}<a href="{% url 'core:control' %}" class="btn btn-outline btn-sm">Clear</a>{% endif %}
+            </form>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Email</th><th>Role</th><th>Company</th><th>Identity</th><th>Status</th><th>⚡</th></tr></thead>
+                    <tbody>
+                    {% for u in users_manage %}
+                    <tr>
+                        <td>{{ u.email }}</td>
+                        <td><span class="badge badge-info">B:{{ u.is_buyer|yesno:"✓,✗" }}</span> <span class="badge badge-warning">S:{{ u.is_seller|yesno:"✓,✗" }}</span></td>
+                        <td>{% if u.company %}{{ u.company.name }}{% else %}—{% endif %}</td>
+                        <td><span class="badge {% if u.get_identity_status_display == 'Revealed' %}badge-success{% else %}badge-neutral{% endif %}">{{ u.get_identity_status_display }}</span></td>
+                        <td>{% if u.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
+                        <td>
+                            <div style="display:flex; gap:5px;">
+                                <form method="post" action="{% url 'core:control_user_toggle' u.id %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-power-off"></i></button></form>
+                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i></button></form>
+                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'hide' %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye-slash"></i></button></form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div class="admin-card" id="companies">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-building"></i> 🏢 Companies</h2>
+            <a class="btn btn-outline btn-sm" href="{% url 'core:control_companies' %}">Full manager →</a>
+        </div>
+        <div class="admin-card-body">
+            <form method="get" action="" class="inline-form">
+                <input type="text" name="company_search" placeholder="Search company..." value="{{ request.GET.company_search|default:'' }}">
+                <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                {% if request.GET.company_search %}<a href="{% url 'core:control' %}" class="btn btn-outline btn-sm">Clear</a>{% endif %}
+            </form>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead><tr><th>Name</th><th>Owner</th><th>Identity</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    {% for c in companies_manage %}
+                    <tr>
+                        <td><strong>{{ c.name }}</strong></td>
+                        <td>{{ c.owner.email }}</td>
+                        <td><span class="badge {% if c.get_identity_status_display == 'Revealed' %}badge-success{% else %}badge-neutral{% endif %}">{{ c.get_identity_status_display }}</span></td>
+                        <td>
+                            <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> Reveal</button></form>
+                            <form method="post" action="{% url 'core:control_identity' 'company' c.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye-slash"></i> Hide</button></form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISIBILITY SECTION -->
+    <div class="admin-card" id="visibility">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-eye"></i> 👁️ Hidden items</h2>
+        </div>
+        <div class="admin-card-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-building"></i> Hidden companies</div>
+                    <div class="detail-value">
+                        {% if hidden_companies %}<ul class="compact-list">{% for c in hidden_companies %}<li>{{ c.name }} <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline">Reveal</button></form></li>{% endfor %}</ul>{% else %}None{% endif %}
                     </div>
-                    <h3>{{ n.title }}</h3>
-                    <p class="subtle-copy">{{ n.body|truncatewords:30 }}</p>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="subtle-copy">No recent activity.</p>
-    {% endif %}
-</section>
-
-<section class="content-card" id="queues">
-    <h2>Queues (one-click moderation)</h2>
-
-    <h3>Pending deals</h3>
-    {% if pending_deals %}
-    <table class="table">
-        <thead><tr><th>Type</th><th>Link</th><th>Buyer</th><th>Seller</th><th>When</th><th></th></tr></thead>
-        <tbody>
-        {% for deal in pending_deals %}
-            <tr>
-                <td>{{ deal.deal_type }}</td>
-                <td>
-                    {% if deal.inquiry %}<a href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}">Inquiry #{{ deal.inquiry.id }}</a>
-                    {% elif deal.rfq_conversation %}<a href="{% url 'core:control_deal_detail' deal.id %}">RFQ convo #{{ deal.rfq_conversation.id }}</a>{% endif %}
-                </td>
-                <td>{{ deal.buyer.email }}</td>
-                <td>{{ deal.seller_company.name }}</td>
-                <td>{{ deal.created_at|date:"Y-m-d H:i" }}</td>
-                <td>
-                    <a class="button button-secondary button-small" href="{% url 'core:control_deal_detail' deal.id %}">View details</a>
-                    <form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p class="subtle-copy">No deals awaiting approval.</p>{% endif %}
-
-    <h3>RFQ messages (pending)</h3>
-    {% if pending_rfq_messages %}
-    <table class="table">
-        <thead><tr><th>RFQ</th><th>Sender</th><th>When</th><th>Snippet</th><th></th></tr></thead>
-        <tbody>
-        {% for m in pending_rfq_messages %}
-            <tr>
-                <td>{{ m.conversation.rfq.title|truncatechars:40 }}</td>
-                <td>{{ m.sender_user.email }}</td>
-                <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
-                <td>{{ m.message|truncatechars:80 }}</td>
-                <td>
-                    <a class="button button-secondary button-small" href="{% url 'core:control_rfq_message_detail' m.id %}">View details</a>
-                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p class="subtle-copy">No RFQ messages pending.</p>{% endif %}
-
-    <h3>Inquiry replies (pending)</h3>
-    {% if pending_inquiry_replies %}
-    <table class="table">
-        <thead><tr><th>Inquiry</th><th>Sender</th><th>When</th><th>Snippet</th><th></th></tr></thead>
-        <tbody>
-        {% for r in pending_inquiry_replies %}
-            <tr>
-                <td>{{ r.inquiry.display_subject|truncatechars:40 }}</td>
-                <td>{{ r.sender_user.email }}</td>
-                <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
-                <td>{{ r.message|truncatechars:80 }}</td>
-                <td>
-                    <a class="button button-secondary button-small" href="{% url 'core:control_inquiry_reply_detail' r.id %}">View details</a>
-                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p class="subtle-copy">No inquiry replies pending.</p>{% endif %}
-
-    <h3>Listings (pending)</h3>
-    {% if pending_stocklots %}
-    <table class="table">
-        <thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>When</th><th></th></tr></thead>
-        <tbody>
-        {% for lot in pending_stocklots %}
-            <tr>
-                <td>{{ lot.title|truncatechars:50 }}</td>
-                <td>{{ lot.company.name }}</td>
-                <td>{{ lot.category.full_name }}</td>
-                <td>{{ lot.created_at|date:"Y-m-d H:i" }}</td>
-                <td>
-                    <form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="button">Approve</button></form>
-                    <form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary">Reject</button></form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}<p class="subtle-copy">No listings pending approval.</p>{% endif %}
-</section>
-
-<section class="content-card" id="identity-requests">
-    <h2>Identity requests</h2>
-    {% if identity_requests %}
-    <table class="table">
-        <thead><tr><th>Deal</th><th>Requested by</th><th>Target</th><th>Note</th><th>When</th><th>Actions</th></tr></thead>
-        <tbody>
-        {% for h in identity_requests %}
-            {% with note_lower=h.note|lower %}
-                {% if "seller identity" in note_lower %}
-                    {% with target="seller" target_label="Seller identity" %}
-                        <tr>
-                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
-                            <td>{{ h.actor|default:"User" }}</td>
-                            <td>{{ target_label }}</td>
-                            <td>{{ h.note }}</td>
-                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                            </td>
-                        </tr>
-                    {% endwith %}
-                {% elif "buyer identity" in note_lower %}
-                    {% with target="buyer" target_label="Buyer identity" %}
-                        <tr>
-                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
-                            <td>{{ h.actor|default:"User" }}</td>
-                            <td>{{ target_label }}</td>
-                            <td>{{ h.note }}</td>
-                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                            </td>
-                        </tr>
-                    {% endwith %}
-                {% else %}
-                    {% with target="buyer" target_label="Buyer identity" %}
-                        <tr>
-                            <td><a href="{% url 'core:control_deal_detail' h.deal_id %}">Deal #{{ h.deal_id }}</a></td>
-                            <td>{{ h.actor|default:"User" }}</td>
-                            <td>{{ target_label }}</td>
-                            <td>{{ h.note }}</td>
-                            <td>{{ h.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' target %}" style="display:inline;">{% csrf_token %}<button class="button button-small">Approve</button></form>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' target %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reject</button></form>
-                            </td>
-                        </tr>
-                    {% endwith %}
-                {% endif %}
-            {% endwith %}
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p class="subtle-copy">No identity requests pending.</p>
-    {% endif %}
-</section>
-
-<section class="content-card" id="users">
-    <h2>Users</h2>
-    <p><a class="button button-secondary" href="{% url 'core:control_users' %}">Open full user manager</a></p>
-    <form method="get" action="" class="inline-form">
-        <input type="text" name="user_search" placeholder="Search email" value="{{ request.GET.user_search|default:'' }}">
-        <button class="button button-secondary" type="submit">Search</button>
-        {% if request.GET.user_search %}<a href="{% url 'core:control' %}" class="button button-ghost">Clear</a>{% endif %}
-    </form>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>Email</th><th>Buyer/Seller</th><th>Company</th><th>Identity</th><th>Active</th><th></th></tr></thead>
-            <tbody>
-            {% for u in users_manage %}
-                <tr>
-                    <td>{{ u.email }}</td>
-                    <td>B: {{ u.is_buyer|yesno:"Yes,No" }} / S: {{ u.is_seller|yesno:"Yes,No" }}</td>
-                    <td>{% if u.company %}{{ u.company.name }}{% else %}-{% endif %}</td>
-                    <td>{{ u.get_identity_status_display }}</td>
-                    <td>{{ u.is_active|yesno:"Active,Inactive" }}</td>
-                    <td>
-                        <form method="post" action="{% url 'core:control_user_toggle' u.id %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Toggle active</button></form>
-                        <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Reveal</button></form>
-                        <form method="post" action="{% url 'core:control_identity' 'user' u.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Hide</button></form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="content-card" id="companies">
-    <h2>Companies</h2>
-    <p><a class="button button-secondary" href="{% url 'core:control_companies' %}">Open full company manager</a></p>
-    <form method="get" action="" class="inline-form">
-        <input type="text" name="company_search" placeholder="Search company" value="{{ request.GET.company_search|default:'' }}">
-        <button class="button button-secondary" type="submit">Search</button>
-        {% if request.GET.company_search %}<a href="{% url 'core:control' %}" class="button button-ghost">Clear</a>{% endif %}
-    </form>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>Name</th><th>Owner</th><th>Identity</th><th></th></tr></thead>
-            <tbody>
-            {% for c in companies_manage %}
-                <tr>
-                    <td>{{ c.name }}</td>
-                    <td>{{ c.owner.email }}</td>
-                    <td>{{ c.get_identity_status_display }}</td>
-                    <td>
-                        <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Reveal</button></form>
-                        <form method="post" action="{% url 'core:control_identity' 'company' c.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Hide</button></form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="content-card" id="visibility">
-    <h2>Identity visibility</h2>
-    <div class="detail-grid">
-        <article class="detail-item">
-            <div class="detail-label">Hidden companies</div>
-            <div class="detail-value">
-                {% if hidden_companies %}
-                    <ul class="compact-list">
-                        {% for c in hidden_companies %}
-                            <li>{{ c.name }}
-                                <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reveal</button></form>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}<p class="subtle-copy">None</p>{% endif %}
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-user-secret"></i> Hidden users</div>
+                    <div class="detail-value">
+                        {% if hidden_users %}<ul class="compact-list">{% for u in hidden_users %}<li>{{ u.email }} <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline">Reveal</button></form></li>{% endfor %}</ul>{% else %}None{% endif %}
+                    </div>
+                </div>
             </div>
-        </article>
-        <article class="detail-item">
-            <div class="detail-label">Hidden users</div>
-            <div class="detail-value">
-                {% if hidden_users %}
-                    <ul class="compact-list">
-                        {% for u in hidden_users %}
-                            <li>{{ u.email }}
-                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="button button-secondary button-small">Reveal</button></form>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}<p class="subtle-copy">None</p>{% endif %}
-            </div>
-        </article>
+        </div>
     </div>
-</section>
 
-<section class="content-card">
-    <h2>Visibility grants</h2>
-    <h4>Buyer → Company</h4>
-    <form method="post" action="{% url 'core:control_visibility_add' 'buyer_to_company' %}" class="inline-form">
-        {% csrf_token %}
-        <input type="number" name="user_id" placeholder="Buyer user id">
-        <input type="number" name="company_id" placeholder="Company id">
-        <button class="button button-secondary" type="submit">Add grant</button>
-    </form>
-    <ul>
-        {% for g in buyer_grants %}
-            <li>{{ g.buyer.email }} → {{ g.target_company.name }} ({{ g.status }})
-                <form method="post" action="{% url 'core:control_visibility_revoke' 'buyer' g.id %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Revoke</button></form>
-            </li>
-        {% endfor %}
-    </ul>
-    <h4>Company → Buyer</h4>
-    <form method="post" action="{% url 'core:control_visibility_add' 'company_to_buyer' %}" class="inline-form">
-        {% csrf_token %}
-        <input type="number" name="company_id" placeholder="Company id">
-        <input type="number" name="user_id" placeholder="Buyer user id">
-        <button class="button button-secondary" type="submit">Add grant</button>
-    </form>
-    <ul>
-        {% for g in company_grants %}
-            <li>{{ g.company.name }} → {{ g.target_buyer.email }} ({{ g.status }})
-                <form method="post" action="{% url 'core:control_visibility_revoke' 'company' g.id %}" style="display:inline;">{% csrf_token %}<button class="button button-ghost button-small">Revoke</button></form>
-            </li>
-        {% endfor %}
-    </ul>
-</section>
+    <!-- MONITORING -->
+    <div class="admin-card" id="monitors">
+        <div class="admin-card-header">
+            <h2><i class="fas fa-chart-line"></i> 📊 Live monitors</h2>
+        </div>
+        <div class="admin-card-body">
+            <h3>📦 Listings filter</h3>
+            <form method="get" action="" class="inline-form">
+                <select name="listing_status" onchange="this.form.submit()" class="form-input">
+                    <option value="">All statuses</option>
+                    <option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option>
+                </select>
+            </form>
+            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Seller</th><th>Created</th></tr></thead><tbody>{% for lot in all_listings %}<tr><td>{{ lot.title|truncatechars:50 }}</td><td><span class="badge {% if lot.status == 'approved' %}badge-success{% elif lot.status == 'pending_review' %}badge-warning{% else %}badge-danger{% endif %}">{{ lot.get_status_display }}</span></td><td>{{ lot.company.name }}</td><td>{{ lot.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
 
-<section class="content-card" id="monitors">
-    <h2>Monitoring: Listings</h2>
-    <form method="get" action="" class="inline-form">
-        <select name="listing_status" onchange="this.form.submit()">
-            <option value="">All statuses</option>
-            <option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option>
-            <option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option>
-            <option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option>
-        </select>
-    </form>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>Title</th><th>Status</th><th>Seller</th><th>Created</th></tr></thead>
-            <tbody>
-            {% for lot in all_listings %}
-                <tr><td>{{ lot.title|truncatechars:50 }}</td><td>{{ lot.get_status_display }}</td><td>{{ lot.company.name }}</td><td>{{ lot.created_at|date:"Y-m-d" }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            <h3 style="margin-top:1.5rem;">❓ RFQs</h3>
+            <form method="get" action="" class="inline-form"><select name="rfq_status" onchange="this.form.submit()" class="form-input"><option value="">All</option><option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option><option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option></select></form>
+            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Buyer</th><th>Created</th></tr></thead><tbody>{% for rfq in all_rfqs %}<tr><td>{{ rfq.title|truncatechars:50 }}</td><td><span class="badge {% if rfq.status == 'open' %}badge-success{% else %}badge-neutral{% endif %}">{{ rfq.get_status_display }}</span></td><td>{{ rfq.buyer.email }}</td><td>{{ rfq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
+
+            <h3 style="margin-top:1.5rem;">✉️ Inquiries</h3>
+            <form method="get" action="" class="inline-form"><select name="inquiry_status" onchange="this.form.submit()" class="form-input"><option value="">All</option><option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option><option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option><option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option><option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option></select></form>
+            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Subject</th><th>Status</th><th>Buyer</th><th>Seller</th><th>Created</th></tr></thead><tbody>{% for iq in all_inquiries %}<tr><td>{{ iq.display_subject|truncatechars:45 }}</td><td><span class="badge {% if iq.status == 'pending_admin' %}badge-warning{% elif iq.status == 'approved' %}badge-success{% else %}badge-neutral{% endif %}">{{ iq.get_status_display }}</span></td><td>{{ iq.buyer.email|truncatechars:18 }}</td><td>{{ iq.seller_company.name|truncatechars:18 }}</td><td>{{ iq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
+        </div>
     </div>
-</section>
+</div>
 
-<section class="content-card">
-    <h2>Monitoring: RFQs</h2>
-    <form method="get" action="" class="inline-form">
-        <select name="rfq_status" onchange="this.form.submit()">
-            <option value="">All</option>
-            <option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option>
-            <option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option>
-        </select>
-    </form>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>Title</th><th>Status</th><th>Buyer</th><th>Created</th></tr></thead>
-            <tbody>
-            {% for rfq in all_rfqs %}
-                <tr><td>{{ rfq.title|truncatechars:50 }}</td><td>{{ rfq.get_status_display }}</td><td>{{ rfq.buyer.email }}</td><td>{{ rfq.created_at|date:"Y-m-d" }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="content-card">
-    <h2>Monitoring: Inquiries</h2>
-    <form method="get" action="" class="inline-form">
-        <select name="inquiry_status" onchange="this.form.submit()">
-            <option value="">All</option>
-            <option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option>
-            <option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option>
-            <option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option>
-            <option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option>
-        </select>
-    </form>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>Subject</th><th>Status</th><th>Buyer</th><th>Seller</th><th>Created</th></tr></thead>
-            <tbody>
-            {% for iq in all_inquiries %}
-                <tr><td>{{ iq.display_subject|truncatechars:50 }}</td><td>{{ iq.get_status_display }}</td><td>{{ iq.buyer.email }}</td><td>{{ iq.seller_company.name }}</td><td>{{ iq.created_at|date:"Y-m-d" }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="content-card">
-    <h2>Monitoring: RFQ Conversations</h2>
-    <div class="table-responsive">
-        <table class="table">
-            <thead><tr><th>RFQ</th><th>Buyer</th><th>Seller</th><th>Started</th></tr></thead>
-            <tbody>
-            {% for c in all_conversations %}
-                <tr><td>{{ c.rfq.title|truncatechars:50 }}</td><td>{{ c.buyer.email }}</td><td>{{ c.seller_company.name }}</td><td>{{ c.created_at|date:"Y-m-d" }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
+<script>
+    // Simple keyboard shortcut (Ctrl+K focuses search)
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            let firstSearch = document.querySelector('input[type="text"]');
+            if(firstSearch) firstSearch.focus();
+        }
+    });
+</script>
 {% endblock account_content %}
-

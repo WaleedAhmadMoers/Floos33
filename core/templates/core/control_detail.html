@@ -24,5 +24,21 @@
             </article>
         {% endfor %}
     </div>
+    {% if object|attr:"is_verified_user" %}
+        <div class="banner banner-success">
+            <strong>Admin verified.</strong> {{ object.verified_user_note|default:"No note left." }}
+        </div>
+        <form method="post" action="{% url 'core:control_user_unverify' object.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="button button-secondary">Unverify user</button>
+        </form>
+    {% else %}
+        <form method="post" action="{% url 'core:control_user_verify' object.pk %}" class="stacked-form">
+            {% csrf_token %}
+            <label for="verify-note">Verification note (optional)</label>
+            <textarea id="verify-note" name="note" rows="2" placeholder="Internal note for this verification"></textarea>
+            <button type="submit" class="button">Verify user</button>
+        </form>
+    {% endif %}
 </section>
 {% endblock account_content %}

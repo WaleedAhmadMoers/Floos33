@@ -19,6 +19,22 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=PreferredLanguage.choices,
         default=PreferredLanguage.ARABIC,
     )
+    # Admin override trust flag
+    is_verified_user = models.BooleanField(
+        "verified user",
+        default=False,
+        help_text="Admin override: mark this account as trusted without full buyer/seller verification.",
+    )
+    verified_user_at = models.DateTimeField("verified at", blank=True, null=True)
+    verified_user_by = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_users",
+        verbose_name="verified by",
+    )
+    verified_user_note = models.TextField("verification note", blank=True)
     is_buyer = models.BooleanField("buyer access", default=True)
     is_seller = models.BooleanField("seller access", default=False)
     is_active = models.BooleanField(
@@ -65,6 +81,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_seller:
             return "Seller"
         return "Buyer"
+
+    @property
+    def verified_user_label(self):
+        return "Verified user" if self.is_verified_user else "Not verified"
 
     @property
     def buyer_verification_status(self):

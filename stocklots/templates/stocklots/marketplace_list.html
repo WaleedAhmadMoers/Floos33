@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load identity_tags %}
+{% load identity_tags stocklot_tags %}
 
 {% block title %}Marketplace | floos33{% endblock title %}
 
@@ -29,14 +29,68 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="field-group">
+                <label for="id_country">Country</label>
+                <select id="id_country" name="country" class="form-input">
+                    <option value="">Any country</option>
+                    {% for c in available_countries %}
+                        <option value="{{ c }}" {% if selected_country == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="id_condition">Condition</label>
+                <select id="id_condition" name="condition" class="form-input">
+                    <option value="">Any condition</option>
+                    {% for value,label in condition_choices %}
+                        <option value="{{ value }}" {% if selected_condition == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Price range</label>
+                <div class="inline-inputs">
+                    <input type="number" step="0.01" min="0" name="price_min" value="{{ price_min }}" placeholder="Min">
+                    <input type="number" step="0.01" min="0" name="price_max" value="{{ price_max }}" placeholder="Max">
+                </div>
+            </div>
+            <div class="field-group">
+                <label>Quantity range</label>
+                <div class="inline-inputs">
+                    <input type="number" min="0" name="quantity_min" value="{{ quantity_min }}" placeholder="Min">
+                    <input type="number" min="0" name="quantity_max" value="{{ quantity_max }}" placeholder="Max">
+                </div>
+            </div>
+            <div class="field-group">
+                <label for="id_sort">Sort by</label>
+                <select id="id_sort" name="sort" class="form-input">
+                    <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest</option>
+                    <option value="price_low" {% if sort == "price_low" %}selected{% endif %}>Price (low → high)</option>
+                    <option value="price_high" {% if sort == "price_high" %}selected{% endif %}>Price (high → low)</option>
+                    <option value="quantity_high" {% if sort == "quantity_high" %}selected{% endif %}>Quantity (high → low)</option>
+                    <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest</option>
+                </select>
+            </div>
         </div>
         <div class="actions">
             <button type="submit" class="button">Apply filters</button>
-            <a class="button button-secondary" href="{% url 'stocklots:list' %}">Reset</a>
+            <a class="button button-secondary" href="{% url 'stocklots:list' %}">Clear all filters</a>
             {% if request.user.is_authenticated and request.user.is_seller %}
                 <a class="button button-secondary" href="{% url 'stocklots:create' %}">Add stocklot</a>
             {% endif %}
         </div>
+        {% if has_filters %}
+            <div class="active-filters">
+                <span class="subtle-copy">Active filters:</span>
+                {% for f in active_filters %}
+                    {% with remove_keys=f.remove_keys|default:f.key %}
+                    <a class="badge badge-muted" href="{% if f.remove_keys %}{% query_without request.GET f.remove_keys.0 f.remove_keys.1 %}{% else %}{% query_without request.GET f.key %}{% endif %}">
+                        {{ f.label }}: {{ f.value }} ✕
+                    </a>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        {% endif %}
     </form>
 </section>
 
@@ -44,30 +98,47 @@
     <section class="stocklot-grid">
         {% for stocklot in stocklots %}
             <article class="stocklot-card">
-                <div class="stocklot-card-header">
-                    <div>
-                        <p class="eyebrow">{{ stocklot.category.full_name }}</p>
+                <header class="stocklot-card-header">
+                    <div class="card-topline">
+                        <small class="eyebrow">{{ stocklot.category.full_name }}</small>
                         <h2><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h2>
                     </div>
-                    <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
+                    <div class="badge-row">
+                        <span class="badge badge-muted">{{ stocklot.get_condition_display }}</span>
+                        {% if stocklot.is_admin_verified %}<span class="badge badge-success">Admin approved</span>{% endif %}
+                        {% with owner=stocklot.company.owner %}
+                            {% if stocklot.seller_verified %}
+                                <span class="badge badge-success">Verified seller</span>
+                            {% endif %}
+                            {% if owner.is_verified_user %}
+                                <span class="badge badge-muted">Verified user</span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </header>
+                <div class="stocklot-body">
+                    <div class="price-block">
+                        <div class="price-main">{{ stocklot.price }} {{ stocklot.currency }}</div>
+                        <div class="price-sub">per {{ stocklot.get_unit_type_display }}</div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }} available</span>
+                        <span class="stat">{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
+                    </div>
+                    <p class="subtle-copy">{{ stocklot.description|truncatechars:120 }}</p>
                 </div>
-                <p class="subtle-copy">{{ stocklot.description|truncatechars:180 }}</p>
-                <div class="stocklot-meta">
-                    <span>{% display_company stocklot.company %}</span>
-                    <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
-                    <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
-                </div>
-                <div class="stocklot-card-footer">
-                    <div class="stocklot-price">{{ stocklot.price }} {{ stocklot.currency }}</div>
+                <footer class="stocklot-card-footer">
+                    <div class="identity-line">{% display_company stocklot.company %}</div>
                     <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
-                </div>
+                </footer>
             </article>
         {% endfor %}
     </section>
 {% else %}
     <section class="content-card empty-state">
-        <h2>No listings found</h2>
-        <p class="subtle-copy">Try adjusting your search or filters to find available stocklots.</p>
+        <h2>No listings match your filters</h2>
+        <p class="subtle-copy">Try resetting filters or using a broader category.</p>
+        <a class="button" href="{% url 'stocklots:list' %}">Reset filters</a>
     </section>
 {% endif %}
 {% endblock content %}

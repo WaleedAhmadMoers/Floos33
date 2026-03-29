@@ -21,6 +21,7 @@ from .views import (
     UserCreateView,
     UserUpdateView,
     UserDeleteView,
+    UserVerifyToggleView,
     CompanyListView,
     CompanyDetailView,
     CompanyCreateView,
@@ -84,6 +85,8 @@ urlpatterns = [
     path("control/users/<int:pk>/", UserDetailView.as_view(), name="control_user_detail"),
     path("control/users/<int:pk>/edit/", UserUpdateView.as_view(), name="control_user_edit"),
     path("control/users/<int:pk>/delete/", UserDeleteView.as_view(), name="control_user_delete"),
+    path("control/users/<int:pk>/verify/", UserVerifyToggleView.as_view(), {"action": "verify"}, name="control_user_verify"),
+    path("control/users/<int:pk>/unverify/", UserVerifyToggleView.as_view(), {"action": "unverify"}, name="control_user_unverify"),
 
     path("control/companies/", CompanyListView.as_view(), name="control_companies"),
     path("control/companies/create/", CompanyCreateView.as_view(), name="control_company_create"),

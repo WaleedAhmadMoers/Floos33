@@ -11,8 +11,15 @@
             <p class="subtle-copy">{{ description }}</p>
         </div>
         <div class="actions">
-            <form method="get" class="inline-form" aria-label="search">
-                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search…" />
+            <form method="get" class="inline-form" aria-label="search and filters">
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search..." />
+                {% if verification_filters %}
+                    <select name="verification">
+                        {% for val,label in verification_filters %}
+                            <option value="{{ val }}" {% if verification == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
                 <button type="submit" class="button button-secondary">Search</button>
             </form>
             {% if create_url %}
@@ -41,6 +48,10 @@
                                 {{ item.full_name|default:item.email }}
                             {% elif attr == "roles" %}
                                 {% if item.is_buyer %}Buyer{% endif %}{% if item.is_seller %}{% if item.is_buyer %} / {% endif %}Seller{% endif %}
+                            {% elif attr == "is_verified_user" %}
+                                <span class="badge {% if item.is_verified_user %}badge-success{% else %}badge-muted{% endif %}">
+                                    {% if item.is_verified_user %}Verified user{% else %}Not verified{% endif %}
+                                </span>
                             {% elif attr == "identity_status" %}
                                 {{ item.get_identity_status_display }}
                             {% elif attr == "company" %}
