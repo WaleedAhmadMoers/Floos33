@@ -1,27 +1,29 @@
 {% load identity_tags %}
-<div class="reply-item">
-    <div class="reply-meta">
-        <span class="reply-sender">
-            {% if reply.sender_company %}
-                {% display_company reply.sender_company %}
-            {% else %}
-                {% display_user reply.sender_user 'buyer' %}
-            {% endif %}
-        </span>
-        <span class="reply-date">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
-        {% if reply.moderation_status == "pending_review" and request.user.is_staff %}
-            <span class="badge badge-muted">Pending admin review</span>
-        {% elif reply.moderation_status == "pending_review" and reply.sender_user_id == request.user.id %}
-            <span class="badge badge-muted">Pending admin review</span>
+<div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="font-bold text-slate-900">
+                {% if reply.sender_company %}
+                    {% display_company reply.sender_company %}
+                {% else %}
+                    {% display_user reply.sender_user 'buyer' %}
+                {% endif %}
+            </span>
+            <span class="text-slate-400">•</span>
+            <span class="text-slate-500">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+        </div>
+        {% if reply.moderation_status == "pending_review" and request.user.is_staff or reply.moderation_status == "pending_review" and reply.sender_user_id == request.user.id %}
+            <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700">Pending admin review</span>
         {% elif reply.moderation_status == "rejected" and request.user.is_staff %}
-            <span class="badge badge-muted">Rejected</span>
+            <span class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-rose-700">Rejected</span>
         {% endif %}
     </div>
-    <div class="reply-message">
-        {{ reply.message|linebreaksbr }}
+    <div class="mt-4 space-y-3 text-sm leading-7 text-slate-700">
+        <div>{{ reply.message|linebreaksbr }}</div>
         {% if reply.attachment %}
-            <p class="subtle-copy">
-                Attachment: <a href="{{ reply.attachment.url }}" target="_blank">Download / view</a>
+            <p class="text-sm text-slate-500">
+                Attachment:
+                <a href="{{ reply.attachment.url }}" target="_blank" class="font-semibold text-brand-700 hover:text-brand-600">Download / view</a>
             </p>
         {% endif %}
     </div>

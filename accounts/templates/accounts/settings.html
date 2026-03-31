@@ -6,19 +6,17 @@
 {% block account_intro %}Update your personal information and keep your account details current.{% endblock account_intro %}
 
 {% block account_content %}
-<section class="account-panel">
-    <div class="panel-header">
-        <div>
-            <h2>Profile information</h2>
-            <p class="subtle-copy">Edit your name, email address, and preferred language.</p>
-        </div>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-2 border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-black text-slate-900">Profile information</h2>
+        <p class="text-sm leading-6 text-slate-500">Edit your name, email address, and preferred language.</p>
     </div>
 
-    <form method="post" class="auth-form">
+    <form method="post" class="mt-6 space-y-5">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-            <ul class="form-errors">
+            <ul class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
@@ -26,14 +24,14 @@
         {% endif %}
 
         {% for field in form %}
-            <div class="field-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="space-y-2">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ field.label }}</label>
                 {{ field }}
                 {% if field.help_text %}
-                    <p class="helptext">{{ field.help_text }}</p>
+                    <p class="text-sm leading-6 text-slate-500">{{ field.help_text }}</p>
                 {% endif %}
                 {% if field.errors %}
-                    <ul class="field-errors">
+                    <ul class="text-sm text-rose-600">
                         {% for error in field.errors %}
                             <li>{{ error }}</li>
                         {% endfor %}
@@ -42,30 +40,28 @@
             </div>
         {% endfor %}
 
-        <button type="submit" class="button">Save changes</button>
+        <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Save changes</button>
     </form>
 </section>
 
-<section class="account-panel">
-    <div class="panel-header">
-        <div>
-            <h2>Account status</h2>
-            <p class="subtle-copy">Quick view of your account type, verification, and company status.</p>
-        </div>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-2 border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-black text-slate-900">Account status</h2>
+        <p class="text-sm leading-6 text-slate-500">Quick view of your account type, verification, and company status.</p>
     </div>
 
-    <div class="account-summary-grid">
-        <article class="summary-item">
-            <div class="summary-label">Account type</div>
-            <div class="summary-value">{{ request.user.account_type_label }}</div>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Account type</div>
+            <div class="mt-3 text-base font-bold text-slate-900">{{ request.user.account_type_label }}</div>
         </article>
-        <article class="summary-item">
-            <div class="summary-label">Buyer verification</div>
-            <div class="summary-value">{{ request.user.buyer_verification_status_label }}</div>
+        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Buyer verification</div>
+            <div class="mt-3 text-base font-bold text-slate-900">{{ request.user.buyer_verification_status_label }}</div>
         </article>
-        <article class="summary-item">
-            <div class="summary-label">Seller request</div>
-            <div class="summary-value">
+        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Seller request</div>
+            <div class="mt-3 text-base font-bold text-slate-900">
                 {% if seller_request %}
                     {{ seller_request.get_status_display }}
                 {% else %}
@@ -73,9 +69,9 @@
                 {% endif %}
             </div>
         </article>
-        <article class="summary-item">
-            <div class="summary-label">Company profile</div>
-            <div class="summary-value">
+        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Company profile</div>
+            <div class="mt-3 text-base font-bold text-slate-900">
                 {% if user_company %}
                     {{ user_company.name }}
                 {% else %}
@@ -85,13 +81,13 @@
         </article>
     </div>
 
-    <div class="actions">
-        <a class="button button-secondary" href="{% url 'accounts:buyer_verification' %}">Buyer verification</a>
-        <a class="button button-secondary" href="{% url 'accounts:seller_request' %}">Seller request</a>
+    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'accounts:buyer_verification' %}">Buyer verification</a>
+        <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'accounts:seller_request' %}">Seller request</a>
         {% if user_company %}
-            <a class="button button-secondary" href="{% url 'companies:profile' %}">View company profile</a>
+            <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'companies:profile' %}">View company profile</a>
         {% else %}
-            <a class="button button-secondary" href="{% url 'companies:create' %}">Create company profile</a>
+            <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'companies:create' %}">Create company profile</a>
         {% endif %}
     </div>
 </section>

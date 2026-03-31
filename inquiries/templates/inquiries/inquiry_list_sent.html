@@ -6,36 +6,76 @@
 {% block account_title %}My sent inquiries{% endblock account_title %}
 {% block account_intro %}Track the messages you sent to sellers about stocklots.{% endblock account_intro %}
 
+{% block account_header_actions %}
+<a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Browse marketplace</a>
+{% endblock account_header_actions %}
+
 {% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <div>
+    <h2 class="text-xl font-black text-slate-900">Inquiry overview</h2>
+    <p class="mt-1 text-sm leading-6 text-slate-500">Your buyer-side message threads in one place, with faster access to open conversations.</p>
+  </div>
+
+  <div class="mt-5 grid gap-3 md:grid-cols-2">
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Sent inquiries</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">{{ inquiries|length }}</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">Threads you started with sellers from marketplace listings.</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">Buyer</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">Use this inbox to follow up, review status, and continue negotiations.</p>
+    </article>
+  </div>
+</section>
+
 {% if inquiries %}
-    <section class="content-card">
-        <div class="table-responsive">
-            <table class="simple-table">
-                <thead>
-                    <tr>
-                        <th>Stocklot</th>
-                        <th>Seller</th>
-                        <th>Status</th>
-                        <th>Sent</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for inquiry in inquiries %}
-                        <tr>
-                            <td><a href="{% url 'inquiries:detail' inquiry.pk %}">{{ inquiry.stocklot.title }}</a></td>
-                            <td>{% display_company inquiry.seller_company %}</td>
-                            <td>{{ inquiry.get_status_display }}</td>
-                            <td>{{ inquiry.created_at|date:"Y-m-d H:i" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-xl font-black text-slate-900">Sent inquiries</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">Open any thread to review the listing context and continue the conversation.</p>
+      </div>
+      <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{{ inquiries|length }} threads</span>
+    </div>
+
+    <div class="mt-5 rounded-2xl border border-slate-200">
+      <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Tap or scroll to review your inquiry threads.</div>
+      <div class="overflow-auto">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Stocklot</th>
+            <th class="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Seller</th>
+            <th class="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Status</th>
+            <th class="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Sent</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 bg-white">
+          {% for inquiry in inquiries %}
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-4 text-sm font-bold text-slate-900">
+                <a href="{% url 'inquiries:detail' inquiry.pk %}" class="transition hover:text-brand-700">{{ inquiry.stocklot.title }}</a>
+              </td>
+              <td class="px-4 py-4 text-sm text-slate-600">{% display_company inquiry.seller_company %}</td>
+              <td class="px-4 py-4 text-sm text-slate-600">{{ inquiry.get_status_display }}</td>
+              <td class="px-4 py-4 text-sm text-slate-500">{{ inquiry.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
 {% else %}
-    <section class="content-card empty-state">
-        <h2>No inquiries yet</h2>
-        <p class="subtle-copy">Find a stocklot and send your first inquiry to the seller.</p>
-    </section>
+  <section class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-panel">
+    <h2 class="text-2xl font-black text-slate-900">No inquiries yet</h2>
+    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Find a stocklot and send your first inquiry to the seller.</p>
+    <div class="mt-5">
+      <a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800">Browse stocklots</a>
+    </div>
+  </section>
 {% endif %}
 {% endblock account_content %}

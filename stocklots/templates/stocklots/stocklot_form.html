@@ -6,167 +6,135 @@
 {% block account_intro %}{{ page_intro }}{% endblock account_intro %}
 
 {% block account_content %}
-<section class="account-panel">
-    <div class="panel-header">
-        <div>
-            <h2>Stocklot details</h2>
-            <p class="subtle-copy">Listings are created under your company: {{ user_company.name }}. Provide clear, complete info for faster approvals.</p>
-        </div>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-2 border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-black text-slate-900">Stocklot details</h2>
+        <p class="text-sm leading-6 text-slate-500">Listings are created under your company: {{ user_company.name }}. Provide clear, complete info for faster approvals.</p>
     </div>
 
-    <form method="post" class="auth-form" enctype="multipart/form-data">
+    <form method="post" class="mt-6 space-y-6" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-            <ul class="form-errors">
+            <ul class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
 
-        <div class="form-sections">
-            <section class="form-section">
-                <div>
-                    <h3>Basic listing info</h3>
-                </div>
-                <div class="form-section-grid">
+        <div class="space-y-6">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <h3 class="text-lg font-black text-slate-900">Basic listing info</h3>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
                     {% for field in form %}
                         {% if field.name == "title" or field.name == "category" or field.name == "description" or field.name == "condition" %}
-                            <div class="field-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="space-y-2 {% if field.name == 'description' %}md:col-span-2{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ field.label }}</label>
                                 {{ field }}
-                                {% if field.help_text %}
-                                    <p class="helptext">{{ field.help_text }}</p>
-                                {% endif %}
-                                {% if field.errors %}
-                                    <ul class="field-errors">
-                                        {% for error in field.errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
+                                {% if field.help_text %}<p class="text-sm leading-6 text-slate-500">{{ field.help_text }}</p>{% endif %}
+                                {% if field.errors %}<ul class="text-sm text-rose-600">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
                 </div>
             </section>
 
-            <section class="form-section">
-                <div>
-                    <h3>Quantity & pricing</h3>
-                </div>
-                <div class="form-section-grid">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <h3 class="text-lg font-black text-slate-900">Quantity & pricing</h3>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
                     {% for field in form %}
                         {% if field.name == "quantity" or field.name == "moq" or field.name == "unit_type" or field.name == "price" or field.name == "currency" %}
-                            <div class="field-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="space-y-2">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ field.label }}</label>
                                 {{ field }}
-                                {% if field.help_text %}
-                                    <p class="helptext">{{ field.help_text }}</p>
-                                {% endif %}
-                                {% if field.errors %}
-                                    <ul class="field-errors">
-                                        {% for error in field.errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
+                                {% if field.help_text %}<p class="text-sm leading-6 text-slate-500">{{ field.help_text }}</p>{% endif %}
+                                {% if field.errors %}<ul class="text-sm text-rose-600">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
                 </div>
             </section>
 
-            <section class="form-section">
-                <div>
-                    <h3>Location & status</h3>
-                </div>
-                <div class="form-section-grid">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <h3 class="text-lg font-black text-slate-900">Location & status</h3>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
                     {% for field in form %}
                         {% if field.name == "location_country" or field.name == "location_city" or field.name == "is_active" %}
-                            <div class="field-group">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="space-y-2">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ field.label }}</label>
                                 {{ field }}
-                                {% if field.help_text %}
-                                    <p class="helptext">{{ field.help_text }}</p>
-                                {% endif %}
-                                {% if field.errors %}
-                                    <ul class="field-errors">
-                                        {% for error in field.errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
+                                {% if field.help_text %}<p class="text-sm leading-6 text-slate-500">{{ field.help_text }}</p>{% endif %}
+                                {% if field.errors %}<ul class="text-sm text-rose-600">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
                 </div>
             </section>
 
-            <section class="form-section">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <div>
-                    <h3>Media & documents</h3>
-                    <p class="helptext">Upload photos, videos, Excel/CSV, and PDF files so buyers can review the lot before contacting you. Multiple files are allowed.</p>
+                    <h3 class="text-lg font-black text-slate-900">Media & documents</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">Upload photos, videos, Excel/CSV, and PDF files so buyers can review the lot before contacting you. Multiple files are allowed.</p>
                 </div>
-                <div class="media-upload-grid">
-                    <div class="field-group">
-                        <label for="id_media_images">Listing photos (JPEG/PNG)</label>
-                        <input id="id_media_images" name="media_images" type="file" class="form-input" accept="image/*" multiple>
-                        <p class="helptext">Up to 8 images, max 10MB each.</p>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <label for="id_media_images" class="block text-sm font-bold text-slate-900">Listing photos (JPEG/PNG)</label>
+                        <input id="id_media_images" name="media_images" type="file" class="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-slate-800" accept="image/*" multiple>
+                        <p class="text-sm leading-6 text-slate-500">Up to 8 images, max 10MB each.</p>
                     </div>
-                    <div class="field-group">
-                        <label for="id_media_videos">Listing videos (MP4/WebM)</label>
-                        <input id="id_media_videos" name="media_videos" type="file" class="form-input" accept="video/*" multiple>
-                        <p class="helptext">Up to 3 videos, each under 120 seconds.</p>
+                    <div class="space-y-2">
+                        <label for="id_media_videos" class="block text-sm font-bold text-slate-900">Listing videos (MP4/WebM)</label>
+                        <input id="id_media_videos" name="media_videos" type="file" class="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-slate-800" accept="video/*" multiple>
+                        <p class="text-sm leading-6 text-slate-500">Up to 3 videos, each under 120 seconds.</p>
                     </div>
-                    <div class="field-group">
-                        <label for="id_media_excel">Excel / CSV</label>
-                        <input id="id_media_excel" name="media_excel" type="file" class="form-input" accept=".xlsx,.xls,.csv" multiple>
-                        <p class="helptext">Upload stock/manifest sheets or pricing tables.</p>
+                    <div class="space-y-2">
+                        <label for="id_media_excel" class="block text-sm font-bold text-slate-900">Excel / CSV</label>
+                        <input id="id_media_excel" name="media_excel" type="file" class="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-slate-800" accept=".xlsx,.xls,.csv" multiple>
+                        <p class="text-sm leading-6 text-slate-500">Upload stock/manifest sheets or pricing tables.</p>
                     </div>
-                    <div class="field-group">
-                        <label for="id_media_pdf">PDF files</label>
-                        <input id="id_media_pdf" name="media_pdf" type="file" class="form-input" accept=".pdf" multiple>
-                        <p class="helptext">Specs, certifications, or brochures up to 20MB each.</p>
+                    <div class="space-y-2">
+                        <label for="id_media_pdf" class="block text-sm font-bold text-slate-900">PDF files</label>
+                        <input id="id_media_pdf" name="media_pdf" type="file" class="block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-slate-800" accept=".pdf" multiple>
+                        <p class="text-sm leading-6 text-slate-500">Specs, certifications, or brochures up to 20MB each.</p>
                     </div>
                 </div>
             </section>
         </div>
 
-        <div class="actions">
-            <button type="submit" class="button">{{ submit_label }}</button>
-            <a class="button button-secondary" href="{% url 'stocklots:mine' %}">Back to my listings</a>
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ submit_label }}</button>
+            <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'stocklots:mine' %}">Back to my listings</a>
             {% if object.pk %}
                 {% if object.status == "archived" %}
-                    <form method="post" action="{% url 'stocklots:restore' object.slug %}" style="display:inline;">
+                    <form method="post" action="{% url 'stocklots:restore' object.slug %}">
                         {% csrf_token %}
-                        <button type="submit" class="button button-secondary">Undo sold</button>
+                        <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Undo sold</button>
                     </form>
-                    <form method="post" action="{% url 'stocklots:activate' object.slug %}" style="display:inline;">
+                    <form method="post" action="{% url 'stocklots:activate' object.slug %}">
                         {% csrf_token %}
-                        <button type="submit" class="button button-secondary">Activate</button>
+                        <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Activate</button>
                     </form>
                 {% else %}
                     {% if object.is_active %}
-                        <form method="post" action="{% url 'stocklots:deactivate' object.slug %}" style="display:inline;">
+                        <form method="post" action="{% url 'stocklots:deactivate' object.slug %}">
                             {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Deactivate</button>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Deactivate</button>
                         </form>
-                        <form method="post" action="{% url 'stocklots:mark_sold' object.slug %}" style="display:inline;">
+                        <form method="post" action="{% url 'stocklots:mark_sold' object.slug %}">
                             {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Mark as sold</button>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Mark as sold</button>
                         </form>
                     {% else %}
-                        <form method="post" action="{% url 'stocklots:activate' object.slug %}" style="display:inline;">
+                        <form method="post" action="{% url 'stocklots:activate' object.slug %}">
                             {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Activate</button>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Activate</button>
                         </form>
                     {% endif %}
                 {% endif %}
-                <form method="post" action="{% url 'stocklots:delete' object.slug %}" style="display:inline;" onsubmit="return confirm('Delete this listing?');">
+                <form method="post" action="{% url 'stocklots:delete' object.slug %}" onsubmit="return confirm('Delete this listing?');">
                     {% csrf_token %}
-                    <button type="submit" class="button button-secondary">Delete</button>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100">Delete</button>
                 </form>
             {% endif %}
         </div>

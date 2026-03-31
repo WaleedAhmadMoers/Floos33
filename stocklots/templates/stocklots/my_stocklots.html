@@ -5,100 +5,120 @@
 {% block account_title %}Manage stocklots{% endblock account_title %}
 {% block account_intro %}Keep your listings accurate to build buyer trust and speed up deals.{% endblock account_intro %}
 
+{% block account_header_actions %}
+<a href="{% url 'stocklots:create' %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800">Add listing</a>
+<a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">View marketplace</a>
+{% endblock account_header_actions %}
+
 {% block account_content %}
-<section class="account-panel">
-    <div class="panel-header">
-        <div>
-            <h2>Company & listings summary</h2>
-            <p class="subtle-copy">Listing under company: {{ user_company.name }}.</p>
-        </div>
-    </div>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <div>
+    <h2 class="text-xl font-black text-slate-900">Listings overview</h2>
+    <p class="mt-1 text-sm leading-6 text-slate-500">A structured view of your stocklot inventory and seller readiness.</p>
+  </div>
 
-    <div class="account-summary-grid">
-        <article class="summary-item">
-            <div class="summary-label">Company name</div>
-            <div class="summary-value">{{ user_company.name }}</div>
-        </article>
-        <article class="summary-item">
-            <div class="summary-label">Number of listings</div>
-            <div class="summary-value">{{ my_stocklots_count }}</div>
-        </article>
-        <article class="summary-item">
-            <div class="summary-label">Seller status</div>
-            <div class="summary-value">{% if request.user.is_seller %}Active{% else %}Inactive{% endif %}</div>
-        </article>
-    </div>
-
-    <div class="actions">
-        <a class="button" href="{% url 'stocklots:create' %}">Add new stocklot</a>
-        <a class="button button-secondary" href="{% url 'stocklots:list' %}">View marketplace</a>
-    </div>
+  <div class="mt-5 grid gap-3 md:grid-cols-3">
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Company</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">{{ user_company.name|default:"Not set" }}</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">The company connected to your listing workspace.</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Total listings</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">{{ my_stocklots_count }}</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">All draft, pending, approved, and archived stocklots.</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Seller status</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">{% if request.user.is_seller %}Active{% else %}Inactive{% endif %}</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">Seller access controls whether you can publish new offers.</p>
+    </article>
+  </div>
 </section>
 
 {% if stocklots %}
-    <section class="stocklot-grid">
-        {% for stocklot in stocklots %}
-            <article class="stocklot-card">
-                <div class="stocklot-card-header">
-                    <div>
-                        <p class="eyebrow">{{ stocklot.category.full_name }}</p>
-                        <h2>{{ stocklot.title }}</h2>
-                    </div>
-                    <span class="badge {% if stocklot.status == 'approved' %}badge-success{% else %}badge-muted{% endif %}">{{ stocklot.get_status_display }}</span>
-                    {% if stocklot.is_admin_verified %}
-                        <span class="badge badge-success">Admin verified</span>
-                    {% endif %}
-                </div>
-                <div class="stocklot-meta">
-                    <span>{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
-                    <span>{{ stocklot.location_country }} - {{ stocklot.location_city }}</span>
-                    <span>{{ stocklot.price }} {{ stocklot.currency }}</span>
-                </div>
-                <div class="actions">
-                    {% if stocklot.is_published %}
-                        <a class="button button-secondary" href="{% url 'stocklots:detail' stocklot.slug %}">View</a>
-                    {% endif %}
-                    <a class="button" href="{% url 'stocklots:edit' stocklot.slug %}">Edit</a>
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-xl font-black text-slate-900">Your listings</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">Monitor status, review details, and act quickly on each stocklot.</p>
+      </div>
+      <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{{ my_stocklots_count }} total</span>
+    </div>
 
-                    {% if stocklot.status == "archived" %}
-                        <form method="post" action="{% url 'stocklots:restore' stocklot.slug %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Undo sold</button>
-                        </form>
-                        <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="button button-secondary">Activate</button>
-                        </form>
-                    {% else %}
-                        {% if stocklot.is_active %}
-                            <form method="post" action="{% url 'stocklots:deactivate' stocklot.slug %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="button button-secondary">Deactivate</button>
-                            </form>
-                            <form method="post" action="{% url 'stocklots:mark_sold' stocklot.slug %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="button button-secondary">Mark as sold</button>
-                            </form>
-                        {% else %}
-                            <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="button button-secondary">Activate</button>
-                            </form>
-                        {% endif %}
-                    {% endif %}
+    <div class="mt-5 grid gap-4 xl:grid-cols-2">
+      {% for stocklot in stocklots %}
+        <article class="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ stocklot.category.full_name }}</p>
+              <h3 class="mt-1 text-lg font-black leading-7 text-slate-900">{{ stocklot.title }}</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if stocklot.status == 'approved' %}border border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">
+                {{ stocklot.get_status_display }}
+              </span>
+              {% if stocklot.is_admin_verified %}
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Admin verified</span>
+              {% endif %}
+            </div>
+          </div>
 
-                    <form method="post" action="{% url 'stocklots:delete' stocklot.slug %}" style="display:inline;" onsubmit="return confirm('Delete this listing?');">
-                        {% csrf_token %}
-                        <button type="submit" class="button button-secondary">Delete</button>
-                    </form>
-                </div>
-            </article>
-        {% endfor %}
-    </section>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{{ stocklot.price }} {{ stocklot.currency }}</span>
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-2">
+            {% if stocklot.is_published %}
+              <a href="{% url 'stocklots:detail' stocklot.slug %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">View</a>
+            {% endif %}
+            <a href="{% url 'stocklots:edit' stocklot.slug %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800">Edit</a>
+
+            {% if stocklot.status == "archived" %}
+              <form method="post" action="{% url 'stocklots:restore' stocklot.slug %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">Undo sold</button>
+              </form>
+              <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">Activate</button>
+              </form>
+            {% else %}
+              {% if stocklot.is_active %}
+                <form method="post" action="{% url 'stocklots:deactivate' stocklot.slug %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">Deactivate</button>
+                </form>
+                <form method="post" action="{% url 'stocklots:mark_sold' stocklot.slug %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">Mark as sold</button>
+                </form>
+              {% else %}
+                <form method="post" action="{% url 'stocklots:activate' stocklot.slug %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">Activate</button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            <form method="post" action="{% url 'stocklots:delete' stocklot.slug %}" class="inline" onsubmit="return confirm('Delete this listing?');">
+              {% csrf_token %}
+              <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 transition hover:bg-rose-100">Delete</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
 {% else %}
-    <section class="content-card empty-state">
-        <h2>No listings yet</h2>
-        <p class="subtle-copy">Add your first stocklot to start appearing in the marketplace.</p>
-    </section>
+  <section class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-panel">
+    <h2 class="text-2xl font-black text-slate-900">No listings yet</h2>
+    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Add your first stocklot to start appearing in the marketplace.</p>
+    <div class="mt-5">
+      <a href="{% url 'stocklots:create' %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800">Create first listing</a>
+    </div>
+  </section>
 {% endif %}
 {% endblock account_content %}

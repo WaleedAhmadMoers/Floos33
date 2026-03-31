@@ -1,213 +1,138 @@
 {% extends "base.html" %}
-{% load identity_tags %}
+{% load identity_tags static %}
 
-{% block extra_head %}
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-  </style>
-{% endblock extra_head %}
-
+{% block body_class %}min-h-screen bg-slate-50 font-sans text-slate-900 antialiased{% endblock body_class %}
 {% block title %}floos33 | Trusted B2B stocklots & RFQs{% endblock title %}
 
 {% block content %}
-<!-- Hero -->
-<section class="relative bg-gradient-to-br from-orange-50 via-white to-indigo-50 pt-12 pb-14">
-  <div class="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-10 items-center">
+<section class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-amber-50 py-14 sm:py-16 lg:py-20">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 lg:grid-cols-2 lg:items-center">
     <div class="space-y-5">
-      <p class="text-amber-600 font-semibold">Trusted B2B stocklots, RFQs, and controlled deals</p>
-      <h1 class="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">The marketplace for EU overstock &amp; MENA demand.</h1>
-      <p class="text-lg text-slate-600">Browse approved listings, post RFQs, negotiate privately, and progress every deal under platform oversight with identity protection and verification.</p>
-      <div class="flex flex-wrap gap-3">
-        <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'stocklots:list' %}">Browse marketplace</a>
-        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'rfqs:create' %}">Post an RFQ</a>
-        {% if not request.user.is_authenticated %}
-          <a class="px-5 py-3 rounded-xl text-slate-600 font-semibold hover:text-amber-700" href="{% url 'accounts:signup' %}">Create account</a>
+      <div class="flex items-center gap-3">
+        <img src="{% static 'logo.png' %}" alt="floos33" class="h-12 w-auto">
+        <div class="text-sm text-slate-500">EU to MENA overstock and liquidation marketplace</div>
+      </div>
+      <p class="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600">Trusted B2B stocklots, RFQs, and controlled deals</p>
+      <h1 class="text-4xl font-black leading-tight text-slate-900 sm:text-5xl">The marketplace for EU overstock and MENA demand.</h1>
+      <p class="text-lg leading-8 text-slate-600">Browse approved listings, post RFQs, negotiate privately, and progress every deal under platform oversight with identity protection and verification.</p>
+      <div class="flex flex-wrap items-center gap-3">
+        {% if request.user.is_authenticated %}
+            <a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'stocklots:list' %}">Browse marketplace</a>
+            <a class="inline-flex items-center justify-center rounded-2xl border border-brand-200 bg-white px-5 py-3 text-sm font-bold text-brand-700 transition hover:bg-brand-50" href="{% url 'rfqs:list' %}">Browse RFQs</a>
+        {% else %}
+            <a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'accounts:signup' %}">Create account</a>
+            <a class="inline-flex items-center justify-center rounded-2xl border border-brand-200 bg-white px-5 py-3 text-sm font-bold text-brand-700 transition hover:bg-brand-50" href="{% url 'stocklots:list' %}">Browse marketplace</a>
         {% endif %}
       </div>
       <div class="flex flex-wrap gap-2 text-sm">
-        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">Verified users</span>
-        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Admin-approved listings</span>
-        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Identity protection</span>
-        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700">Controlled deal flow</span>
+        <span class="rounded-full bg-emerald-100 px-3 py-1 font-semibold text-emerald-700">Verified users</span>
+        <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Admin-approved listings</span>
+        <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Identity protection</span>
+        <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Controlled deal flow</span>
       </div>
     </div>
-    <aside class="bg-white border border-amber-100 shadow-lg rounded-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-4 py-3 bg-amber-500 text-white">
-        <span class="font-semibold">Live marketplace feed</span>
-        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">{{ stats_ribbon.active_listings }} active</span>
+    <aside class="overflow-hidden rounded-3xl border border-brand-100 bg-white shadow-panel">
+      <div class="flex items-center justify-between bg-brand-500 px-4 py-3 text-white">
+        <span class="font-semibold">Market snapshot</span>
+        <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">{{ stats_ribbon.active_listings }} active</span>
       </div>
-      <div class="divide-y divide-amber-50">
-        {% for lot in homepage_feed %}
-        <article class="p-4 hover:bg-amber-50 transition flex items-start justify-between gap-3">
-          <div>
-            <div class="font-semibold text-slate-900 leading-snug"><a href="{% url 'stocklots:detail' lot.slug %}">{{ lot.title }}</a></div>
-            <div class="text-sm text-slate-500">{{ lot.location_country }}{% if lot.location_city %} · {{ lot.location_city }}{% endif %} · {{ lot.get_condition_display }}</div>
-          </div>
-          <div class="text-right">
-            <div class="px-3 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold">{{ lot.price }} {{ lot.currency }}</div>
-          </div>
-        </article>
-        {% empty %}
-        <div class="p-4 text-sm text-slate-500">No live items right now.</div>
-        {% endfor %}
+      <div class="divide-y divide-brand-50">
+        <article class="flex items-start justify-between gap-3 p-4"><div><div class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">Trending surplus</div><div class="mt-1 font-semibold text-slate-900">Industrial tools · mixed pallets</div><div class="mt-1 text-sm text-slate-500">Germany · Grade B/C · fast clearance</div></div><div class="rounded-xl bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700">MOQ flexible</div></article>
+        <article class="flex items-start justify-between gap-3 p-4"><div><div class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">New liquidation</div><div class="mt-1 font-semibold text-slate-900">Home and kitchen returns</div><div class="mt-1 text-sm text-slate-500">Netherlands · mixed brands · verified supplier</div></div><div class="rounded-xl bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700">EUR 0.85/unit</div></article>
+        <article class="flex items-start justify-between gap-3 p-4"><div><div class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">Active RFQs</div><div class="mt-1 font-semibold text-slate-900">Electronics clearance lots</div><div class="mt-1 text-sm text-slate-500">Buyers in MENA seeking EU stock</div></div><div class="rounded-xl bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700">Respond now</div></article>
       </div>
-      <a class="block text-center text-amber-600 font-semibold py-3 hover:bg-amber-50" href="{% url 'stocklots:list' %}">View all listings →</a>
+      <a class="block px-4 py-3 text-center text-sm font-bold text-brand-700 transition hover:bg-brand-50" href="{% url 'stocklots:list' %}">View all listings</a>
     </aside>
   </div>
 </section>
 
-<!-- Marketplace preview -->
-<section id="marketplace" class="py-10 bg-white border-t border-slate-200">
-  <div class="max-w-6xl mx-auto px-4">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <div>
-        <h2 class="text-2xl font-bold text-slate-900">Marketplace</h2>
-        <p class="text-slate-500">{{ stats_ribbon.active_listings }} verified listings from EU sellers</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <a class="px-4 py-2 rounded-full bg-amber-500 text-white text-sm font-semibold" href="{% url 'stocklots:list' %}">All deals</a>
-        {% for cat in popular_categories %}
-          <a class="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-sm" href="{% url 'stocklots:list' %}?category={{ cat.slug }}">{{ cat.name }}</a>
-        {% endfor %}
+<section id="home-market-block" class="border-t border-slate-200 bg-white py-12 lg:py-14">
+  <div class="mx-auto max-w-6xl space-y-6 px-4">
+    <div><h2 class="text-2xl font-black text-slate-900">Marketplace</h2><p class="text-slate-500">{{ stats_ribbon.active_listings }} verified listings from EU sellers</p></div>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <aside class="lg:col-span-4 xl:col-span-3">
+        <div class="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:sticky lg:top-28">
+          <div class="flex items-center justify-between"><h3 class="font-bold text-slate-900">Filters</h3><a href="{% url 'stocklots:list' %}" class="text-xs font-bold uppercase tracking-[0.16em] text-brand-700 hover:text-brand-600">Reset</a></div>
+          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Categories</p><div class="flex flex-nowrap gap-2 overflow-x-auto pb-1 lg:flex-wrap"><a class="whitespace-nowrap rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700" href="{% url 'stocklots:list' %}">All</a>{% for cat in popular_categories %}<a class="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700" href="{% url 'stocklots:list' %}?category={{ cat.slug }}">{{ cat.name }}</a>{% endfor %}</div></div>
+          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Condition</p><div class="flex flex-wrap gap-2">{% for code,label in stocklot_conditions %}<a class="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700" href="{% url 'stocklots:list' %}?condition={{ code }}">{{ label }}</a>{% endfor %}</div></div>
+          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Shortcuts</p><div class="space-y-1 text-sm text-slate-700"><a class="block rounded-2xl px-3 py-2 transition hover:bg-white" href="{% url 'stocklots:list' %}">Open full marketplace</a>{% if request.user.is_authenticated %}<a class="block rounded-2xl px-3 py-2 transition hover:bg-white" href="{% url 'stocklots:favorites' %}">Saved listings</a>{% else %}<a class="block rounded-2xl px-3 py-2 transition hover:bg-white" href="{% url 'accounts:login' %}">Sign in to save</a>{% endif %}</div></div>
+        </div>
+      </aside>
+      <div class="space-y-4 lg:col-span-8 xl:col-span-9">
+        {% if homepage_stocklots %}
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {% for stocklot in homepage_stocklots %}
+          <article class="relative flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-panel">
+            <div class="absolute right-3 top-3"><form method="post" class="favorite-toggle" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}">{% csrf_token %}<button type="submit" class="text-slate-400 transition hover:text-amber-600 {% if stocklot.is_favorited %}!text-amber-600{% endif %}" aria-label="Save listing" data-saved="{{ stocklot.is_favorited|yesno:'true,false' }}">{% if stocklot.is_favorited %}<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>{% endif %}</button></form></div>
+            <div class="flex items-start justify-between gap-3"><div><p class="text-xs text-slate-500">{{ stocklot.category.full_name }}</p><h3 class="text-lg font-bold leading-snug text-slate-900"><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h3></div><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{{ stocklot.get_condition_display }}</span></div>
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">{% with first_image=stocklot.images.first %}{% if first_image %}<img src="{{ first_image.file.url }}" alt="{{ stocklot.title }}" class="h-40 w-full object-cover">{% else %}<div class="grid h-40 place-items-center text-sm text-slate-400">No preview</div>{% endif %}{% endwith %}</div>
+            <div class="flex items-center justify-between"><div><div class="text-xl font-black text-brand-600">{{ stocklot.price }} {{ stocklot.currency }}</div><div class="text-xs text-slate-500">per {{ stocklot.get_unit_type_display }}</div></div><div class="text-sm text-slate-600">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div></div>
+            <div class="text-sm text-slate-500">{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</div>
+            <div class="flex flex-wrap gap-2 text-xs">{% if stocklot.is_admin_verified %}<span class="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700">Admin approved</span>{% endif %}{% if stocklot.company.owner.is_verified_user %}<span class="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-700">Verified user</span>{% endif %}</div>
+            <a class="mt-auto inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
+          </article>
+          {% endfor %}
+        </div>
+        <div class="mt-4 text-center"><div class="flex justify-center gap-3">{% if home_page_prev %}<a class="home-hp-link inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{{ home_page_prev }}">Previous</a>{% else %}<span class="inline-flex cursor-not-allowed items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-5 py-3 text-sm font-bold text-slate-400">Previous</span>{% endif %}{% if home_page_next %}<a class="home-hp-link inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" href="{{ home_page_next }}">Next</a>{% else %}<span class="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-bold text-slate-400">Next</span>{% endif %}</div>{% if home_page_obj %}<div class="mt-2 text-sm text-slate-500">Page {{ home_page_obj.number }} of {{ home_page_obj.paginator.num_pages }}</div>{% endif %}</div>
+        {% else %}
+          <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">No listings yet.</div>
+        {% endif %}
       </div>
     </div>
-
-    {% if homepage_stocklots %}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {% for stocklot in homepage_stocklots %}
-      <article class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition p-4 flex flex-col gap-3">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-xs text-slate-500">{{ stocklot.category.full_name }}</p>
-            <h3 class="text-lg font-semibold text-slate-900 leading-snug"><a href="{% url 'stocklots:detail' stocklot.slug %}">{{ stocklot.title }}</a></h3>
-          </div>
-          <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">{{ stocklot.get_condition_display }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-amber-600 text-xl font-bold">{{ stocklot.price }} {{ stocklot.currency }}</div>
-            <div class="text-xs text-slate-500">per {{ stocklot.get_unit_type_display }}</div>
-          </div>
-          <div class="text-sm text-slate-600">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
-        </div>
-        <div class="text-sm text-slate-500 flex items-center gap-2">
-          <span>📍 {{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
-        </div>
-        <div class="flex flex-wrap gap-2 text-xs">
-          {% if stocklot.is_admin_verified %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Admin approved</span>{% endif %}
-          {% if stocklot.company.owner.is_verified_user %}<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700">Verified user</span>{% endif %}
-        </div>
-        <a class="mt-auto inline-flex justify-center items-center px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
-      </article>
-      {% endfor %}
-    </div>
-    {% else %}
-      <div class="text-sm text-slate-500">No listings yet.</div>
-    {% endif %}
   </div>
 </section>
 
-<!-- RFQ Section -->
-<section class="py-10 bg-slate-50" id="rfq">
-  <div class="max-w-6xl mx-auto px-4 flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-slate-900">Need something specific?</h2>
-        <p class="text-slate-600">Post an RFQ and invite verified sellers to respond privately.</p>
-      </div>
-      <div class="flex gap-3">
-        <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'rfqs:create' %}">Post an RFQ</a>
-        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'rfqs:list' %}">Explore RFQs</a>
-      </div>
-    </div>
+<section class="bg-slate-50 py-12 lg:py-14" id="rfq">
+  <div class="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 text-center">
+    <div><h2 class="text-2xl font-black text-slate-900">Need something specific?</h2><p class="mt-2 text-slate-600">Post an RFQ and invite verified sellers to respond privately.</p></div>
+    <div class="flex flex-wrap justify-center gap-3"><a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'rfqs:create' %}">Post an RFQ</a><a class="inline-flex items-center justify-center rounded-2xl border border-brand-200 bg-white px-5 py-3 text-sm font-bold text-brand-700 transition hover:bg-brand-50" href="{% url 'rfqs:list' %}">Explore RFQs</a></div>
     {% if recent_rfqs %}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {% for rfq in recent_rfqs %}
-      <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition">
-        <h3 class="font-semibold text-slate-900"><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></h3>
-        <p class="text-sm text-slate-500 mt-1">{{ rfq.category.name }} · {{ rfq.quantity }} {{ rfq.get_unit_type_display }} · {{ rfq.location_country }}{% if rfq.location_city %} · {{ rfq.location_city }}{% endif %}</p>
-        {% if rfq.target_price %}<p class="text-sm text-amber-600 font-semibold mt-1">Target: {{ rfq.target_price }} {{ rfq.currency }}</p>{% endif %}
-        <a class="mt-3 inline-flex text-sm font-semibold text-amber-600 hover:text-amber-700" href="{% url 'rfqs:detail' rfq.pk %}">View RFQ →</a>
-      </article>
-      {% endfor %}
-    </div>
+    <div class="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">{% for rfq in recent_rfqs %}<article class="rounded-3xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:shadow-panel"><h3 class="font-bold text-slate-900"><a href="{% url 'rfqs:detail' rfq.pk %}">{{ rfq.title }}</a></h3><p class="mt-2 text-sm text-slate-500">{{ rfq.category.name }} · {{ rfq.quantity }} {{ rfq.get_unit_type_display }} · {{ rfq.location_country }}{% if rfq.location_city %} · {{ rfq.location_city }}{% endif %}</p>{% if rfq.target_price %}<p class="mt-2 text-sm font-semibold text-brand-700">Target: {{ rfq.target_price }} {{ rfq.currency }}</p>{% endif %}<a class="mt-4 inline-flex text-sm font-bold text-brand-700 hover:text-brand-600" href="{% url 'rfqs:detail' rfq.pk %}">View RFQ</a></article>{% endfor %}</div>
     {% endif %}
   </div>
 </section>
 
-<!-- How it works -->
-<section id="how" class="py-10 bg-white border-t border-slate-200">
-  <div class="max-w-6xl mx-auto px-4">
-    <div class="text-center mb-8">
-      <p class="text-amber-600 font-semibold text-sm uppercase">Simple process</p>
-      <h2 class="text-3xl font-bold text-slate-900 mt-1">How the marketplace works</h2>
-      <p class="text-slate-500">Four steps to start trading</p>
-    </div>
-    <div class="grid md:grid-cols-4 gap-4">
-      {% for step in how_it_works_steps %}
-      <article class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
-        <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 font-bold flex items-center justify-center mb-3">{{ step.number }}</div>
-        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ step.title }}</h3>
-        <p class="text-sm text-slate-600">{{ step.description }}</p>
-      </article>
-      {% endfor %}
-    </div>
+<section id="how" class="border-t border-slate-200 bg-white py-12 lg:py-14">
+  <div class="mx-auto max-w-6xl px-4">
+    <div class="mb-8 text-center"><p class="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600">Simple process</p><h2 class="mt-2 text-3xl font-black text-slate-900">How the marketplace works</h2><p class="mt-2 text-slate-500">Four steps to start trading</p></div>
+    <div class="grid gap-4 md:grid-cols-4">{% for step in how_it_works_steps %}<article class="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm"><div class="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-100 text-sm font-black text-brand-700">{{ step.number }}</div><h3 class="text-lg font-bold text-slate-900">{{ step.title }}</h3><p class="mt-2 text-sm leading-6 text-slate-600">{{ step.description }}</p></article>{% endfor %}</div>
   </div>
 </section>
 
-<!-- Trust & safety -->
-<section class="py-10 bg-slate-50">
-  <div class="max-w-6xl mx-auto px-4">
-    <div class="text-center mb-8">
-      <p class="text-amber-600 font-semibold text-sm uppercase">Trust &amp; safety</p>
-      <h2 class="text-3xl font-bold text-slate-900 mt-1">Verification and oversight built in</h2>
-    </div>
-    <div class="grid md:grid-cols-4 gap-4">
-      {% for point in trust_safety_points %}
-      <article class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ point.title }}</h3>
-        <p class="text-sm text-slate-600">{{ point.description }}</p>
-      </article>
-      {% endfor %}
-    </div>
+<section class="bg-slate-50 py-12 lg:py-14">
+  <div class="mx-auto max-w-6xl px-4">
+    <div class="mb-8 text-center"><p class="text-sm font-semibold uppercase tracking-[0.18em] text-brand-600">Trust and safety</p><h2 class="mt-2 text-3xl font-black text-slate-900">Verification and oversight built in</h2></div>
+    <div class="grid gap-4 md:grid-cols-4">{% for point in trust_safety_points %}<article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 class="text-lg font-bold text-slate-900">{{ point.title }}</h3><p class="mt-2 text-sm leading-6 text-slate-600">{{ point.description }}</p></article>{% endfor %}</div>
   </div>
 </section>
 
-<!-- Final CTA -->
-<section class="py-10 bg-white">
-  <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-amber-100 rounded-2xl shadow-sm p-6">
-    <div>
-      <h3 class="text-2xl font-bold text-slate-900">Ready to start?</h3>
-      <p class="text-slate-600">Browse the marketplace or create your account to trade with verification and oversight.</p>
-    </div>
-    <div class="flex gap-3">
-      <a class="px-5 py-3 rounded-xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600" href="{% url 'stocklots:list' %}">Start browsing</a>
-      {% if not request.user.is_authenticated %}
-        <a class="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 font-semibold hover:bg-amber-50" href="{% url 'accounts:signup' %}">Create account</a>
-      {% endif %}
-    </div>
+<section class="bg-white py-12 lg:py-14">
+  <div class="mx-auto flex max-w-4xl flex-col gap-4 rounded-3xl border border-brand-100 px-6 py-8 shadow-sm md:flex-row md:items-center md:justify-between">
+    <div><h3 class="text-2xl font-black text-slate-900">Ready to start?</h3><p class="mt-2 text-slate-600">Browse the marketplace or create your account to trade with verification and oversight.</p></div>
+    <div class="flex flex-wrap gap-3"><a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'stocklots:list' %}">Start browsing</a>{% if not request.user.is_authenticated %}<a class="inline-flex items-center justify-center rounded-2xl border border-brand-200 bg-white px-5 py-3 text-sm font-bold text-brand-700 transition hover:bg-brand-50" href="{% url 'accounts:signup' %}">Create account</a>{% endif %}</div>
   </div>
 </section>
-
-<!-- Footer -->
-<footer class="bg-white border-t border-slate-200 py-8">
-  <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-slate-600">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center text-white text-xl">🛒</div>
-      <div>
-        <div class="font-bold text-slate-900">floos33</div>
-        <div class="text-xs text-slate-500">EU ↔ MENA overstock marketplace</div>
-      </div>
-    </div>
-    <div class="flex flex-wrap gap-4">
-      <a href="{% url 'core:home' %}" class="hover:text-amber-700">Home</a>
-      <a href="{% url 'stocklots:list' %}" class="hover:text-amber-700">Marketplace</a>
-      <a href="{% url 'rfqs:list' %}" class="hover:text-amber-700">RFQs</a>
-      <a href="{% url 'core:about' %}" class="hover:text-amber-700">About</a>
-      <a href="{% url 'core:contact' %}" class="hover:text-amber-700">Contact</a>
-    </div>
-  </div>
-</footer>
 {% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function() {
+    const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    document.querySelectorAll('.favorite-toggle').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector('button');
+        try {
+          const resp = await fetch(form.action, {method: 'POST', headers: {'X-CSRFToken': csrftoken || '', 'Accept': 'application/json'}, body: new FormData(form)});
+          if (resp.redirected) { window.location = resp.url; return; }
+          if (!resp.ok) { window.location = form.action; return; }
+          const data = await resp.json(), saved = !!data.is_favorited;
+          btn.classList.toggle('!text-amber-600', saved);
+          btn.innerHTML = saved ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+        } catch (err) { console.error(err); window.location = form.action; }
+      });
+    });
+  })();
+</script>
+{% endblock extra_js %}

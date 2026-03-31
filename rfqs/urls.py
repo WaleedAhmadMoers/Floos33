@@ -10,6 +10,7 @@ from rfqs.views import (
     MyRFQListView,
     RFQCreateView,
     RFQDetailView,
+    RFQFavoriteToggleView,
     RFQListView,
     BuyerConversationListView,
 )
@@ -20,6 +21,7 @@ urlpatterns = [
     path("", RFQListView.as_view(), name="list"),
     path("create/", RFQCreateView.as_view(), name="create"),
     path("mine/", MyRFQListView.as_view(), name="my_rfqs"),
+    path("<int:pk>/save-toggle/", RFQFavoriteToggleView.as_view(), name="favorite_toggle"),
     path("conversations/buyer/", BuyerConversationListView.as_view(), name="buyer_conversations"),
     path("conversations/seller/", MyResponsesListView.as_view(), name="seller_conversations"),
     path("<int:pk>/conversation/deal/accept/", ConversationDealAcceptView.as_view(), name="conversation_deal_accept"),

@@ -7,7 +7,7 @@ from django.contrib.auth.views import PasswordResetCompleteView, PasswordResetCo
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetView
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import TemplateView
@@ -105,8 +105,75 @@ class DashboardView(LoginRequiredMixin, AccountContextMixin, TemplateView):
     login_url = reverse_lazy("accounts:login")
 
     def get_context_data(self, **kwargs):
+        from inquiries.models import Inquiry
+        from rfqs.models import RFQ
+        from stocklots.models import Favorite, Stocklot
+
         context = super().get_context_data(**kwargs)
         context.update(self.get_account_context())
+        user_company = context.get("user_company")
+
+        active_listings_qs = (
+            user_company.stocklots.filter(status=Stocklot.Status.APPROVED, is_active=True) if user_company else []
+        )
+        sent_inquiries_qs = self.request.user.sent_inquiries.exclude(status=Inquiry.Status.CLOSED)
+        received_inquiries_qs = (
+            user_company.received_inquiries.exclude(status=Inquiry.Status.CLOSED) if user_company else []
+        )
+        my_rfqs_qs = self.request.user.rfqs.exclude(status=RFQ.Status.CLOSED)
+
+        context["dashboard_metrics"] = {
+            "active_listings": active_listings_qs.count() if user_company else 0,
+            "saved_items": self.request.user.favorites.count(),
+            "open_inquiries": sent_inquiries_qs.count() + (received_inquiries_qs.count() if user_company else 0),
+            "rfqs": my_rfqs_qs.count(),
+        }
+        context["dashboard_recent_activity"] = sorted(
+            [
+                *(
+                    {
+                        "kind": "Listing",
+                        "title": stocklot.title,
+                        "meta": stocklot.get_status_display(),
+                        "timestamp": stocklot.updated_at,
+                        "url": reverse("stocklots:edit", args=[stocklot.slug]),
+                    }
+                    for stocklot in (user_company.stocklots.all()[:3] if user_company else [])
+                ),
+                *(
+                    {
+                        "kind": "Saved",
+                        "title": favorite.stocklot.title,
+                        "meta": "Saved for review",
+                        "timestamp": favorite.created_at,
+                        "url": reverse("stocklots:detail", args=[favorite.stocklot.slug]),
+                    }
+                    for favorite in Favorite.objects.select_related("stocklot").filter(user=self.request.user)[:3]
+                ),
+                *(
+                    {
+                        "kind": "Inquiry",
+                        "title": inquiry.display_subject,
+                        "meta": inquiry.get_status_display(),
+                        "timestamp": inquiry.updated_at,
+                        "url": reverse("inquiries:detail", args=[inquiry.pk]),
+                    }
+                    for inquiry in list(self.request.user.sent_inquiries.select_related("stocklot")[:3])
+                ),
+                *(
+                    {
+                        "kind": "RFQ",
+                        "title": rfq.title,
+                        "meta": rfq.get_status_display(),
+                        "timestamp": rfq.updated_at,
+                        "url": reverse("rfqs:detail", args=[rfq.pk]),
+                    }
+                    for rfq in self.request.user.rfqs.select_related("category")[:3]
+                ),
+            ],
+            key=lambda item: item["timestamp"],
+            reverse=True,
+        )[:6]
         return context
 
 

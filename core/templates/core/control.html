@@ -1,738 +1,141 @@
 {% extends "accounts/account_shell.html" %}
-{% load static %}
 
 {% block title %}Admin Control Panel | floos33{% endblock title %}
-
-{% block extra_css %}
-<style>
-    /* ============================================
-       GEN-Z / GAMER ADMIN PANEL STYLES
-       For the 16yo website manager — clean, fast, fun
-    ============================================ */
-    :root {
-        --bg-dark: #0f172a;
-        --bg-card: #1e293b;
-        --bg-card-hover: #334155;
-        --accent-cyan: #06b6d4;
-        --accent-green: #10b981;
-        --accent-yellow: #f59e0b;
-        --accent-red: #ef4444;
-        --accent-purple: #8b5cf6;
-        --text-main: #f1f5f9;
-        --text-dim: #94a3b8;
-        --border-glow: rgba(6, 182, 212, 0.3);
-        --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.2);
-    }
-
-    body {
-        background: var(--bg-dark);
-        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    }
-
-    /* Dashboard container */
-    .admin-dashboard {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0.5rem;
-    }
-
-    /* Stats grid — big numbers, game-like */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: var(--bg-card);
-        border-radius: 1.5rem;
-        padding: 1.25rem;
-        transition: all 0.2s ease;
-        border: 1px solid rgba(6, 182, 212, 0.2);
-        backdrop-filter: blur(4px);
-        cursor: pointer;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--accent-cyan);
-        box-shadow: var(--shadow-glow);
-        background: var(--bg-card-hover);
-    }
-
-    .stat-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text-dim);
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
-        background-clip: text;
-        -webkit-background-clip: text;
-        color: transparent;
-        line-height: 1.2;
-    }
-
-    /* Command bar — quick actions */
-    .command-bar {
-        background: var(--bg-card);
-        border-radius: 2rem;
-        padding: 0.5rem 1rem;
-        margin-bottom: 2rem;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        border: 1px solid rgba(6, 182, 212, 0.3);
-        box-shadow: var(--shadow-glow);
-    }
-
-    .command-shortcut {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .cmd-btn {
-        background: rgba(6, 182, 212, 0.1);
-        border: none;
-        padding: 0.4rem 1rem;
-        border-radius: 2rem;
-        color: var(--accent-cyan);
-        font-weight: 500;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.1s;
-        font-family: monospace;
-    }
-
-    .cmd-btn:hover {
-        background: var(--accent-cyan);
-        color: #0f172a;
-        transform: scale(0.98);
-    }
-
-    /* Cards */
-    .admin-card {
-        background: var(--bg-card);
-        border-radius: 1.5rem;
-        margin-bottom: 1.8rem;
-        border: 1px solid rgba(255,255,255,0.05);
-        overflow: hidden;
-        transition: all 0.2s;
-    }
-
-    .admin-card:hover {
-        border-color: rgba(6, 182, 212, 0.3);
-    }
-
-    .admin-card-header {
-        padding: 1rem 1.5rem;
-        background: rgba(0,0,0,0.2);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 0.8rem;
-    }
-
-    .admin-card-header h2, 
-    .admin-card-header h3 {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .admin-card-body {
-        padding: 1.2rem;
-    }
-
-    /* Pill navigation — game-like chips */
-    .pill-nav {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.6rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .pill {
-        background: rgba(255,255,255,0.05);
-        padding: 0.5rem 1.2rem;
-        border-radius: 2rem;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--text-main);
-        transition: all 0.15s;
-        border: 1px solid transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .pill:hover {
-        background: var(--accent-cyan);
-        color: #0f172a;
-        transform: translateY(-2px);
-        border-color: var(--accent-cyan);
-    }
-
-    /* Tables — clean and readable */
-    .table-wrapper {
-        overflow-x: auto;
-        border-radius: 1rem;
-    }
-
-    .admin-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-    }
-
-    .admin-table th {
-        text-align: left;
-        padding: 0.8rem 1rem;
-        background: rgba(0,0,0,0.3);
-        color: var(--accent-cyan);
-        font-weight: 600;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .admin-table td {
-        padding: 0.8rem 1rem;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        vertical-align: middle;
-        color: var(--text-dim);
-    }
-
-    .admin-table tr:hover td {
-        background: rgba(6, 182, 212, 0.05);
-        color: var(--text-main);
-    }
-
-    /* Badges — status indicators */
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 0.2rem 0.7rem;
-        border-radius: 2rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-    .badge-info { background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
-    .badge-neutral { background: rgba(255,255,255,0.1); color: #cbd5e1; }
-
-    /* Buttons — BIG and clicky */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0.4rem 1rem;
-        border-radius: 2rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.1s ease;
-        border: none;
-        background: none;
-    }
-
-    .btn-sm {
-        padding: 0.25rem 0.8rem;
-        font-size: 0.7rem;
-    }
-
-    .btn-primary {
-        background: var(--accent-cyan);
-        color: #0f172a;
-    }
-    .btn-primary:hover { background: #0891b2; transform: scale(0.97); }
-
-    .btn-success {
-        background: var(--accent-green);
-        color: #0f172a;
-    }
-    .btn-success:hover { background: #059669; transform: scale(0.97); }
-
-    .btn-danger {
-        background: var(--accent-red);
-        color: white;
-    }
-    .btn-danger:hover { background: #dc2626; transform: scale(0.97); }
-
-    .btn-outline {
-        background: transparent;
-        border: 1px solid var(--text-dim);
-        color: var(--text-dim);
-    }
-    .btn-outline:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-
-    /* Forms */
-    .inline-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
-        margin: 0.8rem 0;
-    }
-
-    .form-input, .inline-form input, .inline-form select {
-        background: #0f172a;
-        border: 1px solid #334155;
-        padding: 0.5rem 0.8rem;
-        border-radius: 1rem;
-        color: white;
-        font-size: 0.8rem;
-    }
-
-    .form-input:focus, .inline-form input:focus {
-        outline: none;
-        border-color: var(--accent-cyan);
-        box-shadow: 0 0 0 2px rgba(6,182,212,0.2);
-    }
-
-    /* Activity feed */
-    .activity-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-    .activity-item {
-        display: flex;
-        gap: 1rem;
-        padding: 0.8rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .activity-icon {
-        width: 2rem;
-        height: 2rem;
-        background: rgba(6,182,212,0.1);
-        border-radius: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--accent-cyan);
-    }
-    .activity-title { font-weight: 600; color: white; }
-    .activity-meta { font-size: 0.7rem; color: var(--text-dim); }
-
-    /* Compact lists */
-    .compact-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .compact-list li {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        font-size: 0.8rem;
-    }
-
-    /* Detail grid */
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-    .detail-item {
-        background: rgba(0,0,0,0.3);
-        border-radius: 1rem;
-        padding: 1rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        .btn { font-size: 0.7rem; }
-        .admin-card-header { flex-direction: column; align-items: flex-start; }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 10px; }
-</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-{% endblock extra_css %}
-
-{% block account_eyebrow %}
-<i class="fas fa-gamepad"></i> Admin • Level 99
-{% endblock account_eyebrow %}
-
-{% block account_title %}⚡ Control Panel{% endblock account_title %}
-{% block account_intro %}Fast actions, clean queues, full control. One-click moderation for everything.{% endblock account_intro %}
+{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
+{% block account_title %}Control panel{% endblock account_title %}
+{% block account_intro %}Moderation queues, monitoring, and admin shortcuts in one Tailwind workspace.{% endblock account_intro %}
 
 {% block account_content %}
-<div class="admin-dashboard">
-    <!-- STATS DASHBOARD — big numbers for quick overview -->
-    <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-users"></i> 👥 Users</div><div class="stat-value">{{ metrics.users|default:"0" }}</div></div>
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-building"></i> 🏢 Companies</div><div class="stat-value">{{ metrics.companies|default:"0" }}</div></div>
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-box"></i> 📦 Listings</div><div class="stat-value">{{ metrics.stocklots_approved|default:"0" }}</div></div>
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-clock"></i> ⏳ Pending</div><div class="stat-value">{{ metrics.deal_pending|default:"0" }}</div></div>
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-envelope"></i> ✉️ Inquiries</div><div class="stat-value">{{ metrics.inquiries|default:"0" }}</div></div>
-        <div class="stat-card"><div class="stat-label"><i class="fas fa-hourglass-half"></i> ⏱️ Pending replies</div><div class="stat-value">{{ metrics.inquiry_replies_pending|default:"0" }}</div></div>
-    </div>
+<div class="space-y-5">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Users</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.users|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Companies</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.companies|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Listings</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.stocklots_approved|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Pending deals</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.deal_pending|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Inquiries</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.inquiries|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Pending replies</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.inquiry_replies_pending|default:"0" }}</div></article>
+    </section>
 
-    <!-- COMMAND BAR — like a game console -->
-    <div class="command-bar">
-        <div class="command-shortcut">
-            <button class="cmd-btn" onclick="window.location.href='#queues'"><i class="fas fa-tasks"></i> /queues</button>
-            <button class="cmd-btn" onclick="window.location.href='#users'"><i class="fas fa-users"></i> /users</button>
-            <button class="cmd-btn" onclick="window.location.href='#companies'"><i class="fas fa-building"></i> /companies</button>
-            <button class="cmd-btn" onclick="window.location.href='#monitors'"><i class="fas fa-chart-line"></i> /monitor</button>
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <div class="flex flex-wrap gap-3">
+            <a href="#queues" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Queues</a>
+            <a href="{% url 'core:control_deals' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Deals</a>
+            <a href="{% url 'core:control_users' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Users</a>
+            <a href="{% url 'core:control_companies' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Companies</a>
+            <a href="{% url 'core:control_stocklots' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Listings</a>
+            <a href="{% url 'core:control_rfqs' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">RFQs</a>
+            <a href="#monitoring" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Monitoring</a>
         </div>
-        <div class="command-shortcut">
-            <span class="cmd-btn" style="background:transparent;"><i class="fas fa-keyboard"></i> Ctrl+K</span>
-        </div>
-    </div>
+    </section>
 
-    <!-- QUICK NAV PILLS -->
-    <div class="admin-card">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-compass"></i> 🧭 Quick Warp</h2>
-        </div>
-        <div class="admin-card-body">
-            <div class="pill-nav">
-                <a class="pill" href="#queues"><i class="fas fa-tasks"></i> Mod Queues</a>
-                <a class="pill" href="{% url 'core:control_deals' %}"><i class="fas fa-file-signature"></i> Deals</a>
-                <a class="pill" href="{% url 'core:control_users' %}"><i class="fas fa-user-cog"></i> Users Hub</a>
-                <a class="pill" href="{% url 'core:control_companies' %}"><i class="fas fa-building"></i> Companies Hub</a>
-                <a class="pill" href="{% url 'core:control_stocklots' %}"><i class="fas fa-boxes"></i> Listings</a>
-                <a class="pill" href="{% url 'core:control_rfqs' %}"><i class="fas fa-question-circle"></i> RFQs</a>
-                <a class="pill" href="#visibility"><i class="fas fa-eye"></i> Visibility</a>
-                <a class="pill" href="#monitors"><i class="fas fa-chart-line"></i> Monitors</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- RECENT ACTIVITY FEED -->
-    <div class="admin-card">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-history"></i> 🔔 Latest moves</h2>
-        </div>
-        <div class="admin-card-body">
-            {% if latest_activity %}
-                <ul class="activity-list">
-                    {% for n in latest_activity %}
-                    <li class="activity-item">
-                        <div class="activity-icon"><i class="fas fa-bolt"></i></div>
-                        <div class="activity-content">
-                            <div class="activity-title">{{ n.title }}</div>
-                            <div class="activity-meta">{{ n.get_notification_type_display }} • {{ n.created_at|timesince }} ago</div>
-                            <p style="font-size:0.75rem; margin-top:4px;">{{ n.body|truncatewords:25 }}</p>
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Recent activity</h2>
+        {% if latest_activity %}
+            <div class="mt-5 space-y-3">
+                {% for n in latest_activity %}
+                    <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">{{ n.title }}</h3>
+                                <p class="mt-1 text-xs font-medium text-slate-400">{{ n.get_notification_type_display }} · {{ n.created_at|timesince }} ago</p>
+                            </div>
                         </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="subtle-copy"><i class="fas fa-inbox"></i> No recent activity</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- ========== MODERATION QUEUES (one-click heaven) ========== -->
-    <div class="admin-card" id="queues">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-tasks"></i> 🎯 Moderation Queues</h2>
-            <span class="badge badge-info"><i class="fas fa-mouse-pointer"></i> One-click actions</span>
-        </div>
-        <div class="admin-card-body">
-            <!-- Pending Deals -->
-            <h3><i class="fas fa-handshake"></i> 🤝 Pending Deals</h3>
-            {% if pending_deals %}
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Type</th><th>Link</th><th>Buyer</th><th>Seller</th><th>When</th><th>⚡Action</th></tr></thead>
-                    <tbody>
-                    {% for deal in pending_deals %}
-                    <tr>
-                        <td><span class="badge badge-warning">{{ deal.deal_type }}</span></td>
-                        <td>{% if deal.inquiry %}<a href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}" style="color:#06b6d4;">Inquiry #{{ deal.inquiry.id }}</a>{% elif deal.rfq_conversation %}<a href="{% url 'core:control_deal_detail' deal.id %}" style="color:#06b6d4;">RFQ #{{ deal.rfq_conversation.id }}</a>{% endif %}</td>
-                        <td>{{ deal.buyer.email|truncatechars:20 }}</td>
-                        <td>{{ deal.seller_company.name|truncatechars:20 }}</td>
-                        <td>{{ deal.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_deal_detail' deal.id %}"><i class="fas fa-eye"></i></a>
-                                <form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i> ✅</button></form>
-                                <form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i> ❌</button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        <p class="mt-3 text-sm leading-6 text-slate-600">{{ n.body|truncatewords:25 }}</p>
+                    </article>
+                {% endfor %}
             </div>
-            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> All clear — no deals pending.</p>{% endif %}
+        {% else %}
+            <p class="mt-4 text-sm text-slate-500">No recent activity.</p>
+        {% endif %}
+    </section>
 
-            <!-- RFQ Messages -->
-            <h3 style="margin-top:1.5rem;"><i class="fas fa-comment"></i> 💬 RFQ Messages</h3>
-            {% if pending_rfq_messages %}
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>RFQ</th><th>Sender</th><th>When</th><th>Message preview</th><th>Action</th></tr></thead>
-                    <tbody>
-                    {% for m in pending_rfq_messages %}
-                    <tr>
-                        <td>{{ m.conversation.rfq.title|truncatechars:35 }}</td>
-                        <td>{{ m.sender_user.email }}</td>
-                        <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ m.message|truncatechars:50 }}</td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_rfq_message_detail' m.id %}"><i class="fas fa-eye"></i></a>
-                                <form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
-                                <form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    <section id="queues" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Moderation queues</h2>
+        <div class="mt-6 space-y-8">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending deals</h3>
+                {% if pending_deals %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Type</th><th class="px-4 py-3 text-left font-bold text-slate-500">Link</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for deal in pending_deals %}<tr><td class="px-4 py-4">{{ deal.deal_type }}</td><td class="px-4 py-4">{% if deal.inquiry %}<a class="font-semibold text-brand-700" href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}">Inquiry #{{ deal.inquiry.id }}</a>{% elif deal.rfq_conversation %}<a class="font-semibold text-brand-700" href="{% url 'core:control_deal_detail' deal.id %}">RFQ #{{ deal.rfq_conversation.id }}</a>{% endif %}</td><td class="px-4 py-4">{{ deal.buyer.email|truncatechars:20 }}</td><td class="px-4 py-4">{{ deal.seller_company.name|truncatechars:20 }}</td><td class="px-4 py-4">{{ deal.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_deal_detail' deal.id %}">View</a><form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">All clear. No deals pending.</p>{% endif %}
             </div>
-            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No RFQ messages pending.</p>{% endif %}
 
-            <!-- Inquiry Replies -->
-            <h3 style="margin-top:1.5rem;"><i class="fas fa-reply-all"></i> 📨 Inquiry replies</h3>
-            {% if pending_inquiry_replies %}
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Inquiry</th><th>Sender</th><th>When</th><th>Snippet</th><th>Action</th></tr></thead>
-                    <tbody>
-                    {% for r in pending_inquiry_replies %}
-                    <tr>
-                        <td>{{ r.inquiry.display_subject|truncatechars:35 }}</td>
-                        <td>{{ r.sender_user.email }}</td>
-                        <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ r.message|truncatechars:50 }}</td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <a class="btn btn-sm btn-outline" href="{% url 'core:control_inquiry_reply_detail' r.id %}"><i class="fas fa-eye"></i></a>
-                                <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button></form>
-                                <form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending RFQ messages</h3>
+                {% if pending_rfq_messages %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">RFQ</th><th class="px-4 py-3 text-left font-bold text-slate-500">Sender</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Preview</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for m in pending_rfq_messages %}<tr><td class="px-4 py-4">{{ m.conversation.rfq.title|truncatechars:35 }}</td><td class="px-4 py-4">{{ m.sender_user.email }}</td><td class="px-4 py-4">{{ m.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4">{{ m.message|truncatechars:50 }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_rfq_message_detail' m.id %}">View</a><form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No RFQ messages pending.</p>{% endif %}
             </div>
-            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No inquiry replies pending.</p>{% endif %}
 
-            <!-- Pending Listings -->
-            <h3 style="margin-top:1.5rem;"><i class="fas fa-box"></i> 📦 Pending listings</h3>
-            {% if pending_stocklots %}
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>When</th><th>Action</th></tr></thead>
-                    <tbody>
-                    {% for lot in pending_stocklots %}
-                    <tr>
-                        <td>{{ lot.title|truncatechars:45 }}</td>
-                        <td>{{ lot.company.name }}</td>
-                        <td>{{ lot.category.full_name }}</td>
-                        <td>{{ lot.created_at|date:"Y-m-d" }}</td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="fas fa-check"></i> Approve</button></form>
-                                <form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-danger"><i class="fas fa-times"></i> Reject</button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending inquiry replies</h3>
+                {% if pending_inquiry_replies %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Inquiry</th><th class="px-4 py-3 text-left font-bold text-slate-500">Sender</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Preview</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for r in pending_inquiry_replies %}<tr><td class="px-4 py-4">{{ r.inquiry.display_subject|truncatechars:35 }}</td><td class="px-4 py-4">{{ r.sender_user.email }}</td><td class="px-4 py-4">{{ r.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4">{{ r.message|truncatechars:50 }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_inquiry_reply_detail' r.id %}">View</a><form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No inquiry replies pending.</p>{% endif %}
             </div>
-            {% else %}<p class="subtle-copy"><i class="fas fa-check-circle"></i> No pending listings.</p>{% endif %}
-        </div>
-    </div>
 
-    <!-- IDENTITY REQUESTS -->
-    <div class="admin-card">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-id-card"></i> 🆔 Identity requests</h2>
-        </div>
-        <div class="admin-card-body">
-            {% if identity_requests %}
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Deal</th><th>Requester</th><th>Target</th><th>Note</th><th>When</th><th>Action</th></tr></thead>
-                    <tbody>
-                    {% for h in identity_requests %}
-                    <tr>
-                        <td><a href="{% url 'core:control_deal_detail' h.deal_id %}" style="color:#06b6d4;">Deal #{{ h.deal_id }}</a></td>
-                        <td>{{ h.actor|default:"User" }}</td>
-                        <td><span class="badge badge-info">{{ h.note|default:"Identity"|truncatechars:20 }}</span></td>
-                        <td>{{ h.note|truncatechars:30 }}</td>
-                        <td>{{ h.created_at|date:"Y-m-d" }}</td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'approve' 'buyer' %}">{% csrf_token %}<button class="btn btn-sm btn-success">✅ Approve</button></form>
-                                <form method="post" action="{% url 'core:deal_identity_request' h.deal_id 'reject' 'buyer' %}">{% csrf_token %}<button class="btn btn-sm btn-danger">❌ Reject</button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending listings</h3>
+                {% if pending_stocklots %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Category</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for lot in pending_stocklots %}<tr><td class="px-4 py-4">{{ lot.title|truncatechars:45 }}</td><td class="px-4 py-4">{{ lot.company.name }}</td><td class="px-4 py-4">{{ lot.category.full_name }}</td><td class="px-4 py-4">{{ lot.created_at|date:"Y-m-d" }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No pending listings.</p>{% endif %}
             </div>
-            {% else %}<p class="subtle-copy">✅ No identity requests pending.</p>{% endif %}
         </div>
-    </div>
+    </section>
 
-    <!-- USERS SECTION (compact) -->
-    <div class="admin-card" id="users">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-users"></i> 👤 User control</h2>
-            <a class="btn btn-outline btn-sm" href="{% url 'core:control_users' %}"><i class="fas fa-external-link-alt"></i> Full manager</a>
-        </div>
-        <div class="admin-card-body">
-            <form method="get" action="" class="inline-form">
-                <i class="fas fa-search"></i>
-                <input type="text" name="user_search" placeholder="Search email..." value="{{ request.GET.user_search|default:'' }}">
-                <button class="btn btn-primary btn-sm" type="submit">🔍 Search</button>
-                {% if request.GET.user_search %}<a href="{% url 'core:control' %}" class="btn btn-outline btn-sm">Clear</a>{% endif %}
+    <section class="grid gap-5 xl:grid-cols-2">
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+            <h2 class="text-xl font-black text-slate-900">User control</h2>
+            <form method="get" action="" class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input type="text" name="user_search" placeholder="Search email..." value="{{ request.GET.user_search|default:'' }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                <button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" type="submit">Search</button>
             </form>
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Email</th><th>Role</th><th>Company</th><th>Identity</th><th>Status</th><th>⚡</th></tr></thead>
-                    <tbody>
-                    {% for u in users_manage %}
-                    <tr>
-                        <td>{{ u.email }}</td>
-                        <td><span class="badge badge-info">B:{{ u.is_buyer|yesno:"✓,✗" }}</span> <span class="badge badge-warning">S:{{ u.is_seller|yesno:"✓,✗" }}</span></td>
-                        <td>{% if u.company %}{{ u.company.name }}{% else %}—{% endif %}</td>
-                        <td><span class="badge {% if u.get_identity_status_display == 'Revealed' %}badge-success{% else %}badge-neutral{% endif %}">{{ u.get_identity_status_display }}</span></td>
-                        <td>{% if u.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
-                        <td>
-                            <div style="display:flex; gap:5px;">
-                                <form method="post" action="{% url 'core:control_user_toggle' u.id %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-power-off"></i></button></form>
-                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i></button></form>
-                                <form method="post" action="{% url 'core:control_identity' 'user' u.id 'hide' %}">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye-slash"></i></button></form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Email</th><th class="px-4 py-3 text-left font-bold text-slate-500">Role</th><th class="px-4 py-3 text-left font-bold text-slate-500">Company</th><th class="px-4 py-3 text-left font-bold text-slate-500">Identity</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for u in users_manage %}<tr><td class="px-4 py-4">{{ u.email }}</td><td class="px-4 py-4">{% if u.is_buyer %}Buyer{% endif %}{% if u.is_seller %}{% if u.is_buyer %} / {% endif %}Seller{% endif %}</td><td class="px-4 py-4">{% if u.company %}{{ u.company.name }}{% else %}-{% endif %}</td><td class="px-4 py-4">{{ u.get_identity_status_display }}</td><td class="px-4 py-4">{% if u.is_active %}Active{% else %}Inactive{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
+        </section>
 
-    <!-- COMPANIES -->
-    <div class="admin-card" id="companies">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-building"></i> 🏢 Companies</h2>
-            <a class="btn btn-outline btn-sm" href="{% url 'core:control_companies' %}">Full manager →</a>
-        </div>
-        <div class="admin-card-body">
-            <form method="get" action="" class="inline-form">
-                <input type="text" name="company_search" placeholder="Search company..." value="{{ request.GET.company_search|default:'' }}">
-                <button class="btn btn-primary btn-sm" type="submit">Search</button>
-                {% if request.GET.company_search %}<a href="{% url 'core:control' %}" class="btn btn-outline btn-sm">Clear</a>{% endif %}
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+            <h2 class="text-xl font-black text-slate-900">Company control</h2>
+            <form method="get" action="" class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input type="text" name="company_search" placeholder="Search company..." value="{{ request.GET.company_search|default:'' }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                <button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" type="submit">Search</button>
             </form>
-            <div class="table-wrapper">
-                <table class="admin-table">
-                    <thead><tr><th>Name</th><th>Owner</th><th>Identity</th><th>Actions</th></tr></thead>
-                    <tbody>
-                    {% for c in companies_manage %}
-                    <tr>
-                        <td><strong>{{ c.name }}</strong></td>
-                        <td>{{ c.owner.email }}</td>
-                        <td><span class="badge {% if c.get_identity_status_display == 'Revealed' %}badge-success{% else %}badge-neutral{% endif %}">{{ c.get_identity_status_display }}</span></td>
-                        <td>
-                            <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> Reveal</button></form>
-                            <form method="post" action="{% url 'core:control_identity' 'company' c.id 'hide' %}" style="display:inline;">{% csrf_token %}<button class="btn btn-sm btn-outline"><i class="fas fa-eye-slash"></i> Hide</button></form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Name</th><th class="px-4 py-3 text-left font-bold text-slate-500">Owner</th><th class="px-4 py-3 text-left font-bold text-slate-500">Identity</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for c in companies_manage %}<tr><td class="px-4 py-4 font-semibold text-slate-900">{{ c.name }}</td><td class="px-4 py-4">{{ c.owner.email }}</td><td class="px-4 py-4">{{ c.get_identity_status_display }}</td></tr>{% endfor %}</tbody></table></div></div>
+        </section>
+    </section>
 
-    <!-- VISIBILITY SECTION -->
-    <div class="admin-card" id="visibility">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-eye"></i> 👁️ Hidden items</h2>
-        </div>
-        <div class="admin-card-body">
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label"><i class="fas fa-building"></i> Hidden companies</div>
-                    <div class="detail-value">
-                        {% if hidden_companies %}<ul class="compact-list">{% for c in hidden_companies %}<li>{{ c.name }} <form method="post" action="{% url 'core:control_identity' 'company' c.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline">Reveal</button></form></li>{% endfor %}</ul>{% else %}None{% endif %}
-                    </div>
+    <section id="monitoring" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Monitoring</h2>
+        <div class="mt-6 space-y-8">
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">Listings</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.rfq_status %}<input type="hidden" name="rfq_status" value="{{ request.GET.rfq_status }}">{% endif %}{% if request.GET.inquiry_status %}<input type="hidden" name="inquiry_status" value="{{ request.GET.inquiry_status }}">{% endif %}<select name="listing_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All statuses</option><option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option><option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option><option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option></select></form>
                 </div>
-                <div class="detail-item">
-                    <div class="detail-label"><i class="fas fa-user-secret"></i> Hidden users</div>
-                    <div class="detail-value">
-                        {% if hidden_users %}<ul class="compact-list">{% for u in hidden_users %}<li>{{ u.email }} <form method="post" action="{% url 'core:control_identity' 'user' u.id 'reveal' %}">{% csrf_token %}<button class="btn btn-sm btn-outline">Reveal</button></form></li>{% endfor %}</ul>{% else %}None{% endif %}
-                    </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for lot in all_listings %}<tr><td class="px-4 py-4">{{ lot.title|truncatechars:50 }}</td><td class="px-4 py-4">{{ lot.get_status_display }}</td><td class="px-4 py-4">{{ lot.company.name }}</td><td class="px-4 py-4">{{ lot.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">RFQs</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.listing_status %}<input type="hidden" name="listing_status" value="{{ request.GET.listing_status }}">{% endif %}{% if request.GET.inquiry_status %}<input type="hidden" name="inquiry_status" value="{{ request.GET.inquiry_status }}">{% endif %}<select name="rfq_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All</option><option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option><option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option></select></form>
                 </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for rfq in all_rfqs %}<tr><td class="px-4 py-4">{{ rfq.title|truncatechars:50 }}</td><td class="px-4 py-4">{{ rfq.get_status_display }}</td><td class="px-4 py-4">{{ rfq.buyer.email }}</td><td class="px-4 py-4">{{ rfq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">Inquiries</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.listing_status %}<input type="hidden" name="listing_status" value="{{ request.GET.listing_status }}">{% endif %}{% if request.GET.rfq_status %}<input type="hidden" name="rfq_status" value="{{ request.GET.rfq_status }}">{% endif %}<select name="inquiry_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All</option><option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option><option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option><option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option><option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option></select></form>
+                </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Subject</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for iq in all_inquiries %}<tr><td class="px-4 py-4">{{ iq.display_subject|truncatechars:45 }}</td><td class="px-4 py-4">{{ iq.get_status_display }}</td><td class="px-4 py-4">{{ iq.buyer.email|truncatechars:18 }}</td><td class="px-4 py-4">{{ iq.seller_company.name|truncatechars:18 }}</td><td class="px-4 py-4">{{ iq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
             </div>
         </div>
-    </div>
-
-    <!-- MONITORING -->
-    <div class="admin-card" id="monitors">
-        <div class="admin-card-header">
-            <h2><i class="fas fa-chart-line"></i> 📊 Live monitors</h2>
-        </div>
-        <div class="admin-card-body">
-            <h3>📦 Listings filter</h3>
-            <form method="get" action="" class="inline-form">
-                <select name="listing_status" onchange="this.form.submit()" class="form-input">
-                    <option value="">All statuses</option>
-                    <option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option>
-                    <option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option>
-                    <option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option>
-                </select>
-            </form>
-            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Seller</th><th>Created</th></tr></thead><tbody>{% for lot in all_listings %}<tr><td>{{ lot.title|truncatechars:50 }}</td><td><span class="badge {% if lot.status == 'approved' %}badge-success{% elif lot.status == 'pending_review' %}badge-warning{% else %}badge-danger{% endif %}">{{ lot.get_status_display }}</span></td><td>{{ lot.company.name }}</td><td>{{ lot.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
-
-            <h3 style="margin-top:1.5rem;">❓ RFQs</h3>
-            <form method="get" action="" class="inline-form"><select name="rfq_status" onchange="this.form.submit()" class="form-input"><option value="">All</option><option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option><option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option></select></form>
-            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Buyer</th><th>Created</th></tr></thead><tbody>{% for rfq in all_rfqs %}<tr><td>{{ rfq.title|truncatechars:50 }}</td><td><span class="badge {% if rfq.status == 'open' %}badge-success{% else %}badge-neutral{% endif %}">{{ rfq.get_status_display }}</span></td><td>{{ rfq.buyer.email }}</td><td>{{ rfq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
-
-            <h3 style="margin-top:1.5rem;">✉️ Inquiries</h3>
-            <form method="get" action="" class="inline-form"><select name="inquiry_status" onchange="this.form.submit()" class="form-input"><option value="">All</option><option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option><option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option><option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option><option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option></select></form>
-            <div class="table-wrapper"><table class="admin-table"><thead><tr><th>Subject</th><th>Status</th><th>Buyer</th><th>Seller</th><th>Created</th></tr></thead><tbody>{% for iq in all_inquiries %}<tr><td>{{ iq.display_subject|truncatechars:45 }}</td><td><span class="badge {% if iq.status == 'pending_admin' %}badge-warning{% elif iq.status == 'approved' %}badge-success{% else %}badge-neutral{% endif %}">{{ iq.get_status_display }}</span></td><td>{{ iq.buyer.email|truncatechars:18 }}</td><td>{{ iq.seller_company.name|truncatechars:18 }}</td><td>{{ iq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div>
-        </div>
-    </div>
+    </section>
 </div>
 
 <script>
-    // Simple keyboard shortcut (Ctrl+K focuses search)
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
-            let firstSearch = document.querySelector('input[type="text"]');
-            if(firstSearch) firstSearch.focus();
+            const firstSearch = document.querySelector('input[type="text"]');
+            if (firstSearch) firstSearch.focus();
         }
     });
 </script>

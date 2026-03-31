@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, DetailView, ListView, FormView
@@ -8,7 +8,7 @@ from django.db.models import Q
 
 from companies.models import Company
 from rfqs.forms import ConversationStartForm, MessageReplyForm, RFQForm
-from rfqs.models import RFQ, RFQConversation, RFQMessage
+from rfqs.models import RFQ, RFQConversation, RFQFavorite, RFQMessage
 from core.utils.deals import accept_deal, cancel_deal, reject_deal, get_or_create_for_rfq_conversation
 from core.utils.verification import enforce_verified
 from django.views import View
@@ -26,6 +26,41 @@ class RFQListView(ListView):
             .select_related("category", "buyer")
             .order_by("-created_at")
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page_obj = context.get("page_obj")
+        query = self.request.GET.copy()
+        query.pop("page", None)
+        base_query = query.urlencode()
+        context["pagination_base_query"] = f"&{base_query}" if base_query else ""
+
+        pagination_items = []
+        if page_obj and page_obj.paginator.num_pages > 1:
+            current = page_obj.number
+            total = page_obj.paginator.num_pages
+            pages = {1, total, current - 1, current, current + 1}
+            if current <= 3:
+                pages.update({2, 3, 4})
+            if current >= total - 2:
+                pages.update({total - 3, total - 2, total - 1})
+            pages = sorted(page for page in pages if 1 <= page <= total)
+
+            previous_page = None
+            for page in pages:
+                if previous_page and page - previous_page > 1:
+                    pagination_items.append({"type": "ellipsis"})
+                pagination_items.append(
+                    {
+                        "type": "page",
+                        "number": page,
+                        "is_current": page == current,
+                    }
+                )
+                previous_page = page
+
+        context["pagination_items"] = pagination_items
+        return context
 
 
 class RFQDetailView(DetailView):
@@ -48,6 +83,13 @@ class RFQDetailView(DetailView):
 
             ok_seller, _ = enforce_verified(self.request, role="seller")
         ctx["can_quote"] = ok_seller
+        ctx["is_saved"] = (
+            RFQFavorite.objects.filter(user=self.request.user, rfq=self.object).exists()
+            if self.request.user.is_authenticated
+            else False
+        )
+        ctx["response_count"] = self.object.conversations.count()
+        ctx["ask_question_url"] = f"{reverse('rfqs:start_conversation', args=[self.object.pk])}?intent=question"
         return ctx
 
 
@@ -233,6 +275,7 @@ class ConversationStartView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["rfq"] = self.rfq_obj
+        ctx["intent"] = "question" if self.request.GET.get("intent") == "question" else "quote"
         return ctx
 
     def form_valid(self, form):
@@ -265,6 +308,26 @@ class ConversationStartView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return getattr(self, "success_url", reverse("rfqs:list"))
+
+
+class RFQFavoriteToggleView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        rfq = get_object_or_404(
+            RFQ,
+            pk=kwargs.get("pk"),
+            status=RFQ.Status.OPEN,
+            moderation_status=RFQ.ModerationStatus.APPROVED,
+        )
+        favorite, created = RFQFavorite.objects.get_or_create(user=request.user, rfq=rfq)
+        if not created:
+            favorite.delete()
+            messages.info(request, "Removed from saved RFQs.")
+        else:
+            messages.success(request, "RFQ saved.")
+
+        if request.headers.get("HX-Request") or request.headers.get("Accept", "").startswith("application/json"):
+            return JsonResponse({"saved": created, "is_saved": created})
+        return redirect(rfq.get_absolute_url())
 
 
 class ConversationDealAcceptView(LoginRequiredMixin, View):

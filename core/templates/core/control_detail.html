@@ -4,19 +4,19 @@
 {% block account_intro %}A quick, plain-language summary and actions.{% endblock account_intro %}
 
 {% block account_content %}
-<section class="content-card">
-    <div class="detail-header">
-        <h2>{{ title }}</h2>
-        <div class="actions">
-            {% if edit_url_name %}<a class="button button-secondary" href="{% url edit_url_name object.pk %}">Edit</a>{% endif %}
-            {% if delete_url_name %}<a class="button button-danger" href="{% url delete_url_name object.pk %}">Delete</a>{% endif %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
+        <h2 class="text-xl font-black text-slate-900">{{ title }}</h2>
+        <div class="flex flex-col gap-3 sm:flex-row">
+            {% if edit_url_name %}<a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url edit_url_name object.pk %}">Edit</a>{% endif %}
+            {% if delete_url_name %}<a class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100" href="{% url delete_url_name object.pk %}">Delete</a>{% endif %}
         </div>
     </div>
-    <div class="detail-grid">
+    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {% for label,attr in fields %}
-            <article class="detail-item">
-                <div class="detail-label">{{ label }}</div>
-                <div class="detail-value">
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ label }}</div>
+                <div class="mt-3 text-sm font-semibold text-slate-900">
                     {% with val=object|attr:attr %}
                         {% if val == True %}Yes{% elif val == False %}No{% else %}{{ val }}{% endif %}
                     {% endwith %}
@@ -25,19 +25,19 @@
         {% endfor %}
     </div>
     {% if object|attr:"is_verified_user" %}
-        <div class="banner banner-success">
+        <div class="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-800">
             <strong>Admin verified.</strong> {{ object.verified_user_note|default:"No note left." }}
         </div>
-        <form method="post" action="{% url 'core:control_user_unverify' object.pk %}">
+        <form method="post" action="{% url 'core:control_user_unverify' object.pk %}" class="mt-5">
             {% csrf_token %}
-            <button type="submit" class="button button-secondary">Unverify user</button>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Unverify user</button>
         </form>
     {% else %}
-        <form method="post" action="{% url 'core:control_user_verify' object.pk %}" class="stacked-form">
+        <form method="post" action="{% url 'core:control_user_verify' object.pk %}" class="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
             {% csrf_token %}
-            <label for="verify-note">Verification note (optional)</label>
-            <textarea id="verify-note" name="note" rows="2" placeholder="Internal note for this verification"></textarea>
-            <button type="submit" class="button">Verify user</button>
+            <label for="verify-note" class="block text-sm font-bold text-slate-900">Verification note (optional)</label>
+            <textarea id="verify-note" name="note" rows="2" placeholder="Internal note for this verification" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"></textarea>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Verify user</button>
         </form>
     {% endif %}
 </section>

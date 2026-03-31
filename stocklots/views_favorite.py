@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
 from django.views import View
 from django.views.generic import ListView
 
@@ -16,6 +17,8 @@ class FavoriteToggleView(LoginRequiredMixin, View):
             messages.info(request, "Removed from saved listings.")
         else:
             messages.success(request, "Saved to your favorites.")
+        if request.headers.get("HX-Request") or request.headers.get("Accept", "").startswith("application/json"):
+            return JsonResponse({"saved": created, "is_favorited": created})
         return redirect(stocklot.get_absolute_url())
 
 

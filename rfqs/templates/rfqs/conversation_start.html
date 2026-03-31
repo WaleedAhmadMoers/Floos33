@@ -1,28 +1,45 @@
 {% extends "accounts/account_shell.html" %}
 
-{% block title %}Send quote | floos33{% endblock title %}
+{% block title %}{% if intent == "question" %}Ask question{% else %}Send quote{% endif %} | floos33{% endblock title %}
 {% block account_eyebrow %}RFQ response{% endblock account_eyebrow %}
-{% block account_title %}Send quote{% endblock account_title %}
+{% block account_title %}{% if intent == "question" %}Ask a question{% else %}Send quote{% endif %}{% endblock account_title %}
 {% block account_intro %}Start a private, admin-moderated conversation with the buyer.{% endblock account_intro %}
 
 {% block account_content %}
-<section class="content-card">
-    <h3>{{ rfq.title }}</h3>
-    <p class="subtle-copy">{{ rfq.quantity }} {{ rfq.get_unit_type_display }} — {{ rfq.location_country }} / {{ rfq.location_city }}</p>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h2 class="text-xl font-black text-slate-900">{{ rfq.title }}</h2>
+      <p class="mt-1 text-sm leading-6 text-slate-500">{{ rfq.quantity }} {{ rfq.get_unit_type_display }} · {{ rfq.location_country }}{% if rfq.location_city %} · {{ rfq.location_city }}{% endif %}</p>
+    </div>
+    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{{ intent|title }}</span>
+  </div>
 </section>
 
-<form method="post" class="auth-form" enctype="multipart/form-data">
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
     {% csrf_token %}
     {% for field in form %}
-        <div class="field-group">
-            {{ field.label_tag }}{{ field }}
-            {% if field.errors %}
-                <ul class="field-errors">
-                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-                </ul>
-            {% endif %}
-        </div>
+      <div>
+        <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-900">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
+        {% endif %}
+        {% if field.errors %}
+          <ul class="mt-2 space-y-1 text-sm text-rose-600">
+            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
     {% endfor %}
-    <button type="submit" class="button">Send quote</button>
-</form>
+
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 sm:w-auto">
+        {% if intent == "question" %}Send question{% else %}Send quote{% endif %}
+      </button>
+      <a href="{{ rfq.get_absolute_url }}" class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto">Back to RFQ</a>
+    </div>
+  </form>
+</section>
 {% endblock account_content %}

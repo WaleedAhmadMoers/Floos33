@@ -9,7 +9,24 @@ from inquiries.models import Inquiry, InquiryReply
 from rfqs.models import RFQMessage
 
 
-class AdminUserForm(forms.ModelForm):
+class BaseAdminStyledForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        base_class = (
+            "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 "
+            "shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        )
+        checkbox_class = "h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
+
+        for field in self.fields.values():
+            existing = field.widget.attrs.get("class", "").strip()
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs["class"] = " ".join(part for part in [existing, checkbox_class] if part).strip()
+            else:
+                field.widget.attrs["class"] = " ".join(part for part in [existing, base_class] if part).strip()
+
+
+class AdminUserForm(BaseAdminStyledForm):
     class Meta:
         model = User
         fields = [
@@ -24,7 +41,7 @@ class AdminUserForm(forms.ModelForm):
         ]
 
 
-class AdminCompanyForm(forms.ModelForm):
+class AdminCompanyForm(BaseAdminStyledForm):
     class Meta:
         model = Company
         fields = [
@@ -43,7 +60,7 @@ class AdminCompanyForm(forms.ModelForm):
         ]
 
 
-class AdminDealForm(forms.ModelForm):
+class AdminDealForm(BaseAdminStyledForm):
     class Meta:
         model = DealTrigger
         fields = [
@@ -60,7 +77,7 @@ class AdminDealForm(forms.ModelForm):
         ]
 
 
-class AdminStocklotForm(forms.ModelForm):
+class AdminStocklotForm(BaseAdminStyledForm):
     class Meta:
         model = Stocklot
         fields = [
@@ -82,7 +99,7 @@ class AdminStocklotForm(forms.ModelForm):
         ]
 
 
-class AdminRFQForm(forms.ModelForm):
+class AdminRFQForm(BaseAdminStyledForm):
     class Meta:
         model = RFQ
         fields = [
@@ -101,7 +118,7 @@ class AdminRFQForm(forms.ModelForm):
         ]
 
 
-class AdminInquiryForm(forms.ModelForm):
+class AdminInquiryForm(BaseAdminStyledForm):
     class Meta:
         model = Inquiry
         fields = [
@@ -115,7 +132,7 @@ class AdminInquiryForm(forms.ModelForm):
         ]
 
 
-class AdminInquiryReplyForm(forms.ModelForm):
+class AdminInquiryReplyForm(BaseAdminStyledForm):
     class Meta:
         model = InquiryReply
         fields = [
@@ -127,7 +144,7 @@ class AdminInquiryReplyForm(forms.ModelForm):
         ]
 
 
-class AdminRFQMessageForm(forms.ModelForm):
+class AdminRFQMessageForm(BaseAdminStyledForm):
     class Meta:
         model = RFQMessage
         fields = [

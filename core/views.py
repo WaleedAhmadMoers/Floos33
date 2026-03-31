@@ -1,15 +1,18 @@
 from django.contrib import messages
 from django.db import models, transaction
+from django.db.models import Exists, OuterRef, Value, BooleanField
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from stocklots.models import Stocklot, Category
+from stocklots.models import Favorite
 from core.models import Notification, DealTrigger
-from rfqs.models import RFQMessage, RFQ, RFQConversation
+from rfqs.models import RFQMessage, RFQ, RFQConversation, RFQFavorite
 from inquiries.models import InquiryReply, Inquiry
 from companies.models import Company
 from accounts.models import User
@@ -26,11 +29,36 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["homepage_stocklots"] = (
+        qs = (
             Stocklot.objects.select_related("company", "company__owner", "category", "category__parent")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
-            .order_by("-created_at")[:6]
+            .annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(user=self.request.user, stocklot=OuterRef("pk"))
+                ) if self.request.user.is_authenticated else Value(False, output_field=BooleanField())
+            )
+            .order_by("-created_at")
         )
+        paginator = Paginator(qs, 6)
+        page_num = self.request.GET.get("hp", 1)
+        try:
+            page_obj = paginator.page(page_num)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+        context["homepage_stocklots"] = list(page_obj.object_list)
+        # build prev/next links preserving other home params
+        base_qs = self.request.GET.copy()
+        base_qs.pop("hp", None)
+        base_prefix = "?" + base_qs.urlencode()
+        if base_prefix != "?" and not base_prefix.endswith("&"):
+            base_prefix += "&"
+        elif base_prefix == "?":
+            base_prefix = "?"
+        context["home_page_obj"] = page_obj
+        context["home_page_prev"] = f"{base_prefix}hp={page_obj.previous_page_number()}" if page_obj.has_previous() else None
+        context["home_page_next"] = f"{base_prefix}hp={page_obj.next_page_number()}" if page_obj.has_next() else None
         context["homepage_feed"] = (
             Stocklot.objects.select_related("company", "category")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
@@ -94,6 +122,28 @@ class AboutView(TemplateView):
 
 class ContactView(TemplateView):
     template_name = "core/contact.html"
+
+
+class SavedItemsView(LoginRequiredMixin, TemplateView):
+    template_name = "core/saved.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["saved_listings"] = (
+            Favorite.objects.select_related("stocklot", "stocklot__company", "stocklot__company__owner", "stocklot__category", "stocklot__category__parent")
+            .filter(user=self.request.user, stocklot__status=Stocklot.Status.APPROVED, stocklot__is_active=True)
+            .order_by("-created_at")
+        )
+        context["saved_rfqs"] = (
+            RFQFavorite.objects.select_related("rfq", "rfq__buyer", "rfq__category", "rfq__category__parent")
+            .filter(
+                user=self.request.user,
+                rfq__status=RFQ.Status.OPEN,
+                rfq__moderation_status=RFQ.ModerationStatus.APPROVED,
+            )
+            .order_by("-created_at")
+        )
+        return context
 
 
 class NotificationListView(LoginRequiredMixin, ListView):

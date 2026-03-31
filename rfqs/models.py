@@ -150,3 +150,28 @@ class RFQMessage(models.Model):
 
     def __str__(self):
         return f"Message in {self.conversation} ({self.get_moderation_status_display()})"
+
+
+class RFQFavorite(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_rfqs",
+        verbose_name="user",
+    )
+    rfq = models.ForeignKey(
+        RFQ,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+        verbose_name="rfq",
+    )
+    created_at = models.DateTimeField("created at", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("user", "rfq")
+        verbose_name = "saved RFQ"
+        verbose_name_plural = "saved RFQs"
+
+    def __str__(self):
+        return f"{self.user} -> {self.rfq}"

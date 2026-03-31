@@ -1,0 +1,21 @@
+{% with fname=cleanname|default:doc.file.name|default:"Document" %}
+  {% with lower=fname|lower %}
+    {% if '.pdf' in lower or doc.doc_type == 'pdf' %}
+      {% with icon='📄' type_label='PDF' %}
+        {% include "stocklots/partials/doc_row_inner.html" %}
+      {% endwith %}
+    {% elif '.xls' in lower or '.xlsx' in lower or '.csv' in lower or doc.doc_type == 'excel' %}
+      {% with icon='📊' type_label='Excel' %}
+        {% include "stocklots/partials/doc_row_inner.html" %}
+      {% endwith %}
+    {% elif '.png' in lower or '.jpg' in lower or '.jpeg' in lower or '.webp' in lower or '.gif' in lower %}
+      {% with icon='🖼️' type_label='Image' %}
+        {% include "stocklots/partials/doc_row_inner.html" %}
+      {% endwith %}
+    {% else %}
+      {% with icon='📁' type_label='' %}
+        {% include "stocklots/partials/doc_row_inner.html" %}
+      {% endwith %}
+    {% endif %}
+  {% endwith %}
+{% endwith %}

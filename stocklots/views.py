@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal, InvalidOperation
 
-from django.db.models import Q, OuterRef, Exists
+from django.db.models import Q, OuterRef, Exists, Value, BooleanField
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -30,8 +30,7 @@ class MarketplaceListView(ListView):
 
     def get_queryset(self):
         queryset = (
-            Stocklot.objects.select_related("company", "category", "category__parent")
-            .select_related("company__owner")
+            Stocklot.objects.select_related("company", "category", "category__parent", "company__owner")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
             .annotate(
                 seller_verified=Exists(
@@ -41,6 +40,13 @@ class MarketplaceListView(ListView):
                 )
             )
         )
+
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(Favorite.objects.filter(user=self.request.user, stocklot=OuterRef("pk")))
+            )
+        else:
+            queryset = queryset.annotate(is_favorited=Value(False, output_field=BooleanField()))
 
         search_query = self.request.GET.get("q", "").strip()
         if search_query:
@@ -157,6 +163,20 @@ class MarketplaceListView(ListView):
             )
         context["active_filters"] = active_filters
         context["has_filters"] = bool(active_filters or context["search_query"])
+
+        page_obj = context.get("page_obj")
+        if page_obj:
+            base_qs = self.request.GET.copy()
+            base_qs.pop("page", None)
+            base_prefix = "?" + base_qs.urlencode()
+            if base_prefix != "?" and not base_prefix.endswith("&"):
+                base_prefix += "&"
+            context["page_prev"] = (
+                f"{base_prefix}page={page_obj.previous_page_number()}" if page_obj.has_previous() else None
+            )
+            context["page_next"] = f"{base_prefix}page={page_obj.next_page_number()}" if page_obj.has_next() else None
+        else:
+            context["page_prev"] = context["page_next"] = None
         return context
 
 
@@ -196,6 +216,22 @@ class StocklotDetailView(DetailView):
             context["can_contact"] = ok_buyer
         else:
             context["can_contact"] = False
+        # Hot deals / other marketplace items for exploration
+        context.setdefault(
+            "other_market_stocklots",
+            list(
+                Stocklot.objects.select_related("company", "category")
+                .filter(status=Stocklot.Status.APPROVED, is_active=True)
+                .exclude(pk=self.object.pk)
+                .order_by("-created_at")[:8]
+            ),
+        )
+        # Precompute document display names (basename only) for clean UI
+        docs = []
+        for d in self.object.documents.all():
+            d.display_name = d.file.name.rsplit("/", 1)[-1] if d.file and d.file.name else "Document"
+            docs.append(d)
+        context["stocklot_documents"] = docs
         return context
 
 

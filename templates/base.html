@@ -4,264 +4,172 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {brand: {50: "#fff7ed",100: "#ffedd5",200: "#fed7aa",500: "#f59e0b",600: "#d97706",700: "#b45309"}},
+                    boxShadow: {panel: "0 12px 34px rgba(15, 23, 42, 0.06)"},
+                    keyframes: {
+                        "ticker-ltr": {"0%": {transform: "translateX(100%)"},"100%": {transform: "translateX(-100%)"}},
+                        "ticker-rtl": {"0%": {transform: "translateX(-100%)"},"100%": {transform: "translateX(100%)"}}
+                    },
+                    animation: {"ticker-ltr": "ticker-ltr 25s linear infinite","ticker-rtl": "ticker-rtl 25s linear infinite"}
+                }
+            }
+        }
+    </script>
     <title>{% block title %}floos33{% endblock title %}</title>
-    <link rel="stylesheet" href="{% static 'core/css/app.css' %}">
-    <style>
-        :root {
-            --brand: #f59e0b;
-            --ink: #0f172a;
-            --muted: #475569;
-            --line: #e2e8f0;
-            --bg: rgba(255,255,255,0.96);
-            --ticker-h: 28px;
-        }
-        html, body { margin:0; padding:0 !important; width:100%; max-width:100%; display:block; overflow-x:hidden; }
-        .site-shell { margin:0; padding:0 !important; width:100%; max-width:100%; }
-        .ticker-shell {position:sticky; top:0; z-index:50; background:#f59e0b; color:#fff; overflow:hidden; border-bottom:1px solid rgba(0,0,0,0.06); min-height:var(--ticker-h); margin:0; padding:0; width:100%; display:flex; align-items:center; justify-content:flex-start;}
-        .ticker-track {display:inline-block; white-space:nowrap; padding:5px 10px; font-size:12px; font-weight:600; animation-duration:25s; animation-timing-function:linear; animation-iteration-count:infinite;}
-        .ticker-track.ltr {animation-name:ticker-ltr;}
-        .ticker-track.rtl {animation-name:ticker-rtl;}
-        .ticker-pill {margin-inline-end:24px;}
-        .ticker-pill a {color:inherit; text-decoration:none;}
-        .ticker-pill a:hover {text-decoration:underline;}
-        @keyframes ticker-ltr { 0% {transform: translateX(100%);} 100% {transform: translateX(-100%);} }
-        @keyframes ticker-rtl { 0% {transform: translateX(-100%);} 100% {transform: translateX(100%);} }
-        @media (max-width: 640px) {
-            :root { --ticker-h: 24px; }
-            .ticker-track {font-size:11px; padding:4px 8px; animation-duration:16s;}
-            .ticker-pill {margin-inline-end:16px;}
-        }
-        @media (max-width: 768px) {
-            .nav-bar {gap:10px; padding:10px 12px;}
-            .nav-logo-img {height:30px; max-height:30px;}
-        }
-        @media (max-width: 480px) {
-            .nav-logo-img {height:26px; max-height:26px;}
-            .nav-links {gap:10px;}
-        }
-        .page-content {overflow-x:hidden;}
-        img {max-width:100%; height:auto;}
-        /* Discovery strip */
-        .cat-strip {width:100%; background:#fff;}
-        .cat-inner {max-width:1080px; margin:0 auto; padding:6px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-        .cat-rail {display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; padding:2px 0; scrollbar-width:thin; justify-content:flex-end; flex:1 1 auto; min-width:0; white-space:nowrap; -webkit-overflow-scrolling: touch;}
-        .cat-pill {flex:0 0 auto; padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:#5b6473; background:#fff; white-space:nowrap; transition:all 0.15s ease;}
-        .cat-pill:hover {border-color:var(--brand); color:var(--ink);}
-        .cat-pill.active {background:#fef3c7; border-color:#f59e0b; color:#b45309;}
-
-        /* Search bar */
-        .search-form {display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:10px; padding:5px 8px; background:#fff; box-shadow:0 1px 6px rgba(15,23,42,0.04); flex:0 0 360px; width:360px; max-width:360px;}
-        .search-icon {display:flex; align-items:center; justify-content:center; color:var(--muted);}
-        .search-icon svg {width:18px; height:18px;}
-        .search-form input {flex:1 1 auto; min-width:0; border:none; outline:none; font-size:12px; color:var(--ink); padding:5px 2px;}
-        .search-form button {background:var(--brand); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer; white-space:nowrap; font-size:12px;}
-        .search-form button:hover {background:#d98207;}
-        @media (max-width: 640px) {
-            :root { --ticker-h: 24px; }
-            .ticker-track {font-size:11px; padding:4px 8px; animation-duration:16s;}
-            .ticker-pill {margin-inline-end:16px;}
-            .cat-inner {padding:6px 12px; flex-direction:column; align-items:flex-start; gap:8px;}
-            .cat-rail {justify-content:flex-start; width:100%; white-space:nowrap;}
-            .cat-pill {padding:6px 8px; font-size:11.5px;}
-            .search-form {padding:6px 8px; gap:6px; max-width:100%; width:100%; flex:1 1 auto;}
-            .search-form input {font-size:12.5px;}
-            .search-form button {padding:8px 10px; font-size:12.5px;}
-        }
-
-        .nav-shell {position:sticky; top:0; z-index:40; background:var(--bg); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); box-shadow:0 6px 20px rgba(15,23,42,0.06);}
-        .has-ticker .nav-shell {top:var(--ticker-h);}
-        .nav-bar {width:100%; max-width:1180px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px;}
-        .nav-left {display:flex; align-items:center; gap:10px; min-width:0; flex:0 0 auto;}
-        .nav-logo-img {height:34px; max-height:34px; width:auto; display:block; object-fit:contain;}
-        .nav-center {display:flex; align-items:center; justify-content:center; gap:12px; flex:1 1 auto; min-width:0;}
-        .nav-links {display:flex; align-items:center; gap:14px;}
-        .nav-link {text-decoration:none; color:var(--muted); padding:6px 0; border-bottom:2px solid transparent; font-weight:600; font-size:14px;}
-        .nav-link:hover, .nav-link.is-active {color:var(--brand); border-color:var(--brand);}
-        .nav-actions {display:flex; align-items:center; gap:10px;}
-        .nav-right {display:flex; align-items:center; gap:10px; flex:0 0 auto;}
-        .nav-link-ghost {text-decoration:none; border:1px solid var(--line); padding:8px 10px; border-radius:10px; font-weight:700; color:var(--muted);}
-        .nav-link-ghost:hover {border-color:var(--brand); color:var(--ink);}
-        .nav-link-solid {text-decoration:none; background:var(--brand); color:#fff; padding:9px 12px; border-radius:10px; font-weight:700; box-shadow:0 6px 14px rgba(245,158,11,0.18);}
-        .nav-cta {background:var(--brand); color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; text-decoration:none; box-shadow:0 6px 14px rgba(245,158,11,0.18);}
-        .nav-icon {position:relative; color:var(--muted); text-decoration:none; display:inline-flex; align-items:center;}
-        .nav-icon svg {width:18px; height:18px;}
-        .badge {position:absolute; top:-6px; right:-8px; background:#ef4444; color:#fff; border-radius:999px; padding:2px 6px; font-size:10px; font-weight:700;}
-        .nav-user {position:relative;}
-        .nav-user-trigger {display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none; color:var(--muted); font-weight:600;}
-        .nav-avatar {width:30px; height:30px; border-radius:50%; background:var(--line); display:grid; place-items:center; font-weight:700; color:var(--ink);}
-        .nav-verified {font-size:11px; color:var(--brand); border:1px solid var(--brand); border-radius:999px; padding:2px 6px;}
-        .nav-dropdown {position:absolute; right:0; top:110%; min-width:220px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 30px rgba(15,23,42,0.12); padding:8px; display:none;}
-        details[open] > .nav-dropdown {display:block;}
-        .nav-dropdown a, .nav-dropdown button {display:block; width:100%; text-align:left; padding:8px 10px; color:var(--muted); text-decoration:none; border:none; background:none; cursor:pointer; font-size:14px;}
-        .nav-dropdown a:hover, .nav-dropdown button:hover {background:#f8fafc; color:var(--ink);}
-        .nav-mobile-toggle {display:none; background:none; border:none; font-size:22px; color:var(--ink);}
-        .nav-mobile {display:none; border-top:1px solid var(--line); padding:14px 16px; background:#fff;}
-        .nav-mobile-links a {display:block; padding:10px 0; color:var(--muted); text-decoration:none; font-weight:600;}
-        .nav-mobile-links form {margin:10px 0;}
-        .nav-cta.mobile {display:block; text-align:center; margin-top:10px;}
-        @media (max-width: 960px) {
-            .nav-bar {flex-wrap:nowrap; justify-content:space-between;}
-            .nav-center {display:none;}
-            .nav-right {display:none;}
-            .nav-mobile-toggle {display:block;}
-            .nav-mobile {display:block;}
-        }
-    </style>
     {% block extra_head %}{% endblock extra_head %}
 </head>
-<body class="{% block body_class %}site-body{% endblock body_class %}">
-    <div class="site-shell {% if ticker_items %}has-ticker{% endif %}">
+<body class="{% block body_class %}min-h-screen bg-slate-50 text-slate-900 antialiased{% endblock body_class %}">
+    <div class="min-h-screen">
         {% if ticker_items %}
-        <div class="ticker-shell" dir="{{ ticker_direction|default:'ltr' }}" style="display:flex;align-items:center;justify-content:flex-start;width:100%;margin:0;padding:0;">
-            <div class="ticker-track {% if ticker_direction == 'rtl' %}rtl{% else %}ltr{% endif %}">
-                {% for item in ticker_items %}
-                    <span class="ticker-pill">
-                        {% if item.link_url %}<a href="{{ item.link_url }}">{{ item.message }}</a>{% else %}{{ item.message }}{% endif %}
-                    </span>
-                {% endfor %}
+        <div class="sticky top-0 z-50 overflow-hidden border-b border-black/5 bg-[#f59e0b] text-white">
+            <div dir="{{ ticker_direction|default:'ltr' }}" class="flex min-h-7 items-center">
+                <div class="whitespace-nowrap px-3 py-1 text-xs font-semibold {% if ticker_direction == 'rtl' %}animate-ticker-rtl{% else %}animate-ticker-ltr{% endif %} sm:py-1.5">
+                    {% for item in ticker_items %}
+                        <span class="mr-6 inline-block">{% if item.link_url %}<a href="{{ item.link_url }}" class="hover:underline">{{ item.message }}</a>{% else %}{{ item.message }}{% endif %}</span>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         {% endif %}
-        <header class="nav-shell" dir="ltr">
-            <div class="nav-bar">
-                <div class="nav-left">
-                    <a href="{% url 'core:home' %}">
-                        <img src="{% static 'logo.png' %}" alt="floos33" class="nav-logo-img">
-                    </a>
-                </div>
-                <div class="nav-center">
-                    <div class="nav-links">
-                        <a class="nav-link" href="{% url 'stocklots:list' %}">Marketplace</a>
-                        <a class="nav-link" href="{% url 'rfqs:list' %}">RFQs</a>
-                        <a class="nav-link" href="#how">How it works</a>
-                    </div>
-                </div>
-
-                <div class="nav-right">
+        <header class="sticky z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur {% if ticker_items %}top-7{% else %}top-0{% endif %}">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+                <a href="{% url 'core:home' %}" class="inline-flex items-center"><img src="{% static 'logo.png' %}" alt="floos33" class="h-10 w-auto sm:h-11"></a>
+                <nav class="hidden items-center gap-6 lg:flex">
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'stocklots:list' %}">Marketplace</a>
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'rfqs:list' %}">Browse RFQs</a>
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="#how">How it works</a>
+                </nav>
+                <div class="hidden items-center gap-3 lg:flex">
                     {% if request.user.is_authenticated %}
-                        <div class="nav-actions">
-                            <a class="nav-icon" href="{% url 'core:notifications' %}" aria-label="Notifications">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 14v-3a6 6 0 10-12 0v3l-1.5 2.5a1 1 0 00.85 1.5h13.3a1 1 0 00.85-1.5L18 14z"/>
-                                    <path d="M12 6v-1"/>
-                                    <path d="M10 19a2 2 0 004 0"/>
-                                </svg>
-                                {% if notifications_unread_count > 0 %}
-                                    <span class="badge">{{ notifications_unread_count }}</span>
-                                {% endif %}
-                            </a>
-                            <details class="nav-user">
-                                <summary class="nav-user-trigger">
-                                    <span class="nav-avatar">{{ request.user.full_name|default:request.user.email|slice:":1" }}</span>
-                                    <span class="nav-username">{{ request.user.full_name|default:request.user.email }}</span>
-                                    {% if request.user.is_verified_user %}
-                                        <span class="nav-verified">Verified</span>
-                                    {% endif %}
-                                    <span class="nav-caret">▾</span>
-                                </summary>
-                                <div class="nav-dropdown">
-                                    <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
-                                    <a href="{% url 'rfqs:my_rfqs' %}">My RFQs</a>
-                                    <a href="{% url 'stocklots:mine' %}">My listings</a>
-                                    <a href="{% url 'accounts:settings' %}">Settings</a>
-                                    <a href="{% url 'core:notifications' %}">Notifications</a>
-                                    <form action="{% url 'accounts:logout' %}" method="post">
-                                        {% csrf_token %}
-                                        <button type="submit">Logout</button>
-                                    </form>
-                                </div>
-                            </details>
-                            {% if request.user.is_seller %}
-                                <a class="nav-cta" href="{% url 'stocklots:create' %}">List stock</a>
-                            {% else %}
-                                <a class="nav-cta" href="{% url 'rfqs:create' %}">Post RFQ</a>
-                            {% endif %}
-                        </div>
+                        <a class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:saved' %}" aria-label="Saved items"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></a>
+                        <a class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:notifications' %}" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M18 14v-3a6 6 0 10-12 0v3l-1.5 2.5a1 1 0 00.85 1.5h13.3a1 1 0 00.85-1.5L18 14z"/><path d="M12 6v-1"/><path d="M10 19a2 2 0 004 0"/></svg>{% if notifications_unread_count > 0 %}<span class="absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{{ notifications_unread_count }}</span>{% endif %}</a>
+                        <details class="relative">
+                            <summary class="flex list-none items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"><span class="grid h-9 w-9 place-items-center rounded-2xl bg-slate-100 text-sm font-black text-slate-900">{{ request.user.full_name|default:request.user.email|slice:":1" }}</span><span class="max-w-[11rem] truncate">{{ request.user.full_name|default:request.user.email }}</span>{% if request.user.is_verified_user %}<span class="hidden rounded-full border border-brand-200 bg-brand-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700 xl:inline-flex">Verified</span>{% endif %}</summary>
+                            <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-3xl border border-slate-200 bg-white p-3 shadow-panel">
+                                <a href="{% url 'accounts:dashboard' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Dashboard</a>
+                                <a href="{% url 'rfqs:my_rfqs' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My RFQs</a>
+                                <a href="{% url 'stocklots:mine' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My listings</a>
+                                <a href="{% url 'accounts:settings' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Settings</a>
+                                <a href="{% url 'core:notifications' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Notifications</a>
+                                <form action="{% url 'accounts:logout' %}" method="post" class="mt-1">{% csrf_token %}<button type="submit" class="block w-full rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Logout</button></form>
+                            </div>
+                        </details>
+                        {% if request.user.is_seller %}<a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'stocklots:create' %}">List stock</a>{% endif %}
                     {% else %}
-                        <div class="nav-actions">
-                            <a class="nav-link-ghost" href="{% url 'accounts:login' %}">Sign in</a>
-                            <a class="nav-link-solid" href="{% url 'accounts:signup' %}">Create account</a>
-                        </div>
+                        <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'accounts:login' %}">Sign in</a>
+                        <a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'accounts:signup' %}">Create account</a>
                     {% endif %}
                 </div>
-
-                <button class="nav-mobile-toggle" aria-label="Toggle menu">☰</button>
+                <button class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-slate-300 lg:hidden" type="button" aria-label="Toggle menu" id="mobile-menu-toggle"><span id="mobile-menu-icon" class="text-xl leading-none">&#9776;</span></button>
             </div>
-
-            <div class="nav-mobile" hidden>
-                <div class="nav-mobile-links">
-                    <a href="{% url 'stocklots:list' %}">Marketplace</a>
-                    <a href="{% url 'rfqs:list' %}">RFQs</a>
-                    <a href="#how">How it works</a>
+            <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white lg:hidden">
+                <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
+                    <a href="{% url 'stocklots:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Marketplace</a>
+                    <a href="{% url 'rfqs:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Browse RFQs</a>
+                    <a href="#how" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">How it works</a>
                     {% if request.user.is_authenticated %}
-                        <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
-                        <a href="{% url 'rfqs:my_rfqs' %}">My RFQs</a>
-                        <a href="{% url 'stocklots:mine' %}">My listings</a>
-                        <a href="{% url 'accounts:settings' %}">Settings</a>
-                        <a href="{% url 'core:notifications' %}">Notifications ({{ notifications_unread_count }})</a>
-                        <form action="{% url 'accounts:logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Logout</button>
-                        </form>
-                        {% if request.user.is_seller %}
-                            <a class="nav-cta mobile" href="{% url 'stocklots:create' %}">List stock</a>
-                        {% else %}
-                            <a class="nav-cta mobile" href="{% url 'rfqs:create' %}">Post RFQ</a>
-                        {% endif %}
+                        <a href="{% url 'core:saved' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Saved items</a>
+                        <a href="{% url 'accounts:dashboard' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Dashboard</a>
+                        <a href="{% url 'rfqs:my_rfqs' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My RFQs</a>
+                        <a href="{% url 'stocklots:mine' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My listings</a>
+                        <a href="{% url 'accounts:settings' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Settings</a>
+                        <a href="{% url 'core:notifications' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Notifications ({{ notifications_unread_count }})</a>
+                        <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button type="submit" class="w-full rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Logout</button></form>
+                        {% if request.user.is_seller %}<a class="mt-2 inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'stocklots:create' %}">List stock</a>{% endif %}
                     {% else %}
-                        <a href="{% url 'accounts:login' %}">Sign in</a>
-                        <a class="nav-cta mobile" href="{% url 'accounts:signup' %}">Create account</a>
+                        <a href="{% url 'accounts:login' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Sign in</a>
+                        <a class="mt-2 inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'accounts:signup' %}">Create account</a>
                     {% endif %}
                 </div>
             </div>
         </header>
-
-        <div class="cat-strip">
-            <div class="cat-inner">
-                <form class="search-form" action="{% url 'stocklots:list' %}" method="get">
-                    <div class="search-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="7"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </div>
-                    <input type="search" name="q" placeholder="Search listings, categories, products…" aria-label="Search" value="{{ request.GET.q }}">
-                    <button type="submit">Search</button>
+        <div class="border-b border-slate-200 bg-white">
+            <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                <form class="mx-auto flex w-full max-w-2xl items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm" action="{% url 'stocklots:list' %}" method="get">
+                    <span class="text-slate-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                    <input type="search" name="q" placeholder="Search listings, categories, products..." aria-label="Search" value="{{ request.GET.q }}" class="min-w-0 flex-1 border-0 bg-transparent px-0 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600">Search</button>
                 </form>
-                <div class="cat-rail" role="tablist" aria-label="Categories">
-                    <a class="cat-pill active" href="{% url 'stocklots:list' %}">All</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=electronics">Electronics</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=fashion">Fashion</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=home">Home</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=auto">Auto</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=industrial">Industrial</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=tools">Tools</a>
-                    <a class="cat-pill" href="{% url 'stocklots:list' %}?category=pallets">Pallets</a>
-                </div>
             </div>
         </div>
-
         {% if messages %}
-            <section class="messages">
-                {% for message in messages %}
-                    <div class="message {{ message.tags|default:'info' }}">{{ message }}</div>
-                {% endfor %}
-            </section>
+        <section class="mx-auto mt-4 flex max-w-7xl flex-col gap-3 px-4 sm:px-6 lg:px-8">
+            {% for message in messages %}
+                <div class="rounded-2xl border px-4 py-3 text-sm font-medium {% if 'success' in message.tags %}border-emerald-200 bg-emerald-50 text-emerald-800{% elif 'error' in message.tags %}border-rose-200 bg-rose-50 text-rose-800{% elif 'warning' in message.tags %}border-amber-200 bg-amber-50 text-amber-800{% else %}border-slate-200 bg-white text-slate-700{% endif %}">{{ message }}</div>
+            {% endfor %}
+        </section>
         {% endif %}
-
-        <main class="page-content">
-            {% block content %}{% endblock content %}
-        </main>
+        <main class="overflow-x-hidden">{% block content %}{% endblock content %}</main>
     </div>
+    <footer class="border-t border-[#e18d07] bg-[#f59e0b] text-amber-50">
+      <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
+        <div class="flex flex-col gap-6 rounded-3xl border border-white/20 bg-[#f8b133]/40 p-6 shadow-panel backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
+          <div class="max-w-2xl"><p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-amber-100">Live platform</p><h2 class="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Connecting EU sellers with MENA buyers.</h2><p class="mt-3 text-sm leading-6 text-amber-50/85">floos33 helps verified businesses move surplus inventory, answer demand faster, and manage trade conversations in one platform.</p></div>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-white/15 bg-[#d88908]/25 px-4 py-4"><p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-100/80">Businesses</p><p class="mt-2 text-2xl font-black text-white">3,800+</p><p class="mt-1 text-xs leading-5 text-amber-50/80">Active buyers and sellers across cross-border trade flows.</p></div>
+            <div class="rounded-2xl border border-white/15 bg-[#d88908]/25 px-4 py-4"><p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-100/80">Listings</p><p class="mt-2 text-2xl font-black text-white">1,200+</p><p class="mt-1 text-xs leading-5 text-amber-50/80">Overstock, liquidation, pallets, and mixed commercial lots.</p></div>
+            <div class="rounded-2xl border border-white/15 bg-[#d88908]/25 px-4 py-4"><p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-100/80">Trades</p><p class="mt-2 text-2xl font-black text-white">Active daily</p><p class="mt-1 text-xs leading-5 text-amber-50/80">RFQs, inquiries, and moderated deal progress happening every day.</p></div>
+          </div>
+        </div>
+        <div class="mt-8 grid gap-8 border-t border-white/15 pt-8 md:grid-cols-2 xl:grid-cols-5">
+          <div class="xl:col-span-1"><a href="{% url 'core:home' %}" class="inline-flex items-center gap-3"><span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#d88908]/25 ring-1 ring-white/20"><img src="{% static 'logo.png' %}" alt="floos33" class="h-8 w-auto"></span><span><span class="block text-lg font-black text-white">floos33</span><span class="block text-xs font-medium text-amber-100/80">EU to MENA trade platform</span></span></a><p class="mt-4 max-w-sm text-sm leading-6 text-amber-50/85">A B2B marketplace for browsing stocklots, posting RFQs, and moving deals forward with stronger trust and structure.</p></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Marketplace</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Browse listings</a></li><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Categories</a></li><li><a href="{% url 'core:home' %}#how" class="transition hover:text-white">How it works</a></li></ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">RFQs</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a></li><li><a href="{% url 'rfqs:create' %}" class="transition hover:text-white">Post RFQ</a></li><li><a href="{% url 'rfqs:my_rfqs' %}" class="transition hover:text-white">My RFQs</a></li></ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Account</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'accounts:dashboard' %}" class="transition hover:text-white">Dashboard</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Profile</a></li><li><a href="{% url 'core:saved' %}" class="transition hover:text-white">Saved</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Settings</a></li></ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Legal & Support</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'core:about' %}" class="transition hover:text-white">About</a></li><li><a href="{% url 'core:contact' %}" class="transition hover:text-white">Contact</a></li><li><a href="{% url 'core:notifications' %}" class="transition hover:text-white">Notifications</a></li><li><a href="{% url 'core:home' %}#how" class="transition hover:text-white">Help</a></li></ul></div>
+        </div>
+        <div class="mt-8 flex flex-col gap-4 border-t border-white/15 pt-6 text-sm text-amber-100/80 sm:flex-row sm:items-center sm:justify-between"><p>&copy; floos33 - {% now "Y" %}</p><div class="flex flex-wrap gap-5"><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Marketplace</a><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a><a href="{% url 'core:contact' %}" class="transition hover:text-white">Support</a></div></div>
+      </div>
+    </footer>
     <script>
-        const toggle = document.querySelector('.nav-mobile-toggle');
-        const mobile = document.querySelector('.nav-mobile');
-        if (toggle && mobile) {
-            toggle.addEventListener('click', () => {
-                const hidden = mobile.getAttribute('hidden') !== null;
-                if (hidden) mobile.removeAttribute('hidden'); else mobile.setAttribute('hidden','hidden');
-            });
-        }
+        const mobileToggle = document.getElementById("mobile-menu-toggle"), mobileMenu = document.getElementById("mobile-menu"), mobileIcon = document.getElementById("mobile-menu-icon");
+        if (mobileToggle && mobileMenu && mobileIcon) { mobileToggle.addEventListener("click", () => { const isHidden = mobileMenu.classList.contains("hidden"); mobileMenu.classList.toggle("hidden", !isHidden); mobileIcon.innerHTML = isHidden ? "&#10005;" : "&#9776;"; }); }
     </script>
+    {% block extra_js %}
+    <script>
+      (function() {
+        function getCsrf() { const m = document.cookie.match(/csrftoken=([^;]+)/); return m ? m[1] : ''; }
+        function wireFavorites() {
+          document.querySelectorAll('form.favorite-toggle').forEach(form => {
+            if (form.dataset.wired === '1') return; form.dataset.wired = '1';
+            form.addEventListener('submit', async (e) => {
+              e.preventDefault(); const btn = form.querySelector('button');
+              try {
+                const resp = await fetch(form.action, {method: 'POST', headers: {'X-CSRFToken': getCsrf(), 'Accept': 'application/json'}, body: new FormData(form), redirect: 'follow'});
+                if (resp.redirected) { window.location = resp.url; return; }
+                if (!resp.ok) { window.location = form.action; return; }
+                const data = await resp.json(), saved = !!data.is_favorited;
+                btn.classList.toggle('!text-amber-600', saved);
+                btn.innerHTML = saved ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+              } catch (err) { console.error(err); window.location = form.action; }
+            });
+          });
+        }
+        function replaceHomeMarket(htmlText) {
+          const parser = new DOMParser(), doc = parser.parseFromString(htmlText, 'text/html'), incoming = doc.querySelector('#home-market-block'), current = document.querySelector('#home-market-block');
+          if (incoming && current) { current.replaceWith(incoming); wireFavorites(); wireHomePagination(); }
+        }
+        function wireHomePagination() {
+          document.querySelectorAll('.home-hp-link').forEach(link => {
+            if (link.dataset.wired === '1') return; link.dataset.wired = '1';
+            link.addEventListener('click', async (e) => {
+              e.preventDefault(); const url = link.href;
+              try {
+                const resp = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                if (!resp.ok) return; const text = await resp.text(); replaceHomeMarket(text);
+                if (history && history.pushState) history.pushState(null, '', url); e.target.blur();
+              } catch (err) { console.error(err); window.location = url; }
+            });
+          });
+        }
+        document.addEventListener('DOMContentLoaded', () => { wireFavorites(); wireHomePagination(); });
+      })();
+    </script>
+    {% endblock extra_js %}
 </body>
 </html>

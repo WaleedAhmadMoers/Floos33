@@ -3,29 +3,29 @@
 {% block title %}Log in | floos33{% endblock title %}
 {% block auth_eyebrow %}Login{% endblock auth_eyebrow %}
 {% block auth_title %}Log in to your account{% endblock auth_title %}
-{% block auth_intro %}Enter your email and password to access your dashboard and listings.{% endblock auth_intro %}
+{% block auth_intro %}Enter your email and password to access your dashboard, listings, RFQs, and saved opportunities.{% endblock auth_intro %}
 
 {% block auth_content %}
-<form method="post" class="auth-form">
+<form method="post" class="space-y-5">
     {% csrf_token %}
 
     {% if form.non_field_errors %}
-        <ul class="form-errors">
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
+                <div>{{ error }}</div>
             {% endfor %}
-        </ul>
+        </div>
     {% endif %}
 
     {% for field in form %}
-        <div class="field-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <div>
+            <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-900">{{ field.label }}</label>
             {{ field }}
             {% if field.help_text %}
-                <p class="helptext">{{ field.help_text }}</p>
+                <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
             {% endif %}
             {% if field.errors %}
-                <ul class="field-errors">
+                <ul class="mt-2 space-y-1 text-sm text-rose-600">
                     {% for error in field.errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
@@ -38,17 +38,17 @@
         <input type="hidden" name="next" value="{{ request.GET.next }}">
     {% endif %}
 
-    <button type="submit" class="button">Log in</button>
+    <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Log in</button>
 </form>
 
-<div class="stack-sm">
-    <p class="auth-footer">
+<div class="mt-6 space-y-3 text-sm text-slate-600">
+    <p>
         Forgot your password?
-        <a href="{% url 'accounts:password_reset' %}">Reset your password</a>
+        <a href="{% url 'accounts:password_reset' %}" class="font-bold text-brand-700 transition hover:text-brand-600">Reset your password</a>
     </p>
-    <p class="auth-footer">
+    <p>
         Don't have an account yet?
-        <a href="{% url 'accounts:signup' %}">Create a new account</a>
+        <a href="{% url 'accounts:signup' %}" class="font-bold text-brand-700 transition hover:text-brand-600">Create a new account</a>
     </p>
 </div>
 {% endblock auth_content %}

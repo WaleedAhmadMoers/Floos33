@@ -1,4 +1,11 @@
 (() => {
+  const hiddenBadge =
+    "inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600";
+  const pendingBadge =
+    "inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700";
+  const successBadge =
+    "inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700";
+
   function connect(url, handlers, retryMs = 3000) {
     let socket;
     const retry = () => setTimeout(() => connect(url, handlers, retryMs), retryMs);
@@ -73,9 +80,8 @@
     const statusBadge = (id, state) => {
       const el = root.querySelector(`#${id}`);
       if (!el) return;
-      el.classList.remove("badge-success", "badge-muted");
-      if (state === "revealed") el.classList.add("badge-success");
-      else if (state === "pending") el.classList.add("badge-muted");
+      el.className =
+        state === "revealed" ? successBadge : state === "pending" ? pendingBadge : hiddenBadge;
       el.textContent =
         state === "revealed" ? "Identity revealed" : state === "pending" ? "Reveal pending" : "Identity hidden";
     };

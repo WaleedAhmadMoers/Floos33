@@ -6,181 +6,92 @@
 {% block account_intro %}{{ page_intro }}{% endblock account_intro %}
 
 {% block account_content %}
-<section class="account-panel">
-    <div class="panel-header">
-        <div>
-            <h2>Company details</h2>
-            <p class="subtle-copy">Provide clear company information to unlock marketplace features.</p>
-        </div>
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-2 border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-black text-slate-900">Company details</h2>
+        <p class="text-sm leading-6 text-slate-500">Provide clear company information to unlock marketplace features.</p>
     </div>
 
-    <form method="post" class="auth-form">
+    <form method="post" class="mt-6 space-y-6">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-            <ul class="form-errors">
+            <ul class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
 
-        <div class="form-sections">
-            <section class="form-section">
+        <div class="space-y-6">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <div>
-                    <h3>Basic company info</h3>
-                    <p class="subtle-copy">Name, legal name, and a short description.</p>
+                    <h3 class="text-lg font-black text-slate-900">Basic company info</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">Name, legal name, and a short description.</p>
                 </div>
-                <div class="form-section-grid">
-                    <div class="field-group">
-                        <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ form.name.label }}</label>
                         {{ form.name }}
-                        {% if form.name.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.name.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        {% if form.name.errors %}<ul class="text-sm text-rose-600">{% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                     </div>
-                    <div class="field-group">
-                        <label for="{{ form.legal_name.id_for_label }}">{{ form.legal_name.label }}</label>
+                    <div class="space-y-2">
+                        <label for="{{ form.legal_name.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ form.legal_name.label }}</label>
                         {{ form.legal_name }}
-                        {% if form.legal_name.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.legal_name.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        {% if form.legal_name.errors %}<ul class="text-sm text-rose-600">{% for error in form.legal_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                     </div>
-                    <div class="field-group">
-                        <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ form.description.label }}</label>
                         {{ form.description }}
-                        {% if form.description.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.description.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        {% if form.description.errors %}<ul class="text-sm text-rose-600">{% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                     </div>
                 </div>
             </section>
 
-            <section class="form-section">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <div>
-                    <h3>Contact information</h3>
-                    <p class="subtle-copy">How buyers can reach you.</p>
+                    <h3 class="text-lg font-black text-slate-900">Contact information</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">How buyers can reach you.</p>
                 </div>
-                <div class="form-section-grid">
-                    <div class="field-group">
-                        <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
-                        {{ form.phone }}
-                        {% if form.phone.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.phone.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    {% for field in form %}
+                        {% if field.name == "phone" or field.name == "email" or field.name == "country" or field.name == "city" or field.name == "address" or field.name == "website" %}
+                        <div class="space-y-2 {% if field.name == 'address' or field.name == 'website' %}md:col-span-2{% endif %}">
+                            <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<ul class="text-sm text-rose-600">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
                         {% endif %}
-                    </div>
-                    <div class="field-group">
-                        <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.email.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="field-group">
-                        <label for="{{ form.country.id_for_label }}">{{ form.country.label }}</label>
-                        {{ form.country }}
-                        {% if form.country.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.country.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="field-group">
-                        <label for="{{ form.city.id_for_label }}">{{ form.city.label }}</label>
-                        {{ form.city }}
-                        {% if form.city.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.city.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="field-group">
-                        <label for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
-                        {{ form.address }}
-                        {% if form.address.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.address.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <div class="field-group">
-                        <label for="{{ form.website.id_for_label }}">{{ form.website.label }}</label>
-                        {{ form.website }}
-                        {% if form.website.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.website.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
+                    {% endfor %}
                 </div>
             </section>
 
-            <section class="form-section">
+            <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                 <div>
-                    <h3>Registration</h3>
-                    <p class="subtle-copy">Official registration and tax details.</p>
+                    <h3 class="text-lg font-black text-slate-900">Registration</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-500">Official registration and tax details.</p>
                 </div>
-                <div class="form-section-grid">
-                    <div class="field-group">
-                        <label for="{{ form.registration_number.id_for_label }}">{{ form.registration_number.label }}</label>
+                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <label for="{{ form.registration_number.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ form.registration_number.label }}</label>
                         {{ form.registration_number }}
-                        {% if form.registration_number.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.registration_number.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        {% if form.registration_number.errors %}<ul class="text-sm text-rose-600">{% for error in form.registration_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                     </div>
-                    <div class="field-group">
-                        <label for="{{ form.vat_number.id_for_label }}">{{ form.vat_number.label }}</label>
+                    <div class="space-y-2">
+                        <label for="{{ form.vat_number.id_for_label }}" class="block text-sm font-bold text-slate-900">{{ form.vat_number.label }}</label>
                         {{ form.vat_number }}
-                        {% if form.vat_number.errors %}
-                            <ul class="field-errors">
-                                {% for error in form.vat_number.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        {% if form.vat_number.errors %}<ul class="text-sm text-rose-600">{% for error in form.vat_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                     </div>
                 </div>
             </section>
         </div>
 
-        <div class="actions">
-            <button type="submit" class="button">{{ submit_label }}</button>
+        <div class="flex flex-col gap-3 sm:flex-row">
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ submit_label }}</button>
             {% if page_mode == "edit" %}
-                <a class="button button-secondary" href="{% url 'companies:profile' %}">Back to company</a>
+                <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'companies:profile' %}">Back to company</a>
             {% else %}
-                <a class="button button-secondary" href="{% url 'accounts:dashboard' %}">Back to dashboard</a>
+                <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'accounts:dashboard' %}">Back to dashboard</a>
             {% endif %}
         </div>
     </form>

@@ -1,139 +1,305 @@
 {% extends "base.html" %}
+{% load identity_tags stocklot_tags %}
 
 {% block title %}{{ stocklot.title }} | floos33{% endblock title %}
 
-{% load identity_tags %}
 {% block content %}
-<section class="hero-card">
-    <p class="eyebrow">{{ stocklot.category.full_name }}</p>
-    <h1>{{ stocklot.title }}</h1>
-    <p class="lead">Stocklot offered by {% display_company stocklot.company %} on floos33.</p>
-    {% if stocklot.is_admin_verified %}
-        <div class="badge-row">
-            <span class="badge badge-success">Admin verified</span>
-        </div>
-    {% endif %}
-    <div class="stack-sm">
-        {% if can_contact %}
-            <a class="button" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
-        {% else %}
-            <button class="button" disabled>Contact seller (verification required)</button>
-        {% endif %}
-        {% if request.user.is_authenticated %}
-            <form method="post" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}" style="display:inline;">
-                {% csrf_token %}
-                {% if is_favorited %}
-                    <button type="submit" class="button button-secondary">Unsave</button>
-                {% else %}
-                    <button type="submit" class="button button-secondary">Save</button>
-                {% endif %}
-            </form>
-        {% else %}
-            <a class="button button-secondary" href="{% url 'accounts:login' %}?next={{ request.path }}">Save</a>
-        {% endif %}
+<div class="bg-slate-50">
+<div class="mx-auto max-w-6xl space-y-5 px-4 py-5 lg:space-y-6 lg:py-8">
+  <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="space-y-3">
+      <div class="text-sm text-slate-500">
+      <a href="{% url 'stocklots:list' %}" class="hover:text-amber-600">Marketplace</a> › {{ stocklot.category.full_name }}
     </div>
-</section>
+    <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 leading-snug">{{ stocklot.title }}</h1>
+  </div>
 
-<div class="detail-layout two-col">
-    <section class="content-card main-column">
-        <div class="panel-header">
-            <div>
-                <h2>Stocklot overview</h2>
-                <p class="subtle-copy">Key commercial details buyers need before reaching out.</p>
-            </div>
-            <span class="badge badge-success">{{ stocklot.get_status_display }}</span>
-        </div>
+  <!-- Top row: Gallery | Right column (price + seller + status) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
+    <!-- Gallery left -->
+    <section class="order-1 lg:order-1 lg:col-span-7 bg-white border border-slate-200 rounded-2xl shadow-sm p-3 lg:p-4 space-y-3">
+      {% with media_count=stocklot.images.count|add:stocklot.videos.count %}
+      <div id="media-viewer" class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-50 flex items-center justify-center relative">
+        {% if stocklot.images.first %}
+          <img id="media-main-img" src="{{ stocklot.images.first.file.url }}" alt="{{ stocklot.title }}" class="w-full h-full object-contain">
+        {% elif stocklot.videos.first %}
+          <video id="media-main-video" controls class="w-full h-full object-contain" preload="metadata">
+            <source src="{{ stocklot.videos.first.file.url }}">
+          </video>
+        {% else %}
+          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=70" alt="Placeholder" class="w-full h-full object-cover">
+        {% endif %}
+      </div>
 
-        <div class="detail-grid">
-            <article class="detail-item">
-                <div class="detail-label">Company</div>
-                <div class="detail-value">{% display_company stocklot.company %}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Category</div>
-                <div class="detail-value">{{ stocklot.category.full_name }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Condition</div>
-                <div class="detail-value">{{ stocklot.get_condition_display }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Quantity</div>
-                <div class="detail-value">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Minimum order quantity</div>
-                <div class="detail-value">{{ stocklot.moq }} {{ stocklot.get_unit_type_display }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Price</div>
-                <div class="detail-value">{{ stocklot.price }} {{ stocklot.currency }}</div>
-            </article>
-            <article class="detail-item">
-                <div class="detail-label">Location</div>
-                <div class="detail-value">{{ stocklot.location_country }} - {{ stocklot.location_city }}</div>
-            </article>
-        </div>
-
-        <section class="content-subsection">
-            <h3>Description</h3>
-            <p class="body-text">{{ stocklot.description|linebreaksbr }}</p>
-        </section>
-
+      {% if media_count > 1 %}
+      <div class="flex gap-2 overflow-x-auto" id="media-thumbs">
+        {% for img in stocklot.images.all %}
+          <button type="button" class="w-20 h-16 border border-slate-200 rounded-lg overflow-hidden media-thumb" data-type="image" data-src="{{ img.file.url }}">
+            <img src="{{ img.file.url }}" alt="{{ stocklot.title }} image {{ forloop.counter }}" class="w-full h-full object-cover">
+          </button>
+        {% endfor %}
+        {% for vid in stocklot.videos.all %}
+          <button type="button" class="w-20 h-16 border border-slate-200 rounded-lg overflow-hidden media-thumb relative" data-type="video" data-src="{{ vid.file.url }}">
+            <div class="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-semibold">Video</div>
+            <video class="w-full h-full object-cover pointer-events-none" preload="metadata">
+              <source src="{{ vid.file.url }}">
+            </video>
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
     </section>
 
-    <aside class="content-card media-column">
-        <div class="media-primary">
-            {% with main_image=stocklot.images.all|first %}
-                {% if main_image %}
-                    <img src="{{ main_image.file.url }}" alt="{{ stocklot.title }}">
-                {% else %}
-                    <div class="subtle-copy no-media">No images available.</div>
-                {% endif %}
-            {% endwith %}
+    <!-- Right column: price, seller, status stacked -->
+    <div class="order-5 lg:order-2 lg:col-span-5 space-y-3 w-full">
+      <!-- Price -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 lg:p-5 space-y-3">
+        <div class="flex flex-col gap-2">
+          <div class="text-4xl lg:text-6xl font-black text-amber-600 leading-tight tracking-tight">{{ stocklot.price }} {{ stocklot.currency }}</div>
+          <div class="text-sm text-slate-500 font-medium">per {{ stocklot.get_unit_type_display }}</div>
         </div>
-        {% if stocklot.images.all|length > 1 %}
-            <div class="thumb-strip">
-                {% for image in stocklot.images.all %}
-                    <a href="{{ image.file.url }}" class="thumb" onclick="event.preventDefault(); document.querySelector('.media-primary img').src='{{ image.file.url }}';">
-                        <img src="{{ image.file.url }}" alt="{{ stocklot.title }}">
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
 
-        {% with main_video=stocklot.videos.all|first %}
-            {% if main_video %}
-                <section class="content-subsection">
-                    <h3>Video</h3>
-                    <video controls playsinline style="width:100%; max-height:320px; border-radius:12px;">
-                        <source src="{{ main_video.file.url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </section>
-            {% endif %}
-        {% endwith %}
+        <div class="grid grid-cols-2 gap-3 text-sm text-slate-800">
+          <div>
+            <div class="text-xs text-slate-500">MOQ</div>
+            <div class="font-semibold">{{ stocklot.moq }} {{ stocklot.get_unit_type_display }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">Available</div>
+            <div class="font-semibold">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">Category</div>
+            <div class="font-semibold">{{ stocklot.category.full_name }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500">Location</div>
+            <div class="font-semibold">{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</div>
+          </div>
+        </div>
 
-        {% if stocklot.documents.all|length %}
-            <section class="content-subsection">
-                <h3>Documents</h3>
-                <div class="doc-list">
-                    {% for doc in stocklot.documents.all %}
-                        <div class="doc-row">
-                            <div>
-                                <div class="doc-title">{{ doc.file.name|slice:"-60:" }}</div>
-                                <div class="doc-meta">
-                                    {% if doc.doc_type == "pdf" %}PDF{% elif doc.doc_type == "excel" %}Excel / CSV{% else %}Document{% endif %}
-                                </div>
-                            </div>
-                            <div class="doc-actions">
-                                <a class="button button-secondary" href="{{ doc.file.url }}" download>Download</a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
+        <div class="flex flex-col sm:flex-row gap-2">
+          {% if can_contact %}
+            <a class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold shadow hover:bg-amber-600 w-full sm:w-auto" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+          {% else %}
+            <button class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed w-full sm:w-auto">Contact seller (verification required)</button>
+          {% endif %}
+          {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}" class="w-full sm:w-auto">
+              {% csrf_token %}
+              <button type="submit" class="inline-flex justify-center items-center px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:border-amber-300 w-full sm:w-auto">
+                {% if is_favorited %}Unsave{% else %}Save{% endif %}
+              </button>
+            </form>
+          {% else %}
+            <a class="inline-flex justify-center items-center px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold w-full sm:w-auto" href="{% url 'accounts:login' %}?next={{ request.path }}">Save</a>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Seller -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-slate-500">Seller</div>
+          <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">ID #{{ stocklot.company.owner.id }}</span>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 break-words">{% display_company stocklot.company %}</div>
+        <div class="flex flex-wrap gap-2 text-xs">
+          {% if stocklot.company.owner.is_verified_user %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Verified user</span>{% endif %}
+          {% if stocklot.is_admin_verified %}<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Admin approved</span>{% endif %}
+        </div>
+        <div class="text-sm text-slate-600">
+          Location: {{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}
+        </div>
+        {% if can_contact %}
+        <a class="block w-full text-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+        {% else %}
+        <a class="block w-full text-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed">Contact seller (verification required)</a>
         {% endif %}
-    </aside>
+      </section>
+
+      <!-- Status -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-2 text-sm text-slate-700">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500">Listing status</span>
+          <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">{{ stocklot.get_status_display }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500">Created</span>
+          <span class="font-semibold">{{ stocklot.created_at|date:"Y-m-d" }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500">Updated</span>
+          <span class="font-semibold">{{ stocklot.updated_at|date:"Y-m-d" }}</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Files & Description below -->
+  <div class="grid grid-cols-1 gap-4">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-bold text-slate-900">Files &amp; documents</h2>
+        {% with count=stocklot.documents.count %}{% if count %}<span class="text-xs text-slate-500">{{ count }} file{% if count|pluralize %}s{% endif %}</span>{% endif %}{% endwith %}
+      </div>
+      {% with docs=stocklot.documents.all %}
+        {% if docs %}
+        <div class="grid grid-cols-1 gap-3 text-sm bg-slate-50 rounded-xl p-3">
+          {% for doc in docs %}
+          {% with fname=doc.file.name|default:"Document" %}
+          {% with parts=fname|split:"/" %}
+          {% if parts|length > 1 %}
+            {% with cleanname=parts|last %}
+              {% include "stocklots/partials/doc_row.html" with cleanname=cleanname doc=doc %}
+            {% endwith %}
+          {% else %}
+            {% include "stocklots/partials/doc_row.html" with cleanname=fname doc=doc %}
+          {% endif %}
+          {% endwith %}
+          {% endwith %}
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-sm text-slate-500">No files available</div>
+        {% endif %}
+      {% endwith %}
+    </section>
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-2">
+      <h2 class="text-base font-bold text-slate-900">Description</h2>
+      <div class="text-sm text-slate-700 leading-relaxed">{{ stocklot.description|linebreaksbr }}</div>
+    </section>
+  </div>
+
+  <!-- Marketplace sections (unchanged) -->
+  <div class="space-y-4">
+    {% with similar=other_market_stocklots|default_if_none:None %}
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900">Hot deals from the marketplace</h2>
+      </div>
+      {% if similar %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {% for item in similar %}
+        <article class="border border-slate-200 rounded-xl bg-white shadow-sm p-3 space-y-2">
+          <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-50">
+            {% with img=item.images.first %}
+              {% if img %}
+                <img src="{{ img.file.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+              {% else %}
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.title }}" class="w-full h-full object-cover">
+              {% endif %}
+            {% endwith %}
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.title }}</a></h3>
+          <div class="text-amber-600 font-bold text-base">{{ item.price }} {{ item.currency }}</div>
+          <div class="text-xs text-slate-600">{{ item.location_country }}{% if item.location_city %} · {{ item.location_city }}{% endif %}</div>
+          <a class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'stocklots:detail' item.slug %}">View</a>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="text-sm text-slate-500">No similar offers available right now.</div>
+      {% endif %}
+    </section>
+    {% endwith %}
+
+    {% with seller_items=seller_other_stocklots|default_if_none:None %}
+    {% if seller_items %}
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900">More from this seller</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {% for item in seller_items %}
+        <article class="border border-slate-200 rounded-xl bg-white shadow-sm p-3 space-y-2">
+          <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-50">
+            {% with img=item.images.first %}
+              {% if img %}
+                <img src="{{ img.file.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+              {% else %}
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.title }}" class="w-full h-full object-cover">
+              {% endif %}
+            {% endwith %}
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.title }}</a></h3>
+          <div class="text-amber-600 font-bold text-base">{{ item.price }} {{ item.currency }}</div>
+          <div class="text-xs text-slate-600">{{ item.location_country }}{% if item.location_city %} · {{ item.location_city }}{% endif %}</div>
+          <a class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'stocklots:detail' item.slug %}">View</a>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+    {% endwith %}
+
+    <section class="space-y-2">
+      <h2 class="text-lg font-bold text-slate-900">Useful links</h2>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'core:home' %}#how">How it works</a>
+        <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'rfqs:list' %}">Browse RFQs</a>
+        <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'core:contact' %}">Contact support</a>
+        {% if useful_links %}
+          {% for link in useful_links %}
+            <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{{ link.url }}">{{ link.title }}</a>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+  </div>
 </div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const viewer = document.getElementById('media-viewer');
+  const thumbs = document.querySelectorAll('.media-thumb');
+  const mainImgId = 'media-main-img';
+  const mainVideoId = 'media-main-video';
+
+  function showImage(src) {
+    let img = document.getElementById(mainImgId);
+    let vid = document.getElementById(mainVideoId);
+    if (vid) vid.remove();
+    if (!img) {
+      img = document.createElement('img');
+      img.id = mainImgId;
+      img.className = 'w-full h-full object-contain';
+      viewer.innerHTML = '';
+      viewer.appendChild(img);
+    }
+    img.src = src;
+  }
+
+  function showVideo(src) {
+    let vid = document.getElementById(mainVideoId);
+    let img = document.getElementById(mainImgId);
+    if (img) img.remove();
+    if (!vid) {
+      vid = document.createElement('video');
+      vid.id = mainVideoId;
+      vid.controls = true;
+      vid.preload = 'metadata';
+      vid.className = 'w-full h-full object-contain';
+      viewer.innerHTML = '';
+      viewer.appendChild(vid);
+    }
+    vid.innerHTML = '';
+    const source = document.createElement('source');
+    source.src = src;
+    vid.appendChild(source);
+  }
+
+  thumbs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      const src = btn.dataset.src;
+      if (type === 'video') showVideo(src); else showImage(src);
+    });
+  });
+})();
+</script>
+{% endblock extra_js %}
