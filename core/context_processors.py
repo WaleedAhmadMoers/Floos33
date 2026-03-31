@@ -1,7 +1,22 @@
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 
 from core.models import Notification, TickerNews
+
+
+SUPPORTED_SITE_LANGUAGES = {"en", "de", "ar"}
+
+
+def resolve_site_language(request):
+    lang = (request.session.get("site_language") or "").lower()
+    if lang not in SUPPORTED_SITE_LANGUAGES and getattr(request, "user", None) and request.user.is_authenticated:
+        lang = (request.user.preferred_language or "").lower()
+    if lang not in SUPPORTED_SITE_LANGUAGES:
+        lang = (getattr(request, "LANGUAGE_CODE", None) or "").lower()
+    if lang not in SUPPORTED_SITE_LANGUAGES:
+        lang = "en"
+    return lang
 
 
 def notifications(request):
@@ -20,13 +35,7 @@ def ticker_news(request):
     Expose ticker items based on user language and audience.
     """
     # Determine language preference
-    lang = None
-    if getattr(request, "user", None) and request.user.is_authenticated:
-        lang = (request.user.preferred_language or "").lower()
-    if not lang:
-        lang = (getattr(request, "LANGUAGE_CODE", None) or "").lower()
-    if not lang:
-        lang = "en"
+    lang = resolve_site_language(request)
 
     now = timezone.now()
 
@@ -74,4 +83,54 @@ def ticker_news(request):
 
     direction = "rtl" if lang.startswith("ar") else "ltr"
 
-    return {"ticker_items": items, "ticker_language": lang or "en", "ticker_direction": direction}
+    return {
+        "ticker_items": items,
+        "ticker_language": lang or "en",
+        "ticker_direction": direction,
+        "current_site_language": lang or "en",
+        "current_site_direction": direction,
+    }
+
+
+def site_identity(request):
+    resolver = getattr(request, "resolver_match", None)
+    namespace = getattr(resolver, "namespace", "") or ""
+    url_name = getattr(resolver, "url_name", "") or ""
+
+    seo_indexable = True
+    if namespace in {"accounts", "companies", "inquiries"}:
+        seo_indexable = False
+    elif namespace == "stocklots" and url_name in {
+        "mine",
+        "favorites",
+        "create",
+        "edit",
+        "mark_sold",
+        "deactivate",
+        "activate",
+        "restore",
+        "delete",
+        "favorite_toggle",
+    }:
+        seo_indexable = False
+    elif namespace == "rfqs" and url_name not in {"list", "detail"}:
+        seo_indexable = False
+    elif namespace == "core" and (
+        url_name in {"saved", "notifications", "notification_read", "notification_read_all", "deal_status", "deal_identity_request", "support", "set_language"}
+        or url_name.startswith("control")
+    ):
+        seo_indexable = False
+
+    site_origin = f"{request.scheme}://{request.get_host()}"
+    canonical_url = f"{site_origin}{request.path}"
+
+    return {
+        "site_name": settings.SITE_NAME,
+        "support_email": settings.SUPPORT_EMAIL,
+        "support_phone": settings.SUPPORT_PHONE,
+        "site_origin": site_origin,
+        "canonical_url": canonical_url,
+        "seo_indexable": seo_indexable,
+        "current_site_language": resolve_site_language(request),
+        "default_meta_description": "floos33 is a B2B marketplace for EU stocklots, liquidation inventory, and buyer RFQs connecting EU sellers with MENA buyers.",
+    }

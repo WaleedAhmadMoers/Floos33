@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="{{ ticker_language|default:'en' }}" dir="ltr">
+<html lang="{{ current_site_language|default:'en' }}" dir="{% if current_site_language == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,20 @@
             }
         }
     </script>
-    <title>{% block title %}floos33{% endblock title %}</title>
+    <title>{% block title %}floos33 | B2B Stocklots and RFQ Marketplace{% endblock title %}</title>
+    <meta name="description" content="{% block meta_description %}{{ default_meta_description }}{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}{% if seo_indexable %}index,follow{% else %}noindex,nofollow{% endif %}{% endblock %}">
+    <link rel="canonical" href="{% block canonical_href %}{{ canonical_url }}{% endblock %}">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{% block social_title %}{{ site_name }} | B2B Stocklots and RFQ Marketplace{% endblock %}">
+    <meta property="og:description" content="{% block social_description %}{{ default_meta_description }}{% endblock %}">
+    <meta property="og:url" content="{% block social_url %}{{ canonical_url }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:image" content="{% block social_image %}{{ site_origin }}{% static 'logo.png' %}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_name }} | B2B Stocklots and RFQ Marketplace{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ default_meta_description }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ site_origin }}{% static 'logo.png' %}{% endblock %}">
     {% block extra_head %}{% endblock extra_head %}
 </head>
 <body class="{% block body_class %}min-h-screen bg-slate-50 text-slate-900 antialiased{% endblock body_class %}">
@@ -39,12 +52,31 @@
         <header class="sticky z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur {% if ticker_items %}top-7{% else %}top-0{% endif %}">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                 <a href="{% url 'core:home' %}" class="inline-flex items-center"><img src="{% static 'logo.png' %}" alt="floos33" class="h-10 w-auto sm:h-11"></a>
-                <nav class="hidden items-center gap-6 lg:flex">
+                <nav class="hidden items-center gap-4 lg:flex">
                     <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'stocklots:list' %}">Marketplace</a>
                     <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'rfqs:list' %}">Browse RFQs</a>
-                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="#how">How it works</a>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Services</span>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Machinery</span>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Supplier Database</span>
                 </nav>
                 <div class="hidden items-center gap-3 lg:flex">
+                    <details class="relative">
+                        <summary class="flex h-10 w-10 list-none items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" aria-label="Change language">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z"/></svg>
+                        </summary>
+                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-40 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
+                            <form action="{% url 'core:set_language' %}" method="post" class="space-y-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" name="language" value="en" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'en' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>EN</span><span class="text-xs text-slate-400">English</span></button>
+                                <button type="submit" name="language" value="de" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'de' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>DE</span><span class="text-xs text-slate-400">Deutsch</span></button>
+                                <button type="submit" name="language" value="ar" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'ar' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>AR</span><span class="text-xs text-slate-400">العربية</span></button>
+                            </form>
+                        </div>
+                    </details>
+                    <a class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:contact' %}" aria-label="Contact support">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 5.15 12.8 19.8 19.8 0 0 1 2.08 4.09 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72l.32 2.57a2 2 0 0 1-.57 1.73L7.1 9.73a16 16 0 0 0 7.17 7.17l1.71-1.71a2 2 0 0 1 1.73-.57l2.57.32A2 2 0 0 1 22 16.92z"/></svg>
+                    </a>
                     {% if request.user.is_authenticated %}
                         <a class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:saved' %}" aria-label="Saved items"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></a>
                         <a class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:notifications' %}" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M18 14v-3a6 6 0 10-12 0v3l-1.5 2.5a1 1 0 00.85 1.5h13.3a1 1 0 00.85-1.5L18 14z"/><path d="M12 6v-1"/><path d="M10 19a2 2 0 004 0"/></svg>{% if notifications_unread_count > 0 %}<span class="absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{{ notifications_unread_count }}</span>{% endif %}</a>
@@ -66,13 +98,35 @@
                         <a class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'accounts:signup' %}">Create account</a>
                     {% endif %}
                 </div>
-                <button class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-slate-300 lg:hidden" type="button" aria-label="Toggle menu" id="mobile-menu-toggle"><span id="mobile-menu-icon" class="text-xl leading-none">&#9776;</span></button>
+                <div class="flex items-center gap-2 lg:hidden">
+                    <details class="relative">
+                        <summary class="flex list-none items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
+                            {{ current_site_language|default:"en" }}
+                        </summary>
+                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-32 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
+                            <form action="{% url 'core:set_language' %}" method="post" class="space-y-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" name="language" value="en" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'en' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>EN</span><span class="text-xs text-slate-400">English</span></button>
+                                <button type="submit" name="language" value="de" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'de' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>DE</span><span class="text-xs text-slate-400">Deutsch</span></button>
+                                <button type="submit" name="language" value="ar" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == 'ar' %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>AR</span><span class="text-xs text-slate-400">العربية</span></button>
+                            </form>
+                        </div>
+                    </details>
+                    <a href="{% url 'core:contact' %}" class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900" aria-label="Contact support">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 5.15 12.8 19.8 19.8 0 0 1 2.08 4.09 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72l.32 2.57a2 2 0 0 1-.57 1.73L7.1 9.73a16 16 0 0 0 7.17 7.17l1.71-1.71a2 2 0 0 1 1.73-.57l2.57.32A2 2 0 0 1 22 16.92z"/></svg>
+                        <span class="ml-2">Contact</span>
+                    </a>
+                    <button class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" type="button" aria-label="Toggle menu" id="mobile-menu-toggle"><span id="mobile-menu-icon" class="text-xl leading-none">&#9776;</span></button>
+                </div>
             </div>
             <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white lg:hidden">
                 <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
                     <a href="{% url 'stocklots:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Marketplace</a>
                     <a href="{% url 'rfqs:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Browse RFQs</a>
-                    <a href="#how" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">How it works</a>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Services</div>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Machinery</div>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">Supplier Database</div>
                     {% if request.user.is_authenticated %}
                         <a href="{% url 'core:saved' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Saved items</a>
                         <a href="{% url 'accounts:dashboard' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Dashboard</a>
@@ -120,12 +174,12 @@
         </div>
         <div class="mt-8 grid gap-8 border-t border-white/15 pt-8 md:grid-cols-2 xl:grid-cols-5">
           <div class="xl:col-span-1"><a href="{% url 'core:home' %}" class="inline-flex items-center gap-3"><span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#d88908]/25 ring-1 ring-white/20"><img src="{% static 'logo.png' %}" alt="floos33" class="h-8 w-auto"></span><span><span class="block text-lg font-black text-white">floos33</span><span class="block text-xs font-medium text-amber-100/80">EU to MENA trade platform</span></span></a><p class="mt-4 max-w-sm text-sm leading-6 text-amber-50/85">A B2B marketplace for browsing stocklots, posting RFQs, and moving deals forward with stronger trust and structure.</p></div>
-          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Marketplace</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Browse listings</a></li><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Categories</a></li><li><a href="{% url 'core:home' %}#how" class="transition hover:text-white">How it works</a></li></ul></div>
-          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">RFQs</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a></li><li><a href="{% url 'rfqs:create' %}" class="transition hover:text-white">Post RFQ</a></li><li><a href="{% url 'rfqs:my_rfqs' %}" class="transition hover:text-white">My RFQs</a></li></ul></div>
-          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Account</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'accounts:dashboard' %}" class="transition hover:text-white">Dashboard</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Profile</a></li><li><a href="{% url 'core:saved' %}" class="transition hover:text-white">Saved</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Settings</a></li></ul></div>
-          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Legal & Support</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'core:about' %}" class="transition hover:text-white">About</a></li><li><a href="{% url 'core:contact' %}" class="transition hover:text-white">Contact</a></li><li><a href="{% url 'core:notifications' %}" class="transition hover:text-white">Notifications</a></li><li><a href="{% url 'core:home' %}#how" class="transition hover:text-white">Help</a></li></ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Marketplace</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Browse listings</a></li><li><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Categories</a></li><li><span class="opacity-75 cursor-not-allowed select-none">Services</span></li><li><span class="opacity-75 cursor-not-allowed select-none">Machinery</span></li><li><span class="opacity-75 cursor-not-allowed select-none">Supplier Database</span></li></ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">RFQs</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a></li><li><a href="{% url 'rfqs:create' %}" class="transition hover:text-white">Post RFQ</a></li>{% if request.user.is_authenticated %}<li><a href="{% url 'rfqs:my_rfqs' %}" class="transition hover:text-white">My RFQs</a></li>{% else %}<li><a href="{% url 'core:contact' %}" class="transition hover:text-white">RFQ support</a></li>{% endif %}</ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Account</h3><ul class="mt-4 space-y-3 text-sm">{% if request.user.is_authenticated %}<li><a href="{% url 'accounts:dashboard' %}" class="transition hover:text-white">Dashboard</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Profile</a></li><li><a href="{% url 'core:saved' %}" class="transition hover:text-white">Saved</a></li><li><a href="{% url 'accounts:settings' %}" class="transition hover:text-white">Settings</a></li>{% else %}<li><a href="{% url 'accounts:login' %}" class="transition hover:text-white">Sign in</a></li><li><a href="{% url 'accounts:signup' %}" class="transition hover:text-white">Create account</a></li><li><a href="{% url 'core:contact' %}" class="transition hover:text-white">Support</a></li><li><a href="{% url 'core:about' %}" class="transition hover:text-white">About floos33</a></li>{% endif %}</ul></div>
+          <div><h3 class="text-sm font-extrabold uppercase tracking-[0.18em] text-white">Legal & Support</h3><ul class="mt-4 space-y-3 text-sm"><li><a href="{% url 'core:about' %}" class="transition hover:text-white">About</a></li><li><a href="{% url 'core:contact' %}" class="transition hover:text-white">Contact</a></li><li><a href="{% url 'sitemap' %}" class="transition hover:text-white">Sitemap</a></li><li><a href="{% url 'core:home' %}#how" class="transition hover:text-white">Help</a></li></ul><div class="mt-5 space-y-2 text-sm text-amber-50/85"><a href="mailto:{{ support_email }}" class="block transition hover:text-white">{{ support_email }}</a><a href="tel:{{ support_phone }}" class="block transition hover:text-white">{{ support_phone }}</a></div></div>
         </div>
-        <div class="mt-8 flex flex-col gap-4 border-t border-white/15 pt-6 text-sm text-amber-100/80 sm:flex-row sm:items-center sm:justify-between"><p>&copy; floos33 - {% now "Y" %}</p><div class="flex flex-wrap gap-5"><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Marketplace</a><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a><a href="{% url 'core:contact' %}" class="transition hover:text-white">Support</a></div></div>
+        <div class="mt-8 flex flex-col gap-4 border-t border-white/15 pt-6 text-sm text-amber-100/80 sm:flex-row sm:items-center sm:justify-between"><p>&copy; floos33 - {% now "Y" %}</p><div class="flex flex-wrap gap-5"><a href="{% url 'stocklots:list' %}" class="transition hover:text-white">Marketplace</a><a href="{% url 'rfqs:list' %}" class="transition hover:text-white">Browse RFQs</a><span class="opacity-75 cursor-not-allowed select-none">Services</span><span class="opacity-75 cursor-not-allowed select-none">Machinery</span><span class="opacity-75 cursor-not-allowed select-none">Supplier Database</span><a href="{% url 'core:contact' %}" class="transition hover:text-white">Support</a><a href="{% url 'sitemap' %}" class="transition hover:text-white">Sitemap</a></div></div>
       </div>
     </footer>
     <script>

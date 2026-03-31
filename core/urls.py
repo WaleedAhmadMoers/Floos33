@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     AboutView,
     ContactView,
+    SetLanguageView,
     SavedItemsView,
     HomeView,
     NotificationListView,
@@ -69,6 +70,7 @@ urlpatterns = [
     path("about/", AboutView.as_view(), name="about"),
     path("contact/", ContactView.as_view(), name="contact"),
     path("support/", ContactView.as_view(), name="support"),
+    path("language/", SetLanguageView.as_view(), name="set_language"),
     path("saved/", SavedItemsView.as_view(), name="saved"),
     path("notifications/", NotificationListView.as_view(), name="notifications"),
     path("notifications/<int:pk>/read/", NotificationMarkReadView.as_view(), name="notification_read"),

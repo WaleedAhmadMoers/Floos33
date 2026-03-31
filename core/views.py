@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView, FormView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -25,6 +25,9 @@ from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant
 from core import forms_admin
 from core.forms import SupportContactForm
 from core.models import DealHistory
+
+
+SUPPORTED_LANGUAGE_CODES = {"en", "de", "ar"}
 
 
 class HomeView(TemplateView):
@@ -137,11 +140,12 @@ class ContactView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["support_email"] = "support@floos33.de"
+        context["support_email"] = settings.SUPPORT_EMAIL
+        context["support_phone"] = settings.SUPPORT_PHONE
         return context
 
     def form_valid(self, form):
-        support_email = "support@floos33.de"
+        support_email = settings.SUPPORT_EMAIL
         subject = form.cleaned_data.get("subject") or "Support request from floos33"
         message = (
             f"Name: {form.cleaned_data['name']}\n"
@@ -158,6 +162,47 @@ class ContactView(FormView):
         )
         messages.success(self.request, "Your message has been sent. We will respond shortly.")
         return super().form_valid(form)
+
+
+class SetLanguageView(View):
+    def post(self, request, *args, **kwargs):
+        language = (request.POST.get("language") or "en").lower()
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("core:home")
+        if language not in SUPPORTED_LANGUAGE_CODES:
+            messages.warning(request, "That language is not available yet.")
+            return redirect(next_url)
+
+        request.session["site_language"] = language
+        if request.user.is_authenticated and getattr(request.user, "preferred_language", None) != language:
+            request.user.preferred_language = language
+            request.user.save(update_fields=["preferred_language"])
+        return redirect(next_url)
+
+
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /account/",
+        "Disallow: /login/",
+        "Disallow: /logout/",
+        "Disallow: /signup/",
+        "Disallow: /password-reset/",
+        "Disallow: /saved/",
+        "Disallow: /notifications/",
+        "Disallow: /support/",
+        "Disallow: /inquiries/",
+        "Disallow: /company/",
+        "Disallow: /stocklots/create/",
+        "Disallow: /stocklots/mine/",
+        "Disallow: /rfqs/create/",
+        "Disallow: /rfqs/mine/",
+        "Disallow: /rfqs/conversations/",
+        "Disallow: /control/",
+        "Disallow: /admin/",
+        f"Sitemap: {request.build_absolute_uri(reverse('sitemap'))}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
 class SavedItemsView(LoginRequiredMixin, TemplateView):

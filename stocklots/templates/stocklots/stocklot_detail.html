@@ -1,7 +1,15 @@
 {% extends "base.html" %}
-{% load identity_tags stocklot_tags %}
+{% load identity_tags stocklot_tags static %}
 
 {% block title %}{{ stocklot.title }} | floos33{% endblock title %}
+{% block meta_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
+{% block social_title %}{{ stocklot.title }} | floos33{% endblock %}
+{% block social_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
+{% block twitter_title %}{{ stocklot.title }} | floos33{% endblock %}
+{% block twitter_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block social_image %}{% with first_image=stocklot.images.first %}{% if first_image %}{{ site_origin }}{{ first_image.file.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endwith %}{% endblock %}
+{% block twitter_image %}{% with first_image=stocklot.images.first %}{% if first_image %}{{ site_origin }}{{ first_image.file.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endwith %}{% endblock %}
 
 {% block content %}
 <div class="bg-slate-50">

@@ -21,6 +21,7 @@ DJANGO_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sitemaps",
     "django.contrib.staticfiles",
 ]
 
@@ -75,6 +76,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.notifications",
+                "core.context_processors.site_identity",
                 "core.context_processors.ticker_news",
             ],
         },
@@ -124,3 +126,6 @@ LOGOUT_REDIRECT_URL = "/"
 
 EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", "noreply@floos33.local")
+SITE_NAME = env("DJANGO_SITE_NAME", "floos33")
+SUPPORT_EMAIL = env("DJANGO_SUPPORT_EMAIL", "support@floos33.de")
+SUPPORT_PHONE = "+49 1575 4967414"

@@ -9,6 +9,7 @@ from .managers import UserManager
 class User(AbstractBaseUser, PermissionsMixin):
     class PreferredLanguage(models.TextChoices):
         ARABIC = "ar", "Arabic"
+        GERMAN = "de", "German"
         ENGLISH = "en", "English"
 
     email = models.EmailField("email address", unique=True)
