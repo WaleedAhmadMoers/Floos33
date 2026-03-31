@@ -1,17 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Contact | floos33{% endblock title %}
+{% block title %}Contact / Support | floos33{% endblock title %}
 
 {% block content %}
-<section class="mx-auto max-w-4xl px-4 py-10">
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-panel">
+<div class="bg-slate-50">
+  <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <section class="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-orange-50/70 to-amber-50 p-5 shadow-panel sm:p-6 lg:p-8">
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_18rem] lg:items-end">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-600">Contact / Support</p>
+          <h1 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Need help? Contact our support team and we will get back to you.</h1>
+          <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">Use the form below for account questions, marketplace issues, RFQ help, or general support. We keep it simple so you can reach us quickly.</p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Support email</p>
+            <a href="mailto:{{ support_email }}" class="mt-2 block text-lg font-black text-slate-900 transition hover:text-brand-700">{{ support_email }}</a>
+            <p class="mt-2 text-sm leading-6 text-slate-500">Direct fallback contact for urgent support.</p>
+          </article>
+          <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Response</p>
+            <p class="mt-2 text-lg font-black text-slate-900">Support team</p>
+            <p class="mt-2 text-sm leading-6 text-slate-500">We review marketplace and account issues as quickly as possible.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_20rem]">
+      <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
         <div class="border-b border-slate-200 pb-5">
-            <h1 class="text-3xl font-black text-slate-900">Contact</h1>
-            <p class="mt-2 text-sm leading-6 text-slate-500">This prototype does not process live requests. Use the links below for demo purposes.</p>
+          <h2 class="text-2xl font-black tracking-tight text-slate-900">Send a message</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-500">Tell us what you need help with and we will follow up by email.</p>
         </div>
-        <div class="mt-5 text-sm leading-7 text-slate-700">
-            <p>For questions about this prototype, reach the project team via the dashboard messaging mockups or email placeholder@example.com.</p>
-        </div>
+
+        <form method="post" class="mt-6 space-y-5">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="space-y-2">
+              <label for="{{ form.name.id_for_label }}" class="text-sm font-bold text-slate-800">Name</label>
+              {{ form.name }}
+              {% if form.name.errors %}<p class="text-sm text-rose-600">{{ form.name.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div class="space-y-2">
+              <label for="{{ form.email.id_for_label }}" class="text-sm font-bold text-slate-800">Email</label>
+              {{ form.email }}
+              {% if form.email.errors %}<p class="text-sm text-rose-600">{{ form.email.errors|join:", " }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label for="{{ form.subject.id_for_label }}" class="text-sm font-bold text-slate-800">Subject</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<p class="text-sm text-rose-600">{{ form.subject.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div class="space-y-2">
+            <label for="{{ form.message.id_for_label }}" class="text-sm font-bold text-slate-800">Message</label>
+            {{ form.message }}
+            {% if form.message.errors %}<p class="text-sm text-rose-600">{{ form.message.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm leading-6 text-slate-500">Or email us directly at: <a href="mailto:{{ support_email }}" class="font-bold text-brand-700 transition hover:text-brand-600">{{ support_email }}</a></p>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Send message</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="space-y-4">
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">Need help with</h2>
+          <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+            <p>Account access and verification</p>
+            <p>Marketplace listings and inquiries</p>
+            <p>RFQs and seller responses</p>
+            <p>General platform support</p>
+          </div>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">Direct email</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-500">If you prefer, you can contact us directly and include your company name and issue in the email.</p>
+          <a href="mailto:{{ support_email }}" class="mt-4 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-white">{{ support_email }}</a>
+        </section>
+      </aside>
     </div>
-</section>
+  </div>
+</div>
 {% endblock content %}

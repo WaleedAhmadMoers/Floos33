@@ -55,6 +55,7 @@
                                 <a href="{% url 'rfqs:my_rfqs' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My RFQs</a>
                                 <a href="{% url 'stocklots:mine' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My listings</a>
                                 <a href="{% url 'accounts:settings' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Settings</a>
+                                <a href="{% url 'core:contact' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Support</a>
                                 <a href="{% url 'core:notifications' %}" class="block rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Notifications</a>
                                 <form action="{% url 'accounts:logout' %}" method="post" class="mt-1">{% csrf_token %}<button type="submit" class="block w-full rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Logout</button></form>
                             </div>
@@ -78,6 +79,7 @@
                         <a href="{% url 'rfqs:my_rfqs' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My RFQs</a>
                         <a href="{% url 'stocklots:mine' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My listings</a>
                         <a href="{% url 'accounts:settings' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Settings</a>
+                        <a href="{% url 'core:contact' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Support</a>
                         <a href="{% url 'core:notifications' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Notifications ({{ notifications_unread_count }})</a>
                         <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button type="submit" class="w-full rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Logout</button></form>
                         {% if request.user.is_seller %}<a class="mt-2 inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600" href="{% url 'stocklots:create' %}">List stock</a>{% endif %}

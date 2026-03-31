@@ -68,6 +68,7 @@ urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("about/", AboutView.as_view(), name="about"),
     path("contact/", ContactView.as_view(), name="contact"),
+    path("support/", ContactView.as_view(), name="support"),
     path("saved/", SavedItemsView.as_view(), name="saved"),
     path("notifications/", NotificationListView.as_view(), name="notifications"),
     path("notifications/<int:pk>/read/", NotificationMarkReadView.as_view(), name="notification_read"),

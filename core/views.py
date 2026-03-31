@@ -2,9 +2,11 @@ from django.contrib import messages
 from django.db import models, transaction
 from django.db.models import Exists, OuterRef, Value, BooleanField
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.conf import settings
+from django.core.mail import send_mail
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.http import JsonResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -21,6 +23,7 @@ from core.utils.deals import _broadcast_deal, _identity_status
 from core.utils.verification import enforce_verified
 from core.models import BuyerVisibilityGrant, CompanyVisibilityGrant
 from core import forms_admin
+from core.forms import SupportContactForm
 from core.models import DealHistory
 
 
@@ -120,8 +123,41 @@ class AboutView(TemplateView):
     template_name = "core/about.html"
 
 
-class ContactView(TemplateView):
+class ContactView(FormView):
     template_name = "core/contact.html"
+    form_class = SupportContactForm
+    success_url = reverse_lazy("core:contact")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.user.is_authenticated:
+            initial["name"] = self.request.user.full_name or ""
+            initial["email"] = self.request.user.email or ""
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["support_email"] = "support@floos33.de"
+        return context
+
+    def form_valid(self, form):
+        support_email = "support@floos33.de"
+        subject = form.cleaned_data.get("subject") or "Support request from floos33"
+        message = (
+            f"Name: {form.cleaned_data['name']}\n"
+            f"Email: {form.cleaned_data['email']}\n"
+            f"Subject: {form.cleaned_data.get('subject') or '-'}\n\n"
+            f"{form.cleaned_data['message']}"
+        )
+        send_mail(
+            subject=f"[floos33 Support] {subject}",
+            message=message,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@floos33.local"),
+            recipient_list=[support_email],
+            fail_silently=True,
+        )
+        messages.success(self.request, "Your message has been sent. We will respond shortly.")
+        return super().form_valid(form)
 
 
 class SavedItemsView(LoginRequiredMixin, TemplateView):
