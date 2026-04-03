@@ -8,6 +8,7 @@ from django.contrib.auth.views import PasswordChangeDoneView, PasswordChangeView
 from django.contrib.auth.views import PasswordResetCompleteView, PasswordResetConfirmView
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetView
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_str
@@ -23,7 +24,8 @@ from .forms import AccountPasswordChangeForm, AccountPasswordResetForm, AccountS
 from .forms import AccountSettingsForm, BuyerVerificationRequestForm, LoginForm
 from .forms import SellerVerificationRequestForm, SignupForm
 from .models import BuyerVerificationRequest, SellerVerificationRequest, User
-from .services import app_uses_https, get_app_domain, send_verification_email
+from .services import app_uses_https, get_app_domain, send_password_changed_email
+from .services import send_verification_email, send_welcome_email
 
 
 class RedirectToNextMixin:
@@ -71,14 +73,31 @@ class SignupView(RedirectToNextMixin, FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save()
-        send_verification_email(user)
+        try:
+            with transaction.atomic():
+                user = form.save()
+                if settings.ACCOUNT_EMAIL_VERIFICATION_REQUIRED:
+                    send_verification_email(user)
+                else:
+                    user.email_verified = True
+                    user.is_active = True
+                    user.save(update_fields=["email_verified", "is_active"])
+        except Exception:
+            form.add_error(
+                None,
+                "We could not send the verification email right now. Please try again in a moment.",
+            )
+            return self.form_invalid(form)
         self.request.session["pending_verification_email"] = user.email
-        messages.success(
-            self.request,
-            "Account created. Please check your email and activate your account before logging in.",
-        )
-        return redirect("accounts:verification_sent")
+        if settings.ACCOUNT_EMAIL_VERIFICATION_REQUIRED:
+            messages.success(
+                self.request,
+                "Account created. Please check your email and activate your account before logging in.",
+            )
+            return redirect("accounts:verification_sent")
+
+        messages.success(self.request, "Account created successfully. You can log in now.")
+        return redirect("accounts:login")
 
 
 class VerificationSentView(TemplateView):
@@ -102,8 +121,9 @@ class VerifyEmailView(View):
             messages.error(request, "This verification link is invalid or has expired.")
             return redirect("accounts:verification_invalid")
 
+        was_unverified = not user.email_verified
         updates = []
-        if not user.email_verified:
+        if was_unverified:
             user.email_verified = True
             updates.append("email_verified")
         if not user.is_active:
@@ -111,6 +131,8 @@ class VerifyEmailView(View):
             updates.append("is_active")
         if updates:
             user.save(update_fields=updates)
+        if was_unverified and settings.ACCOUNT_SEND_WELCOME_EMAIL:
+            send_welcome_email(user, fail_silently=True)
 
         request.session.pop("pending_verification_email", None)
         messages.success(request, "Your email has been verified. You can now log in.")
@@ -437,20 +459,28 @@ class SettingsView(LoginRequiredMixin, AccountContextMixin, UpdateView):
 
     def form_valid(self, form):
         email_changed = "email" in form.changed_data
-        response = super().form_valid(form)
+        try:
+            with transaction.atomic():
+                response = super().form_valid(form)
 
-        if email_changed:
-            self.object.email_verified = False
-            self.object.is_active = False
-            self.object.save(update_fields=["email_verified", "is_active"])
-            send_verification_email(self.object)
-            auth_logout(self.request)
-            self.request.session["pending_verification_email"] = self.object.email
-            messages.info(
-                self.request,
-                "Your email address changed. Please verify the new address before logging in again.",
+                if email_changed and settings.ACCOUNT_EMAIL_VERIFICATION_REQUIRED:
+                    self.object.email_verified = False
+                    self.object.is_active = False
+                    self.object.save(update_fields=["email_verified", "is_active"])
+                    send_verification_email(self.object)
+                    auth_logout(self.request)
+                    self.request.session["pending_verification_email"] = self.object.email
+                    messages.info(
+                        self.request,
+                        "Your email address changed. Please verify the new address before logging in again.",
+                    )
+                    return redirect("accounts:verification_sent")
+        except Exception:
+            form.add_error(
+                None,
+                "We could not send the verification email to your new address right now. Please try again.",
             )
-            return redirect("accounts:verification_sent")
+            return self.form_invalid(form)
 
         messages.success(self.request, "Account details updated.")
         return response
@@ -546,8 +576,10 @@ class AccountPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     login_url = reverse_lazy("accounts:login")
 
     def form_valid(self, form):
+        response = super().form_valid(form)
+        send_password_changed_email(self.request.user, fail_silently=True)
         messages.success(self.request, "Your password has been changed.")
-        return super().form_valid(form)
+        return response
 
 
 class AccountPasswordChangeDoneView(LoginRequiredMixin, PasswordChangeDoneView):
@@ -558,20 +590,32 @@ class AccountPasswordChangeDoneView(LoginRequiredMixin, PasswordChangeDoneView):
 class AccountPasswordResetView(PasswordResetView):
     template_name = "accounts/password_reset_form.html"
     email_template_name = "accounts/emails/password_reset_email.txt"
+    html_email_template_name = "accounts/emails/password_reset_email.html"
     subject_template_name = "accounts/emails/password_reset_subject.txt"
     success_url = reverse_lazy("accounts:password_reset_done")
     form_class = AccountPasswordResetForm
 
     def form_valid(self, form):
-        form.save(
-            use_https=app_uses_https(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            email_template_name=self.email_template_name,
-            subject_template_name=self.subject_template_name,
-            request=self.request,
-            domain_override=get_app_domain(),
-            extra_email_context={"site_name": settings.SITE_NAME},
-        )
+        try:
+            form.save(
+                use_https=app_uses_https(),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                email_template_name=self.email_template_name,
+                html_email_template_name=self.html_email_template_name,
+                subject_template_name=self.subject_template_name,
+                request=self.request,
+                domain_override=get_app_domain(),
+                extra_email_context={
+                    "site_name": settings.SITE_NAME,
+                    "support_email": settings.SUPPORT_EMAIL,
+                },
+            )
+        except Exception:
+            form.add_error(
+                None,
+                "We could not send the password reset email right now. Please try again shortly.",
+            )
+            return self.form_invalid(form)
         return FormView.form_valid(self, form)
 
 
@@ -583,6 +627,11 @@ class AccountPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = "accounts/password_reset_confirm.html"
     success_url = reverse_lazy("accounts:password_reset_complete")
     form_class = AccountSetPasswordForm
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        send_password_changed_email(form.user, fail_silently=True)
+        return response
 
 
 class AccountPasswordResetCompleteView(PasswordResetCompleteView):

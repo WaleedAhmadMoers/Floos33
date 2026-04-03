@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+</head>
+<body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
+    <div style="padding:32px 16px;">
+        <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;">
+            <div style="padding:32px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;">{{ site_name }}</p>
+                <h1 style="margin:12px 0 0;font-size:28px;line-height:1.2;color:#0f172a;">{% block heading %}{% endblock %}</h1>
+            </div>
+            <div style="padding:32px;">
+                {% block body %}{% endblock %}
+                {% block action %}{% endblock %}
+                <p style="margin:32px 0 0;font-size:14px;line-height:1.7;color:#64748b;">
+                    {% block footer %}
+                        Need help? Contact <a href="mailto:{{ support_email }}" style="color:#b45309;text-decoration:none;">{{ support_email }}</a>.
+                    {% endblock %}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

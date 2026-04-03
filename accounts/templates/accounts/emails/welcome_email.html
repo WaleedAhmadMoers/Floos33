@@ -1,0 +1,25 @@
+{% extends "accounts/emails/_email_base.html" %}
+
+{% block title %}Welcome to {{ site_name }}{% endblock %}
+
+{% block heading %}Your account is ready{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+    Hello {% if user.full_name %}{{ user.full_name }}{% else %}{{ user.email }}{% endif %},
+</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+    Your email has been verified and your floos33 account is now active.
+</p>
+<p style="margin:0;font-size:14px;line-height:1.7;color:#64748b;">
+    You can now sign in, complete your profile, and start browsing listings or posting RFQs.
+</p>
+{% endblock %}
+
+{% block action %}
+<div style="margin-top:32px;">
+    <a href="{{ login_url }}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#0f172a;color:#ffffff;text-decoration:none;font-weight:700;">
+        Sign in
+    </a>
+</div>
+{% endblock %}

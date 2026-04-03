@@ -8,3 +8,5 @@ Please verify your email address by opening the link below:
 After verification, your account will be active and you can log in normally.
 
 If you did not create this account, you can ignore this email.
+
+Need help? Contact {{ support_email }}.

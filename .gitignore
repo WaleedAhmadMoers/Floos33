@@ -9,9 +9,6 @@ venv/
 env/
 myenv/
 
-# Environment files
-.env
-
 # Django
 db.sqlite3
 db.sqlite3-journal
