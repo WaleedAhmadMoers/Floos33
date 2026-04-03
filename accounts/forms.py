@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.contrib.auth.forms import PasswordResetForm, ReadOnlyPasswordHashField, SetPasswordForm
 
@@ -39,12 +39,21 @@ class BaseStyledFormMixin:
 
 
 class AdminUserCreationForm(BaseStyledFormMixin, forms.ModelForm):
-    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
+    password1 = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text=password_validation.password_validators_help_text_html(),
+    )
+    password2 = forms.CharField(
+        label="Confirm password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
 
     class Meta:
         model = User
-        fields = ("email", "full_name", "preferred_language")
+        fields = ("email", "full_name", "preferred_language", "email_verified")
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -57,11 +66,13 @@ class AdminUserCreationForm(BaseStyledFormMixin, forms.ModelForm):
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("Passwords do not match.")
+        password_validation.validate_password(password2, self.instance)
         return password2
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.full_name = (self.cleaned_data.get("full_name") or "").strip()
         user.is_buyer = True
         user.is_seller = False
         user.set_password(self.cleaned_data["password1"])
@@ -85,16 +96,22 @@ class AdminUserChangeForm(BaseStyledFormMixin, forms.ModelForm):
 
 
 class SignupForm(BaseStyledFormMixin, forms.ModelForm):
-    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
+    password1 = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text=password_validation.password_validators_help_text_html(),
+    )
+    password2 = forms.CharField(
+        label="Confirm password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
 
     class Meta:
         model = User
-        fields = ("full_name", "email")
-        labels = {
-            "full_name": "Full name",
-            "email": "Email address",
-        }
+        fields = ("email",)
+        labels = {"email": "Email address"}
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -102,23 +119,26 @@ class SignupForm(BaseStyledFormMixin, forms.ModelForm):
             raise forms.ValidationError("This email address is already registered.")
         return email
 
-    def clean_full_name(self):
-        full_name = self.cleaned_data["full_name"].strip()
-        if not full_name:
-            raise forms.ValidationError("Full name is required.")
-        return full_name
-
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
-        if password1 and password2 and password1 != password2:
-            self.add_error("password2", "Passwords do not match.")
+        if password1 and password2:
+            if password1 != password2:
+                self.add_error("password2", "Passwords do not match.")
+            else:
+                try:
+                    password_validation.validate_password(password2, self.instance)
+                except forms.ValidationError as error:
+                    self.add_error("password1", error)
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.full_name = ""
+        user.email_verified = False
+        user.is_active = False
         user.is_buyer = True
         user.is_seller = False
         user.set_password(self.cleaned_data["password1"])
@@ -144,10 +164,21 @@ class LoginForm(BaseStyledFormMixin, forms.Form):
         email = cleaned_data.get("email")
         password = cleaned_data.get("password")
 
-        if email and password:
-            self.user = authenticate(self.request, email=email, password=password)
-            if self.user is None:
-                raise forms.ValidationError("Invalid email or password.")
+        if not email or not password:
+            return cleaned_data
+
+        user = User.objects.filter(email__iexact=email).first()
+        if user and user.check_password(password):
+            if not user.email_verified:
+                raise forms.ValidationError(
+                    "Please verify your email before logging in. Check your inbox for the activation link."
+                )
+            if not user.is_active:
+                raise forms.ValidationError("This account is inactive. Please contact support if you need help.")
+
+        self.user = authenticate(self.request, email=email, password=password)
+        if self.user is None:
+            raise forms.ValidationError("Invalid email or password.")
 
         return cleaned_data
 
@@ -173,7 +204,7 @@ class AccountSettingsForm(BaseStyledFormMixin, forms.ModelForm):
         return email
 
     def clean_full_name(self):
-        full_name = self.cleaned_data["full_name"].strip()
+        full_name = (self.cleaned_data["full_name"] or "").strip()
         if not full_name:
             raise forms.ValidationError("Full name is required.")
         return full_name

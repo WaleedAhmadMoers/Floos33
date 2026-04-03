@@ -1,15 +1,93 @@
 from django.contrib import admin
 
+from core.cms import cms_text_field_names
 from core.models import (
+    AboutCMSBlock,
     BuyerVisibilityGrant,
+    CMSBlock,
     CompanyVisibilityGrant,
-    Notification,
-    DealTrigger,
+    ContactCMSBlock,
     DealHistory,
+    DealTrigger,
+    FooterCMSBlock,
+    HomepageCMSBlock,
+    ImpressumCMSBlock,
+    Notification,
+    PrivacyCMSBlock,
+    SharedCMSBlock,
+    SupportMessage,
+    TermsCMSBlock,
     TickerNews,
     TickerNewsTranslation,
 )
 from core.utils.notifications import create_notification
+
+
+class PageScopedCMSBlockAdmin(admin.ModelAdmin):
+    page_code = None
+    list_display = ("key_suffix", "key", "is_active", "updated_at")
+    list_filter = ("is_active", "updated_at")
+    search_fields = ("key", *cms_text_field_names())
+    readonly_fields = ("updated_at",)
+    ordering = ("key",)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if self.page_code:
+            queryset = queryset.filter(page=self.page_code)
+        return queryset
+
+    def get_fields(self, request, obj=None):
+        return ("key", *cms_text_field_names(), "is_active", "updated_at")
+
+    def save_model(self, request, obj, form, change):
+        if self.page_code:
+            obj.page = self.page_code
+        super().save_model(request, obj, form, change)
+
+    @admin.display(description="Block")
+    def key_suffix(self, obj):
+        return obj.key_suffix
+
+
+@admin.register(HomepageCMSBlock)
+class HomepageCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.HOME
+
+
+@admin.register(AboutCMSBlock)
+class AboutCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.ABOUT
+
+
+@admin.register(ContactCMSBlock)
+class ContactCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.CONTACT
+
+
+@admin.register(PrivacyCMSBlock)
+class PrivacyCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.PRIVACY
+
+
+@admin.register(TermsCMSBlock)
+class TermsCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.TERMS
+
+
+@admin.register(ImpressumCMSBlock)
+class ImpressumCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.IMPRESSUM
+
+
+@admin.register(FooterCMSBlock)
+class FooterCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.FOOTER
+
+
+@admin.register(SharedCMSBlock)
+class SharedCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.SHARED
 
 
 @admin.register(BuyerVisibilityGrant)
@@ -36,6 +114,16 @@ class NotificationAdmin(admin.ModelAdmin):
     list_filter = ("notification_type", "is_read", "created_at")
     search_fields = ("title", "body", "recipient__email")
     raw_id_fields = ("recipient", "actor")
+    ordering = ("-created_at",)
+
+
+@admin.register(SupportMessage)
+class SupportMessageAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "subject", "status", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("name", "email", "subject", "message")
+    readonly_fields = ("created_at", "updated_at", "user")
+    raw_id_fields = ("user",)
     ordering = ("-created_at",)
 
 

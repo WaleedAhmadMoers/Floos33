@@ -1,0 +1,10 @@
+Hello {% if user.full_name %}{{ user.full_name }}{% else %}{{ user.email }}{% endif %},
+
+Welcome to {{ site_name }}.
+
+Please verify your email address by opening the link below:
+{{ activation_url }}
+
+After verification, your account will be active and you can log in normally.
+
+If you did not create this account, you can ignore this email.

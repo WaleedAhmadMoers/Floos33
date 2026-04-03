@@ -187,7 +187,7 @@
             <div class="relative">
               {% with first_image=stocklot.images.first %}
                 {% if first_image %}
-                  <img loading="lazy" src="{{ first_image.file.url }}" alt="{{ stocklot.title }}" class="h-48 w-full object-cover">
+                  <img loading="lazy" src="{{ first_image.file.url }}" alt="{{ stocklot.public_title }}" class="h-48 w-full object-cover">
                 {% else %}
                   <div class="grid h-48 place-items-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">No preview available</div>
                 {% endif %}
@@ -212,7 +212,7 @@
 
             <div class="flex flex-1 flex-col p-5">
               <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ stocklot.category.full_name }}</p>
-              <h2 class="mt-2 text-lg font-black leading-7 text-slate-900 line-clamp-2">{{ stocklot.title }}</h2>
+              <h2 dir="{{ stocklot.public_content_direction }}" class="mt-2 text-lg font-black leading-7 text-slate-900 line-clamp-2">{{ stocklot.public_title }}</h2>
               <div class="mt-4 flex items-baseline gap-2">
                 <span class="text-2xl font-black tracking-tight text-brand-600">{{ stocklot.price }} {{ stocklot.currency }}</span>
                 <span class="text-sm font-semibold text-slate-500">per {{ stocklot.get_unit_type_display }}</span>
@@ -222,7 +222,7 @@
                 <span>{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
                 <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Commercial lot</span>
               </div>
-              <p class="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">{{ stocklot.description|truncatechars:120 }}</p>
+              <p dir="{{ stocklot.public_content_direction }}" class="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">{{ stocklot.public_description|truncatechars:120 }}</p>
             </div>
 
             <div class="mt-4 flex flex-wrap gap-2">

@@ -2,6 +2,148 @@ from django.conf import settings
 from django.db import models
 
 
+class CMSBlock(models.Model):
+    class Page(models.TextChoices):
+        HOME = "home", "Homepage"
+        ABOUT = "about", "About"
+        CONTACT = "contact", "Contact"
+        PRIVACY = "privacy", "Privacy"
+        TERMS = "terms", "Terms"
+        IMPRESSUM = "impressum", "Impressum"
+        FOOTER = "footer", "Footer"
+        SHARED = "shared", "Shared / Global"
+
+    page = models.CharField("page", max_length=20, choices=Page.choices, default=Page.SHARED)
+    key = models.CharField("key", max_length=100, unique=True)
+    text_en = models.TextField("text (English)", blank=True)
+    text_de = models.TextField("text (German)", blank=True)
+    text_ar = models.TextField("text (Arabic)", blank=True)
+    text_tr = models.TextField("text (Turkish)", blank=True)
+    text_fa = models.TextField("text (Farsi)", blank=True)
+    text_fr = models.TextField("text (French)", blank=True)
+    text_es = models.TextField("text (Spanish)", blank=True)
+    text_pt = models.TextField("text (Portuguese)", blank=True)
+    text_nl = models.TextField("text (Dutch)", blank=True)
+    text_zh = models.TextField("text (Chinese)", blank=True)
+    is_active = models.BooleanField("active", default=True)
+    updated_at = models.DateTimeField("updated at", auto_now=True)
+
+    class Meta:
+        ordering = ["page", "key"]
+        verbose_name = "CMS block"
+        verbose_name_plural = "CMS blocks"
+
+    def __str__(self):
+        return self.key
+
+    @property
+    def key_suffix(self):
+        if "." in self.key:
+            return self.key.split(".", 1)[1]
+        return self.key
+
+    def save(self, *args, **kwargs):
+        suffix = self.key.split(".", 1)[1] if "." in self.key else self.key
+        self.key = f"{self.page}.{suffix}"
+        super().save(*args, **kwargs)
+        from core.cms import clear_cms_cache
+
+        clear_cms_cache()
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        from core.cms import clear_cms_cache
+
+        clear_cms_cache()
+        return result
+
+
+class HomepageCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Homepage"
+        verbose_name_plural = "CMS · Homepage"
+
+
+class AboutCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · About"
+        verbose_name_plural = "CMS · About"
+
+
+class ContactCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Contact"
+        verbose_name_plural = "CMS · Contact"
+
+
+class PrivacyCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Privacy"
+        verbose_name_plural = "CMS · Privacy"
+
+
+class TermsCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Terms"
+        verbose_name_plural = "CMS · Terms"
+
+
+class ImpressumCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Impressum"
+        verbose_name_plural = "CMS · Impressum"
+
+
+class FooterCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Footer"
+        verbose_name_plural = "CMS · Footer"
+
+
+class SharedCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS · Shared / Global"
+        verbose_name_plural = "CMS · Shared / Global"
+
+
+class SupportMessage(models.Model):
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        HANDLED = "handled", "Handled"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="support_messages",
+        null=True,
+        blank=True,
+    )
+    name = models.CharField("name", max_length=120)
+    email = models.EmailField("email")
+    phone = models.CharField("phone", max_length=50, blank=True)
+    subject = models.CharField("subject", max_length=180)
+    message = models.TextField("message")
+    status = models.CharField("status", max_length=20, choices=Status.choices, default=Status.NEW)
+    created_at = models.DateTimeField("created at", auto_now_add=True)
+    updated_at = models.DateTimeField("updated at", auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "support message"
+        verbose_name_plural = "support messages"
+
+    def __str__(self):
+        return f"{self.email} - {self.subject}"
+
+
 class BuyerVisibilityGrant(models.Model):
     class Scope(models.TextChoices):
         SINGLE = "single", "Single company"

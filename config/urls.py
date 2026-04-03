@@ -13,6 +13,7 @@ urlpatterns = [
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
     path("robots.txt", robots_txt, name="robots"),
     path("", include("accounts.urls")),
+    path("blog/", include("blog.urls")),
     path("", include("companies.urls")),
     path("stocklots/", include("stocklots.urls")),
     path("inquiries/", include("inquiries.urls")),

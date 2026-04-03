@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load identity_tags %}
 
-{% block title %}{{ rfq.title }} | RFQ | floos33{% endblock title %}
-{% block meta_description %}{{ rfq.title }}. Review quantity, destination, budget, and buyer request details in the public floos33 RFQ marketplace.{% endblock %}
-{% block social_title %}{{ rfq.title }} | RFQ | floos33{% endblock %}
-{% block social_description %}Review quantity, destination, budget, and buyer request details in the public floos33 RFQ marketplace.{% endblock %}
-{% block twitter_title %}{{ rfq.title }} | RFQ | floos33{% endblock %}
-{% block twitter_description %}Review quantity, destination, budget, and buyer request details in the public floos33 RFQ marketplace.{% endblock %}
+{% block title %}{{ rfq.public_title }} | RFQ | floos33{% endblock title %}
+{% block meta_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
+{% block social_title %}{{ rfq.public_title }} | RFQ | floos33{% endblock %}
+{% block social_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
+{% block twitter_title %}{{ rfq.public_title }} | RFQ | floos33{% endblock %}
+{% block twitter_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
 {% block og_type %}article{% endblock %}
 
 {% block content %}
@@ -31,7 +31,7 @@
                 <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{{ rfq.get_moderation_status_display }}</span>
               </div>
 
-              <h1 class="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ rfq.title }}</h1>
+              <h1 dir="{{ rfq.public_content_direction }}" class="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ rfq.public_title }}</h1>
               <p class="mt-4 text-base leading-7 text-slate-600">
                 Review the buyer requirement, assess quantity and destination, and respond with a commercial quote or question from one clear workspace.
               </p>
@@ -101,8 +101,8 @@
           </div>
 
           <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div class="prose prose-slate max-w-none text-sm leading-7">
-              {{ rfq.description|linebreaksbr }}
+            <div dir="{{ rfq.public_content_direction }}" class="prose prose-slate max-w-none text-sm leading-7">
+              {{ rfq.public_description|linebreaksbr }}
             </div>
           </div>
         </section>

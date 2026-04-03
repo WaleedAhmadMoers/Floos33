@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
+from core.languages import translation_field_names
 from .models import Category, Favorite, Stocklot, StocklotDocument, StocklotImage, StocklotVideo
 
 
@@ -31,6 +32,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class StocklotAdmin(admin.ModelAdmin):
     list_display = (
         "title",
+        "original_language",
         "company",
         "category",
         "status",
@@ -42,12 +44,12 @@ class StocklotAdmin(admin.ModelAdmin):
         "updated_at",
     )
     list_filter = ("status", "is_admin_verified", "is_active", "condition", "currency", "category")
-    search_fields = ("title", "slug", "company__name", "company__owner__email")
+    search_fields = ("title", "slug", "company__name", "company__owner__email", *translation_field_names())
     readonly_fields = ("created_at", "updated_at")
     prepopulated_fields = {"slug": ("title",)}
     inlines = (StocklotImageInline, StocklotVideoInline, StocklotDocumentInline)
     fieldsets = (
-        (_("Listing info"), {"fields": ("company", "category", "title", "slug")}),
+        (_("Listing info"), {"fields": ("company", "category", "original_language", "title", "slug")}),
         (
             _("Stocklot details"),
             {
@@ -60,6 +62,13 @@ class StocklotAdmin(admin.ModelAdmin):
                     "price",
                     "currency",
                 )
+            },
+        ),
+        (
+            _("Translations"),
+            {
+                "fields": translation_field_names(),
+                "classes": ("collapse",),
             },
         ),
         (

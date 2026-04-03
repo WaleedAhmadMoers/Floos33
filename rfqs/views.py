@@ -7,6 +7,8 @@ from django.views.generic import CreateView, DetailView, ListView, FormView
 from django.db.models import Q
 
 from companies.models import Company
+from core.context_processors import resolve_site_language
+from core.multilingual import prepare_objects_for_language
 from rfqs.forms import ConversationStartForm, MessageReplyForm, RFQForm
 from rfqs.models import RFQ, RFQConversation, RFQFavorite, RFQMessage
 from core.utils.deals import accept_deal, cancel_deal, reject_deal, get_or_create_for_rfq_conversation
@@ -21,14 +23,23 @@ class RFQListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return (
+        language_code = resolve_site_language(self.request)
+        queryset = (
             RFQ.objects.filter(status=RFQ.Status.OPEN, moderation_status=RFQ.ModerationStatus.APPROVED)
+            .filter(RFQ.visible_in_language_q(language_code))
             .select_related("category", "buyer")
             .order_by("-created_at")
         )
+        search_query = self.request.GET.get("q", "").strip()
+        if search_query:
+            queryset = queryset.filter(RFQ.public_search_q(language_code, search_query))
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        language_code = resolve_site_language(self.request)
+        context["rfqs"] = prepare_objects_for_language(list(context["rfqs"]), language_code)
+        context["search_query"] = self.request.GET.get("q", "").strip()
         page_obj = context.get("page_obj")
         query = self.request.GET.copy()
         query.pop("page", None)
@@ -68,15 +79,24 @@ class RFQDetailView(DetailView):
     template_name = "rfqs/rfq_detail.html"
     context_object_name = "rfq"
 
+    def get_queryset(self):
+        return RFQ.objects.select_related("category", "buyer")
+
     def dispatch(self, request, *args, **kwargs):
         rfq = self.get_object()
-        if rfq.moderation_status != RFQ.ModerationStatus.APPROVED or rfq.status != RFQ.Status.OPEN:
-            if not (request.user.is_staff or request.user == rfq.buyer):
+        language_code = resolve_site_language(request)
+        owner_or_staff = request.user.is_staff or request.user == rfq.buyer
+        if not owner_or_staff:
+            if rfq.moderation_status != RFQ.ModerationStatus.APPROVED or rfq.status != RFQ.Status.OPEN:
                 raise Http404("RFQ not available")
+            if not rfq.is_visible_in_language(language_code):
+                raise Http404("RFQ not available in this language")
+        self.detail_language_code = language_code if rfq.is_visible_in_language(language_code) else rfq.original_language
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        self.object.prepare_for_language(getattr(self, "detail_language_code", resolve_site_language(self.request)))
         ok_seller = False
         if self.request.user.is_authenticated:
             from core.utils.verification import enforce_verified
@@ -97,6 +117,11 @@ class RFQCreateView(LoginRequiredMixin, CreateView):
     model = RFQ
     form_class = RFQForm
     template_name = "rfqs/rfq_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.setdefault("original_language", resolve_site_language(self.request))
+        return initial
 
     def form_valid(self, form):
         ok, msg = enforce_verified(self.request, role="buyer")
@@ -269,7 +294,14 @@ class ConversationStartView(LoginRequiredMixin, CreateView):
         if not ok:
             messages.error(request, msg)
             return redirect("rfqs:list")
-        self.rfq_obj = get_object_or_404(RFQ, pk=kwargs["pk"], status=RFQ.Status.OPEN)
+        language_code = resolve_site_language(request)
+        self.rfq_obj = get_object_or_404(
+            RFQ.objects.filter(
+                pk=kwargs["pk"],
+                status=RFQ.Status.OPEN,
+                moderation_status=RFQ.ModerationStatus.APPROVED,
+            ).filter(RFQ.visible_in_language_q(language_code))
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -312,12 +344,15 @@ class ConversationStartView(LoginRequiredMixin, CreateView):
 
 class RFQFavoriteToggleView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
+        language_code = resolve_site_language(request)
         rfq = get_object_or_404(
             RFQ,
             pk=kwargs.get("pk"),
             status=RFQ.Status.OPEN,
             moderation_status=RFQ.ModerationStatus.APPROVED,
         )
+        if not rfq.is_visible_in_language(language_code):
+            raise Http404("RFQ not available in this language")
         favorite, created = RFQFavorite.objects.get_or_create(user=request.user, rfq=rfq)
         if not created:
             favorite.delete()

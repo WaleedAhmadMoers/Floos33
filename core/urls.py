@@ -3,6 +3,8 @@ from django.urls import path
 from .views import (
     AboutView,
     ContactView,
+    ImpressumView,
+    PrivacyView,
     SetLanguageView,
     SavedItemsView,
     HomeView,
@@ -61,6 +63,7 @@ from .views import (
     RFQMessageDeleteView,
     DealStatusView,
     DealIdentityRequestView,
+    TermsView,
 )
 
 app_name = "core"
@@ -69,6 +72,9 @@ urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("about/", AboutView.as_view(), name="about"),
     path("contact/", ContactView.as_view(), name="contact"),
+    path("privacy/", PrivacyView.as_view(), name="privacy"),
+    path("terms/", TermsView.as_view(), name="terms"),
+    path("impressum/", ImpressumView.as_view(), name="impressum"),
     path("support/", ContactView.as_view(), name="support"),
     path("language/", SetLanguageView.as_view(), name="set_language"),
     path("saved/", SavedItemsView.as_view(), name="saved"),

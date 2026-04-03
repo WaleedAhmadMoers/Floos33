@@ -13,11 +13,15 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from stocklots.models import Stocklot, Category
 from stocklots.models import Favorite
-from core.models import Notification, DealTrigger
+from core.models import CMSBlock, Notification, DealTrigger, SupportMessage
 from rfqs.models import RFQMessage, RFQ, RFQConversation, RFQFavorite
 from inquiries.models import InquiryReply, Inquiry
 from companies.models import Company
 from accounts.models import User
+from core.cms import get_cms_map, get_cms_text
+from core.context_processors import resolve_site_language
+from core.languages import SUPPORTED_LANGUAGE_CODES
+from core.multilingual import prepare_objects_for_language
 from core.utils.notifications import create_notification
 from core.utils.deals import _broadcast_deal, _identity_status
 from core.utils.verification import enforce_verified
@@ -27,17 +31,20 @@ from core.forms import SupportContactForm
 from core.models import DealHistory
 
 
-SUPPORTED_LANGUAGE_CODES = {"en", "de", "ar"}
-
-
 class HomeView(TemplateView):
     template_name = "core/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        qs = (
+        language_code = resolve_site_language(self.request)
+        cms = get_cms_map(language_code)
+        public_stocklots = (
             Stocklot.objects.select_related("company", "company__owner", "category", "category__parent")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .filter(Stocklot.visible_in_language_q(language_code))
+        )
+        qs = (
+            public_stocklots
             .annotate(
                 is_favorited=Exists(
                     Favorite.objects.filter(user=self.request.user, stocklot=OuterRef("pk"))
@@ -53,7 +60,7 @@ class HomeView(TemplateView):
             page_obj = paginator.page(1)
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
-        context["homepage_stocklots"] = list(page_obj.object_list)
+        context["homepage_stocklots"] = prepare_objects_for_language(list(page_obj.object_list), language_code)
         # build prev/next links preserving other home params
         base_qs = self.request.GET.copy()
         base_qs.pop("hp", None)
@@ -65,93 +72,230 @@ class HomeView(TemplateView):
         context["home_page_obj"] = page_obj
         context["home_page_prev"] = f"{base_prefix}hp={page_obj.previous_page_number()}" if page_obj.has_previous() else None
         context["home_page_next"] = f"{base_prefix}hp={page_obj.next_page_number()}" if page_obj.has_next() else None
-        context["homepage_feed"] = (
-            Stocklot.objects.select_related("company", "category")
-            .filter(status=Stocklot.Status.APPROVED, is_active=True)
-            .order_by("-updated_at")[:5]
+        context["homepage_feed"] = prepare_objects_for_language(
+            list(public_stocklots.select_related("company", "category").order_by("-updated_at")[:5]),
+            language_code,
         )
         context["how_it_works_steps"] = [
             {
                 "number": 1,
-                "title": "Browse or post",
-                "description": "Search approved stocklots or post an RFQ when you need specific specs or volume.",
+                "title": get_cms_text("home.how_step_1_title", language_code, cms),
+                "description": get_cms_text("home.how_step_1_description", language_code, cms),
             },
             {
                 "number": 2,
-                "title": "Connect privately",
-                "description": "Chat with verified users while identities stay masked until reveal is approved.",
+                "title": get_cms_text("home.how_step_2_title", language_code, cms),
+                "description": get_cms_text("home.how_step_2_description", language_code, cms),
             },
             {
                 "number": 3,
-                "title": "Negotiate with oversight",
-                "description": "All conversations and identity reveals are moderated; admins can approve key steps.",
+                "title": get_cms_text("home.how_step_3_title", language_code, cms),
+                "description": get_cms_text("home.how_step_3_description", language_code, cms),
             },
             {
                 "number": 4,
-                "title": "Confirm the deal",
-                "description": "Both sides accept, admin approves, and progress is tracked with status and history.",
+                "title": get_cms_text("home.how_step_4_title", language_code, cms),
+                "description": get_cms_text("home.how_step_4_description", language_code, cms),
             },
         ]
         context["trust_safety_points"] = [
-            {"title": "Verified users", "description": "Admin-verified accounts plus buyer/seller checks before actions."},
-            {"title": "Approved listings & RFQs", "description": "Only admin-approved, active stocklots and RFQs are visible."},
-            {"title": "Identity protection", "description": "Buyer/seller identities stay masked until reveal requests are approved."},
-            {"title": "Controlled deal flow", "description": "Deals move in stages with admin oversight, history, and notifications."},
+            {
+                "title": get_cms_text("home.trust_point_1_title", language_code, cms),
+                "description": get_cms_text("home.trust_point_1_description", language_code, cms),
+            },
+            {
+                "title": get_cms_text("home.trust_point_2_title", language_code, cms),
+                "description": get_cms_text("home.trust_point_2_description", language_code, cms),
+            },
+            {
+                "title": get_cms_text("home.trust_point_3_title", language_code, cms),
+                "description": get_cms_text("home.trust_point_3_description", language_code, cms),
+            },
+            {
+                "title": get_cms_text("home.trust_point_4_title", language_code, cms),
+                "description": get_cms_text("home.trust_point_4_description", language_code, cms),
+            },
         ]
-        context["recent_rfqs"] = (
-            RFQ.objects.select_related("buyer", "category")
-            .filter(moderation_status=RFQ.ModerationStatus.APPROVED, status=RFQ.Status.OPEN)
-            .order_by("-created_at")[:3]
+        context["recent_rfqs"] = prepare_objects_for_language(
+            list(
+                RFQ.objects.select_related("buyer", "category")
+                .filter(moderation_status=RFQ.ModerationStatus.APPROVED, status=RFQ.Status.OPEN)
+                .filter(RFQ.visible_in_language_q(language_code))
+                .order_by("-created_at")[:3]
+            ),
+            language_code,
         )
         # simple ribbon metrics
         context["stats_ribbon"] = {
-            "avg_deal_size": "€12,450",
-            "countries": Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True)
+            "avg_deal_size": "EUR 12,450",
+            "countries": public_stocklots
             .values_list("location_country", flat=True)
             .distinct()
             .count(),
-            "active_listings": Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True).count(),
+            "active_listings": public_stocklots.count(),
             "open_deals": DealTrigger.objects.filter(status__in=[DealTrigger.Status.PENDING, DealTrigger.Status.MUTUAL]).count(),
         }
         # popular categories (by stock count)
         context["popular_categories"] = (
-            Category.objects.filter(stocklots__status=Stocklot.Status.APPROVED, stocklots__is_active=True)
+            Category.objects.filter(stocklots__in=public_stocklots)
             .annotate(cnt=models.Count("stocklots"))
             .order_by("-cnt")[:8]
         )
         return context
 
 
-class AboutView(TemplateView):
-    template_name = "core/about.html"
+class CMSContentMixin:
+    cms_namespace = CMSBlock.Page.SHARED
+
+    def get_language_code(self):
+        return resolve_site_language(self.request)
+
+    def get_cms_blocks(self):
+        return getattr(self.request, "_cms_blocks", None) or get_cms_map(self.get_language_code())
+
+    def cms_text(self, key):
+        scoped_key = key if "." in key else f"{self.cms_namespace}.{key}"
+        return get_cms_text(scoped_key, self.get_language_code(), self.get_cms_blocks())
+
+    def get_cms_sections(self, count):
+        sections = []
+        for index in range(1, count + 1):
+            title = self.cms_text(f"section_{index}_title")
+            body = self.cms_text(f"section_{index}_body")
+            if title or body:
+                sections.append({"title": title, "body": body})
+        return sections
 
 
-class ContactView(FormView):
+class CMSPageView(CMSContentMixin, TemplateView):
+    template_name = "core/cms_page.html"
+    section_count = 0
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_meta_title"] = self.cms_text("meta_title")
+        context["page_meta_description"] = self.cms_text("meta_description")
+        context["page_eyebrow"] = self.cms_text("eyebrow")
+        context["page_title"] = self.cms_text("title")
+        context["page_intro"] = self.cms_text("intro")
+        context["page_sections"] = self.get_cms_sections(self.section_count)
+        return context
+
+
+class AboutView(CMSPageView):
+    cms_namespace = CMSBlock.Page.ABOUT
+    section_count = 3
+
+
+class PrivacyView(CMSPageView):
+    cms_namespace = CMSBlock.Page.PRIVACY
+    section_count = 4
+
+
+class TermsView(CMSPageView):
+    cms_namespace = CMSBlock.Page.TERMS
+    section_count = 4
+
+
+class ImpressumView(CMSContentMixin, TemplateView):
+    template_name = "core/impressum.html"
+    cms_namespace = CMSBlock.Page.IMPRESSUM
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_meta_title"] = self.cms_text("meta_title")
+        context["page_meta_description"] = self.cms_text("meta_description")
+        context["page_eyebrow"] = self.cms_text("eyebrow")
+        context["page_title"] = self.cms_text("title")
+        context["page_intro"] = self.cms_text("intro")
+        context["impressum_items"] = [
+            {
+                "label": self.cms_text("company_name_label"),
+                "value": self.cms_text("company_name"),
+            },
+            {
+                "label": self.cms_text("address_label"),
+                "value": self.cms_text("address"),
+            },
+            {
+                "label": self.cms_text("contact_label"),
+                "value": self.cms_text("contact_body"),
+            },
+            {
+                "label": self.cms_text("representative_label"),
+                "value": self.cms_text("representative"),
+            },
+            {
+                "label": self.cms_text("registration_label"),
+                "value": self.cms_text("registration"),
+            },
+            {
+                "label": self.cms_text("vat_label"),
+                "value": self.cms_text("vat"),
+            },
+        ]
+        context["legal_title"] = self.cms_text("legal_title")
+        context["legal_body"] = self.cms_text("legal_body")
+        return context
+
+
+class ContactView(CMSContentMixin, FormView):
     template_name = "core/contact.html"
     form_class = SupportContactForm
     success_url = reverse_lazy("core:contact")
+    cms_namespace = CMSBlock.Page.CONTACT
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        def cms_text_or_default(key, default=""):
+            value = self.cms_text(key)
+            return value or default
+
+        kwargs["cms_text"] = cms_text_or_default
+        return kwargs
+
+    def get_support_whatsapp_url(self):
+        digits = "".join(ch for ch in settings.SUPPORT_PHONE if ch.isdigit())
+        return f"https://wa.me/{digits}"
 
     def get_initial(self):
         initial = super().get_initial()
         if self.request.user.is_authenticated:
             initial["name"] = self.request.user.full_name or ""
             initial["email"] = self.request.user.email or ""
+            initial["phone"] = getattr(self.request.user, "phone", "") or ""
         return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["support_email"] = settings.SUPPORT_EMAIL
         context["support_phone"] = settings.SUPPORT_PHONE
+        context["support_whatsapp_url"] = self.get_support_whatsapp_url()
+        context["contact_help_topics"] = [
+            self.cms_text("help_item_1"),
+            self.cms_text("help_item_2"),
+            self.cms_text("help_item_3"),
+            self.cms_text("help_item_4"),
+        ]
         return context
 
     def form_valid(self, form):
         support_email = settings.SUPPORT_EMAIL
-        subject = form.cleaned_data.get("subject") or "Support request from floos33"
+        subject = (form.cleaned_data.get("subject") or "").strip() or self.cms_text("email_subject_fallback")
+        support_message = form.save(commit=False)
+        support_message.subject = subject
+        if self.request.user.is_authenticated:
+            support_message.user = self.request.user
+        support_message.status = SupportMessage.Status.NEW
+        support_message.save()
         message = (
-            f"Name: {form.cleaned_data['name']}\n"
-            f"Email: {form.cleaned_data['email']}\n"
-            f"Subject: {form.cleaned_data.get('subject') or '-'}\n\n"
-            f"{form.cleaned_data['message']}"
+            f"Support message ID: {support_message.pk}\n"
+            f"Name: {support_message.name}\n"
+            f"Email: {support_message.email}\n"
+            f"Phone: {support_message.phone or '-'}\n"
+            f"Subject: {support_message.subject}\n\n"
+            f"{support_message.message}"
         )
         send_mail(
             subject=f"[floos33 Support] {subject}",
@@ -160,8 +304,8 @@ class ContactView(FormView):
             recipient_list=[support_email],
             fail_silently=True,
         )
-        messages.success(self.request, "Your message has been sent. We will respond shortly.")
-        return super().form_valid(form)
+        messages.success(self.request, self.cms_text("success_message"))
+        return redirect(self.get_success_url())
 
 
 class SetLanguageView(View):
@@ -183,6 +327,7 @@ def robots_txt(request):
     lines = [
         "User-agent: *",
         "Allow: /",
+        "Disallow: /language/",
         "Disallow: /account/",
         "Disallow: /login/",
         "Disallow: /logout/",

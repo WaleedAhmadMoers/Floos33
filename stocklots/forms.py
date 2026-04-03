@@ -1,5 +1,6 @@
 from django import forms
 
+from core.languages import SUPPORTED_LANGUAGE_CHOICES
 from .models import Category, Stocklot
 
 
@@ -84,6 +85,7 @@ class StocklotForm(BaseStyledFormMixin, forms.ModelForm):
     class Meta:
         model = Stocklot
         fields = (
+            "original_language",
             "title",
             "category",
             "description",
@@ -98,6 +100,7 @@ class StocklotForm(BaseStyledFormMixin, forms.ModelForm):
             "is_active",
         )
         labels = {
+            "original_language": "Original language",
             "title": "Title",
             "description": "Description",
             "condition": "Condition",
@@ -116,6 +119,7 @@ class StocklotForm(BaseStyledFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["original_language"].choices = SUPPORTED_LANGUAGE_CHOICES
         self.fields["category"].queryset = Category.objects.filter(is_active=True).select_related("parent").order_by(
             "parent__name",
             "name",

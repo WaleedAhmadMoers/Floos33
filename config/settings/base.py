@@ -27,6 +27,7 @@ DJANGO_APPS = [
 
 LOCAL_APPS = [
     "accounts",
+    "blog",
     "companies",
     "core",
     "stocklots",
@@ -75,6 +76,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.cms_content",
                 "core.context_processors.notifications",
                 "core.context_processors.site_identity",
                 "core.context_processors.ticker_news",
@@ -125,7 +127,9 @@ LOGIN_REDIRECT_URL = "/account/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 
 EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_FILE_PATH = env("DJANGO_EMAIL_FILE_PATH", str(BASE_DIR / "tmp" / "emails"))
 DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", "noreply@floos33.local")
 SITE_NAME = env("DJANGO_SITE_NAME", "floos33")
 SUPPORT_EMAIL = env("DJANGO_SUPPORT_EMAIL", "support@floos33.de")
 SUPPORT_PHONE = "+49 1575 4967414"
+APP_BASE_URL = env("APP_BASE_URL", "http://127.0.0.1:8000").rstrip("/")

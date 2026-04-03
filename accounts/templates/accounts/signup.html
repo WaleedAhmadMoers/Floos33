@@ -3,7 +3,7 @@
 {% block title %}Create account | floos33{% endblock title %}
 {% block auth_eyebrow %}Signup{% endblock auth_eyebrow %}
 {% block auth_title %}Create a new account{% endblock auth_title %}
-{% block auth_intro %}Sign up to browse the marketplace, post RFQs, manage listings, and track deals in one place.{% endblock auth_intro %}
+{% block auth_intro %}Sign up with your email, choose a password, and activate the account from the verification email we send you.{% endblock auth_intro %}
 
 {% block auth_content %}
 <form method="post" class="space-y-5">
@@ -40,6 +40,8 @@
 
     <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Create account</button>
 </form>
+
+<p class="mt-4 text-sm leading-6 text-slate-500">We will send a verification link to your email address. You can log in after confirming it.</p>
 
 <p class="mt-6 text-sm text-slate-600">
     Already have an account?

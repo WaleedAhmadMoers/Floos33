@@ -1,5 +1,6 @@
 from django import forms
 
+from core.languages import SUPPORTED_LANGUAGE_CHOICES
 from stocklots.models import Category, Stocklot
 from rfqs.models import RFQ, RFQConversation, RFQMessage
 
@@ -8,6 +9,7 @@ class RFQForm(forms.ModelForm):
     class Meta:
         model = RFQ
         fields = [
+            "original_language",
             "title",
             "description",
             "category",
@@ -22,6 +24,7 @@ class RFQForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["original_language"].choices = SUPPORTED_LANGUAGE_CHOICES
         self.fields["category"].queryset = Category.objects.all()
         self._apply_ui()
 

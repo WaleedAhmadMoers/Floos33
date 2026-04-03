@@ -3,22 +3,20 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
+from core.languages import SUPPORTED_LANGUAGE_CHOICES
+
 from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    class PreferredLanguage(models.TextChoices):
-        ARABIC = "ar", "Arabic"
-        GERMAN = "de", "German"
-        ENGLISH = "en", "English"
-
     email = models.EmailField("email address", unique=True)
-    full_name = models.CharField("full name", max_length=255)
+    full_name = models.CharField("full name", max_length=255, blank=True)
+    email_verified = models.BooleanField("email verified", default=False)
     preferred_language = models.CharField(
         "preferred language",
         max_length=2,
-        choices=PreferredLanguage.choices,
-        default=PreferredLanguage.ARABIC,
+        choices=SUPPORTED_LANGUAGE_CHOICES,
+        default="en",
     )
     # Admin override trust flag
     is_verified_user = models.BooleanField(
@@ -65,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["full_name"]
+    REQUIRED_FIELDS = []
 
     class Meta:
         ordering = ["id"]

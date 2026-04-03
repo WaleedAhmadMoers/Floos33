@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load identity_tags stocklot_tags static %}
 
-{% block title %}{{ stocklot.title }} | floos33{% endblock title %}
-{% block meta_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
-{% block social_title %}{{ stocklot.title }} | floos33{% endblock %}
-{% block social_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
-{% block twitter_title %}{{ stocklot.title }} | floos33{% endblock %}
-{% block twitter_description %}{{ stocklot.title }} in {{ stocklot.location_country }}. Review quantity, condition, pricing, and seller details on floos33.{% endblock %}
+{% block title %}{{ stocklot.public_title }} | floos33{% endblock title %}
+{% block meta_description %}{{ stocklot.public_meta_description|default:stocklot.public_description|truncatechars:165 }}{% endblock %}
+{% block social_title %}{{ stocklot.public_title }} | floos33{% endblock %}
+{% block social_description %}{{ stocklot.public_meta_description|default:stocklot.public_description|truncatechars:165 }}{% endblock %}
+{% block twitter_title %}{{ stocklot.public_title }} | floos33{% endblock %}
+{% block twitter_description %}{{ stocklot.public_meta_description|default:stocklot.public_description|truncatechars:165 }}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block social_image %}{% with first_image=stocklot.images.first %}{% if first_image %}{{ site_origin }}{{ first_image.file.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endwith %}{% endblock %}
 {% block twitter_image %}{% with first_image=stocklot.images.first %}{% if first_image %}{{ site_origin }}{{ first_image.file.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endwith %}{% endblock %}
@@ -19,7 +19,7 @@
       <div class="text-sm text-slate-500">
       <a href="{% url 'stocklots:list' %}" class="hover:text-amber-600">Marketplace</a> › {{ stocklot.category.full_name }}
     </div>
-    <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 leading-snug">{{ stocklot.title }}</h1>
+    <h1 dir="{{ stocklot.public_content_direction }}" class="text-2xl lg:text-3xl font-bold text-slate-900 leading-snug">{{ stocklot.public_title }}</h1>
   </div>
 
   <!-- Top row: Gallery | Right column (price + seller + status) -->
@@ -29,7 +29,7 @@
       {% with media_count=stocklot.images.count|add:stocklot.videos.count %}
       <div id="media-viewer" class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-50 flex items-center justify-center relative">
         {% if stocklot.images.first %}
-          <img id="media-main-img" src="{{ stocklot.images.first.file.url }}" alt="{{ stocklot.title }}" class="w-full h-full object-contain">
+          <img id="media-main-img" src="{{ stocklot.images.first.file.url }}" alt="{{ stocklot.public_title }}" class="w-full h-full object-contain">
         {% elif stocklot.videos.first %}
           <video id="media-main-video" controls class="w-full h-full object-contain" preload="metadata">
             <source src="{{ stocklot.videos.first.file.url }}">
@@ -43,7 +43,7 @@
       <div class="flex gap-2 overflow-x-auto" id="media-thumbs">
         {% for img in stocklot.images.all %}
           <button type="button" class="w-20 h-16 border border-slate-200 rounded-lg overflow-hidden media-thumb" data-type="image" data-src="{{ img.file.url }}">
-            <img src="{{ img.file.url }}" alt="{{ stocklot.title }} image {{ forloop.counter }}" class="w-full h-full object-cover">
+            <img src="{{ img.file.url }}" alt="{{ stocklot.public_title }} image {{ forloop.counter }}" class="w-full h-full object-cover">
           </button>
         {% endfor %}
         {% for vid in stocklot.videos.all %}
@@ -177,7 +177,7 @@
 
     <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-2">
       <h2 class="text-base font-bold text-slate-900">Description</h2>
-      <div class="text-sm text-slate-700 leading-relaxed">{{ stocklot.description|linebreaksbr }}</div>
+      <div dir="{{ stocklot.public_content_direction }}" class="text-sm text-slate-700 leading-relaxed">{{ stocklot.public_description|linebreaksbr }}</div>
     </section>
   </div>
 
@@ -195,13 +195,13 @@
           <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-50">
             {% with img=item.images.first %}
               {% if img %}
-                <img src="{{ img.file.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+                <img src="{{ img.file.url }}" alt="{{ item.public_title|default:item.title }}" class="w-full h-full object-cover">
               {% else %}
-                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.title }}" class="w-full h-full object-cover">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.public_title|default:item.title }}" class="w-full h-full object-cover">
               {% endif %}
             {% endwith %}
           </div>
-          <h3 class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.title }}</a></h3>
+          <h3 dir="{{ item.public_content_direction|default:'ltr' }}" class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.public_title|default:item.title }}</a></h3>
           <div class="text-amber-600 font-bold text-base">{{ item.price }} {{ item.currency }}</div>
           <div class="text-xs text-slate-600">{{ item.location_country }}{% if item.location_city %} · {{ item.location_city }}{% endif %}</div>
           <a class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'stocklots:detail' item.slug %}">View</a>
@@ -226,13 +226,13 @@
           <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-50">
             {% with img=item.images.first %}
               {% if img %}
-                <img src="{{ img.file.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+                <img src="{{ img.file.url }}" alt="{{ item.public_title|default:item.title }}" class="w-full h-full object-cover">
               {% else %}
-                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.title }}" class="w-full h-full object-cover">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60" alt="{{ item.public_title|default:item.title }}" class="w-full h-full object-cover">
               {% endif %}
             {% endwith %}
           </div>
-          <h3 class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.title }}</a></h3>
+          <h3 dir="{{ item.public_content_direction|default:'ltr' }}" class="text-sm font-semibold text-slate-900 line-clamp-2"><a href="{% url 'stocklots:detail' item.slug %}">{{ item.public_title|default:item.title }}</a></h3>
           <div class="text-amber-600 font-bold text-base">{{ item.price }} {{ item.currency }}</div>
           <div class="text-xs text-slate-600">{{ item.location_country }}{% if item.location_city %} · {{ item.location_city }}{% endif %}</div>
           <a class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'stocklots:detail' item.slug %}">View</a>

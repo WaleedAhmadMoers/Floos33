@@ -13,6 +13,8 @@ from django.views import View
 from .forms import StocklotForm
 from .models import Category, Favorite, Stocklot, StocklotDocument, StocklotImage, StocklotVideo
 from accounts.models import SellerVerificationRequest
+from core.context_processors import resolve_site_language
+from core.multilingual import prepare_objects_for_language
 from core.utils.verification import enforce_verified
 
 
@@ -29,9 +31,11 @@ class MarketplaceListView(ListView):
         return Category.objects.filter(slug=slug, is_active=True).first()
 
     def get_queryset(self):
+        language_code = resolve_site_language(self.request)
         queryset = (
             Stocklot.objects.select_related("company", "category", "category__parent", "company__owner")
             .filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .filter(Stocklot.visible_in_language_q(language_code))
             .annotate(
                 seller_verified=Exists(
                     SellerVerificationRequest.objects.filter(
@@ -50,7 +54,7 @@ class MarketplaceListView(ListView):
 
         search_query = self.request.GET.get("q", "").strip()
         if search_query:
-            queryset = queryset.filter(title__icontains=search_query)
+            queryset = queryset.filter(Stocklot.public_search_q(language_code, search_query))
 
         selected_category = self.get_selected_category()
         if selected_category:
@@ -109,6 +113,8 @@ class MarketplaceListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        language_code = resolve_site_language(self.request)
+        context["stocklots"] = prepare_objects_for_language(list(context["stocklots"]), language_code)
         context["marketplace_categories"] = Category.objects.filter(is_active=True, parent__isnull=True).prefetch_related(
             "children"
         )
@@ -124,6 +130,7 @@ class MarketplaceListView(ListView):
         context["condition_choices"] = Stocklot.Condition.choices
         context["available_countries"] = (
             Stocklot.objects.filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .filter(Stocklot.visible_in_language_q(language_code))
             .values_list("location_country", flat=True)
             .distinct()
             .order_by("location_country")
@@ -188,23 +195,18 @@ class StocklotDetailView(DetailView):
     slug_url_kwarg = "slug"
 
     def get_queryset(self):
-        queryset = (
+        language_code = resolve_site_language(self.request)
+        return (
             Stocklot.objects.select_related("company", "category", "category__parent")
             .prefetch_related("images", "documents", "videos")
+            .filter(status=Stocklot.Status.APPROVED, is_active=True)
+            .filter(Stocklot.visible_in_language_q(language_code))
         )
-        if self.request.user.is_authenticated:
-            try:
-                company = self.request.user.company
-            except ObjectDoesNotExist:
-                company = None
-
-            if company and self.request.user.is_seller:
-                return queryset.filter(Q(status=Stocklot.Status.APPROVED, is_active=True) | Q(company=company))
-
-        return queryset.filter(status=Stocklot.Status.APPROVED, is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        language_code = resolve_site_language(self.request)
+        self.object.prepare_for_language(language_code)
         if self.request.user.is_authenticated:
             context["is_favorited"] = Favorite.objects.filter(
                 user=self.request.user, stocklot=self.object
@@ -219,11 +221,15 @@ class StocklotDetailView(DetailView):
         # Hot deals / other marketplace items for exploration
         context.setdefault(
             "other_market_stocklots",
-            list(
+            prepare_objects_for_language(
+                list(
                 Stocklot.objects.select_related("company", "category")
                 .filter(status=Stocklot.Status.APPROVED, is_active=True)
+                .filter(Stocklot.visible_in_language_q(language_code))
                 .exclude(pk=self.object.pk)
                 .order_by("-created_at")[:8]
+                ),
+                language_code,
             ),
         )
         # Precompute document display names (basename only) for clean UI
@@ -331,6 +337,11 @@ class StocklotCreateView(StocklotManagementContextMixin, CreateView):
             }
         )
         return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.setdefault("original_language", resolve_site_language(self.request))
+        return initial
 
     def form_valid(self, form):
         self.object = form.save(commit=False)

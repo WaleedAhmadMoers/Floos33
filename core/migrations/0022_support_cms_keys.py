@@ -1,0 +1,207 @@
+from django.db import migrations
+
+
+CMS_CONTACT_BLOCKS = {
+    "contact.subtitle": {
+        "text_en": "Choose the fastest support option for your question or send us a message below.",
+        "text_de": "Wählen Sie den schnellsten Support-Kanal für Ihr Anliegen oder senden Sie uns unten eine Nachricht.",
+        "text_ar": "اختر أسرع وسيلة دعم لسؤالك أو أرسل لنا رسالة أدناه.",
+        "text_tr": "Sorunuz için en hizli destek kanalini secin veya asagidan bize mesaj gonderin.",
+        "text_fa": "سریع ترین راه پشتیبانی را برای موضوع خود انتخاب کنید یا در پایین برای ما پیام بفرستید.",
+        "text_fr": "Choisissez le canal de support le plus rapide pour votre demande ou envoyez-nous un message ci-dessous.",
+        "text_es": "Elija la opcion de soporte mas rapida para su consulta o envienos un mensaje abajo.",
+        "text_pt": "Escolha a opcao de suporte mais rapida para a sua questao ou envie-nos uma mensagem abaixo.",
+        "text_nl": "Kies de snelste supportoptie voor uw vraag of stuur ons hieronder een bericht.",
+        "text_zh": "请选择最适合您问题的快速支持方式，或在下方给我们留言。",
+    },
+    "contact.quick_actions_title": {
+        "text_en": "Quick support options",
+        "text_de": "Schnelle Support-Optionen",
+        "text_ar": "خيارات دعم سريعة",
+        "text_tr": "Hizli destek secenekleri",
+        "text_fa": "راه های سریع پشتیبانی",
+        "text_fr": "Options de support rapide",
+        "text_es": "Opciones rapidas de soporte",
+        "text_pt": "Opcoes rapidas de suporte",
+        "text_nl": "Snelle supportopties",
+        "text_zh": "快速支持选项",
+    },
+    "contact.quick_actions_intro": {
+        "text_en": "Use email for detailed issues, phone for urgent coordination, or WhatsApp for fast mobile contact.",
+        "text_de": "Nutzen Sie E-Mail für detaillierte Anliegen, Telefon für dringende Abstimmungen oder WhatsApp für schnellen mobilen Kontakt.",
+        "text_ar": "استخدم البريد الإلكتروني للمشكلات التفصيلية، والهاتف للتنسيق العاجل، أو واتساب للتواصل السريع عبر الجوال.",
+        "text_tr": "Ayrintili konular icin e-posta, acil koordinasyon icin telefon veya hizli mobil iletisim icin WhatsApp kullanin.",
+        "text_fa": "برای مسائل جزئی از ایمیل، برای هماهنگی فوری از تلفن و برای ارتباط سریع موبایلی از واتساپ استفاده کنید.",
+        "text_fr": "Utilisez l'email pour les sujets detailles, le telephone pour les urgences ou WhatsApp pour un contact mobile rapide.",
+        "text_es": "Use el correo para temas detallados, el telefono para coordinacion urgente o WhatsApp para contacto movil rapido.",
+        "text_pt": "Use o email para temas detalhados, o telefone para coordenacao urgente ou o WhatsApp para contacto movel rapido.",
+        "text_nl": "Gebruik e-mail voor uitgebreide vragen, telefoon voor urgente afstemming of WhatsApp voor snel mobiel contact.",
+        "text_zh": "详细问题请使用电子邮件，紧急协调可致电，移动端快速联系可使用 WhatsApp。",
+    },
+    "contact.whatsapp_label": {
+        "text_en": "WhatsApp",
+        "text_de": "WhatsApp",
+        "text_ar": "واتساب",
+        "text_tr": "WhatsApp",
+        "text_fa": "واتساپ",
+        "text_fr": "WhatsApp",
+        "text_es": "WhatsApp",
+        "text_pt": "WhatsApp",
+        "text_nl": "WhatsApp",
+        "text_zh": "WhatsApp",
+    },
+    "contact.whatsapp_text": {
+        "text_en": "Open a direct WhatsApp chat for fast support on mobile or desktop.",
+        "text_de": "Öffnen Sie einen direkten WhatsApp-Chat für schnellen Support auf Mobilgeräten oder Desktop.",
+        "text_ar": "افتح محادثة واتساب مباشرة للحصول على دعم سريع على الجوال أو الكمبيوتر.",
+        "text_tr": "Mobilde veya masaustunde hizli destek icin dogrudan bir WhatsApp sohbeti acin.",
+        "text_fa": "برای دریافت پشتیبانی سریع در موبایل یا دسکتاپ، چت مستقیم واتساپ را باز کنید.",
+        "text_fr": "Ouvrez une discussion WhatsApp directe pour une assistance rapide sur mobile ou sur ordinateur.",
+        "text_es": "Abra un chat directo de WhatsApp para soporte rapido en movil o escritorio.",
+        "text_pt": "Abra um chat direto no WhatsApp para suporte rapido no telemovel ou no computador.",
+        "text_nl": "Open een directe WhatsApp-chat voor snelle support op mobiel of desktop.",
+        "text_zh": "打开 WhatsApp 直接聊天，在手机或桌面端快速获得支持。",
+    },
+    "contact.whatsapp_button": {
+        "text_en": "Chat on WhatsApp",
+        "text_de": "Per WhatsApp chatten",
+        "text_ar": "الدردشة عبر واتساب",
+        "text_tr": "WhatsApp'ta sohbet et",
+        "text_fa": "گفتگو در واتساپ",
+        "text_fr": "Discuter sur WhatsApp",
+        "text_es": "Chatear por WhatsApp",
+        "text_pt": "Conversar no WhatsApp",
+        "text_nl": "Chat via WhatsApp",
+        "text_zh": "通过 WhatsApp 聊天",
+    },
+    "contact.response_time_title": {
+        "text_en": "What to include",
+        "text_de": "Was Sie angeben sollten",
+        "text_ar": "ما الذي يجب تضمينه",
+        "text_tr": "Neleri eklemelisiniz",
+        "text_fa": "چه چیزهایی را اضافه کنید",
+        "text_fr": "Ce qu'il faut inclure",
+        "text_es": "Que incluir",
+        "text_pt": "O que incluir",
+        "text_nl": "Wat u moet vermelden",
+        "text_zh": "建议提供的信息",
+    },
+    "contact.response_time_body": {
+        "text_en": "Include your company name, account email, and a short summary so we can route your request faster.",
+        "text_de": "Nennen Sie Ihren Firmennamen, die Konto-E-Mail und eine kurze Zusammenfassung, damit wir Ihr Anliegen schneller zuordnen können.",
+        "text_ar": "اذكر اسم شركتك وبريد الحساب وملخصاً قصيراً حتى نتمكن من توجيه طلبك بشكل أسرع.",
+        "text_tr": "Sirket adinizi, hesap e-postanizi ve kisa bir ozeti ekleyin; boylece talebinizi daha hizli yonlendirebiliriz.",
+        "text_fa": "نام شرکت، ایمیل حساب و یک خلاصه کوتاه را وارد کنید تا درخواست شما سریع تر بررسی شود.",
+        "text_fr": "Indiquez le nom de votre entreprise, l'email du compte et un bref resume afin que nous puissions orienter votre demande plus rapidement.",
+        "text_es": "Incluya el nombre de su empresa, el correo de la cuenta y un breve resumen para que podamos derivar su solicitud mas rapido.",
+        "text_pt": "Inclua o nome da sua empresa, o email da conta e um breve resumo para encaminharmos o pedido mais rapidamente.",
+        "text_nl": "Vermeld uw bedrijfsnaam, account-e-mail en een korte samenvatting zodat we uw aanvraag sneller kunnen doorzetten.",
+        "text_zh": "请提供公司名称、账户邮箱和简要说明，以便我们更快分派您的请求。",
+    },
+    "contact.form_phone_label": {
+        "text_en": "Phone",
+        "text_de": "Telefon",
+        "text_ar": "الهاتف",
+        "text_tr": "Telefon",
+        "text_fa": "تلفن",
+        "text_fr": "Telephone",
+        "text_es": "Telefono",
+        "text_pt": "Telefone",
+        "text_nl": "Telefoon",
+        "text_zh": "电话",
+    },
+    "contact.form_name_placeholder": {
+        "text_en": "Your name",
+        "text_de": "Ihr Name",
+        "text_ar": "اسمك",
+        "text_tr": "Adiniz",
+        "text_fa": "نام شما",
+        "text_fr": "Votre nom",
+        "text_es": "Su nombre",
+        "text_pt": "O seu nome",
+        "text_nl": "Uw naam",
+        "text_zh": "您的姓名",
+    },
+    "contact.form_email_placeholder": {
+        "text_en": "you@company.com",
+        "text_de": "sie@unternehmen.de",
+        "text_ar": "you@company.com",
+        "text_tr": "siz@sirket.com",
+        "text_fa": "you@company.com",
+        "text_fr": "vous@entreprise.com",
+        "text_es": "usted@empresa.com",
+        "text_pt": "voce@empresa.com",
+        "text_nl": "u@bedrijf.com",
+        "text_zh": "you@company.com",
+    },
+    "contact.form_phone_placeholder": {
+        "text_en": "+49 1575 4967414",
+        "text_de": "+49 1575 4967414",
+        "text_ar": "+49 1575 4967414",
+        "text_tr": "+49 1575 4967414",
+        "text_fa": "+49 1575 4967414",
+        "text_fr": "+49 1575 4967414",
+        "text_es": "+49 1575 4967414",
+        "text_pt": "+49 1575 4967414",
+        "text_nl": "+49 1575 4967414",
+        "text_zh": "+49 1575 4967414",
+    },
+    "contact.form_subject_placeholder": {
+        "text_en": "How can we help?",
+        "text_de": "Wobei können wir helfen?",
+        "text_ar": "كيف يمكننا المساعدة؟",
+        "text_tr": "Size nasil yardimci olabiliriz?",
+        "text_fa": "چطور می توانیم کمک کنیم؟",
+        "text_fr": "Comment pouvons-nous aider ?",
+        "text_es": "Como podemos ayudarle?",
+        "text_pt": "Como podemos ajudar?",
+        "text_nl": "Waarmee kunnen we helpen?",
+        "text_zh": "我们可以如何帮助您？",
+    },
+    "contact.form_message_placeholder": {
+        "text_en": "Tell us what you need and we will get back to you.",
+        "text_de": "Teilen Sie uns mit, was Sie brauchen, und wir melden uns bei Ihnen.",
+        "text_ar": "أخبرنا بما تحتاج إليه وسنعود إليك.",
+        "text_tr": "Neye ihtiyaciniz oldugunu yazin, size geri donelim.",
+        "text_fa": "به ما بگویید چه نیازی دارید تا با شما تماس بگیریم.",
+        "text_fr": "Indiquez-nous ce dont vous avez besoin et nous reviendrons vers vous.",
+        "text_es": "Indiquenos lo que necesita y nos pondremos en contacto con usted.",
+        "text_pt": "Diga-nos do que precisa e entraremos em contacto consigo.",
+        "text_nl": "Laat ons weten wat u nodig heeft en we nemen contact met u op.",
+        "text_zh": "请告诉我们您的需求，我们会尽快回复您。",
+    },
+    "contact.form_support_note": {
+        "text_en": "Your message is stored in our support inbox and can also trigger an email notification to the support team.",
+        "text_de": "Ihre Nachricht wird in unserem Support-Posteingang gespeichert und kann zusätzlich eine E-Mail-Benachrichtigung an das Support-Team auslösen.",
+        "text_ar": "يتم حفظ رسالتك في صندوق دعمنا ويمكن أن تؤدي أيضاً إلى إشعار بريد إلكتروني لفريق الدعم.",
+        "text_tr": "Mesajiniz destek kutumuzda saklanir ve destek ekibine e-posta bildirimi de gonderebilir.",
+        "text_fa": "پیام شما در صندوق پشتیبانی ذخیره می شود و می تواند همزمان اعلان ایمیلی برای تیم پشتیبانی ایجاد کند.",
+        "text_fr": "Votre message est enregistre dans notre boite de support et peut egalement declencher une notification email pour l'equipe support.",
+        "text_es": "Su mensaje se guarda en nuestra bandeja de soporte y tambien puede activar una notificacion por correo al equipo de soporte.",
+        "text_pt": "A sua mensagem fica guardada na nossa caixa de suporte e tambem pode gerar uma notificacao por email para a equipa de suporte.",
+        "text_nl": "Uw bericht wordt opgeslagen in onze supportinbox en kan ook een e-mailmelding naar het supportteam sturen.",
+        "text_zh": "您的消息会保存到我们的支持收件箱中，并且也可以向支持团队触发电子邮件通知。",
+    },
+}
+
+
+def seed_support_cms_blocks(apps, schema_editor):
+    CMSBlock = apps.get_model("core", "CMSBlock")
+
+    for key, values in CMS_CONTACT_BLOCKS.items():
+        defaults = {"page": "contact", "is_active": True, **values}
+        CMSBlock.objects.update_or_create(key=key, defaults=defaults)
+
+
+def noop(apps, schema_editor):
+    return None
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("core", "0021_supportmessage"),
+    ]
+
+    operations = [
+        migrations.RunPython(seed_support_cms_blocks, noop),
+    ]

@@ -1,14 +1,17 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import PasswordChangeDoneView, PasswordChangeView
 from django.contrib.auth.views import PasswordResetCompleteView, PasswordResetConfirmView
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetView
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.encoding import force_str
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView, UpdateView
@@ -16,7 +19,8 @@ from django.views.generic.edit import FormView, UpdateView
 from .forms import AccountPasswordChangeForm, AccountPasswordResetForm, AccountSetPasswordForm
 from .forms import AccountSettingsForm, BuyerVerificationRequestForm, LoginForm
 from .forms import SellerVerificationRequestForm, SignupForm
-from .models import BuyerVerificationRequest, SellerVerificationRequest
+from .models import BuyerVerificationRequest, SellerVerificationRequest, User
+from .services import app_uses_https, get_app_domain, send_verification_email
 
 
 class RedirectToNextMixin:
@@ -65,9 +69,57 @@ class SignupView(RedirectToNextMixin, FormView):
 
     def form_valid(self, form):
         user = form.save()
-        auth_login(self.request, user)
-        messages.success(self.request, "Account created and you are now signed in.")
-        return redirect(self.get_success_url())
+        send_verification_email(user)
+        self.request.session["pending_verification_email"] = user.email
+        messages.success(
+            self.request,
+            "Account created. Please check your email and activate your account before logging in.",
+        )
+        return redirect("accounts:verification_sent")
+
+
+class VerificationSentView(TemplateView):
+    template_name = "accounts/verification_sent.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pending_verification_email"] = self.request.session.get("pending_verification_email", "")
+        return context
+
+
+class VerifyEmailView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            uid = force_str(urlsafe_base64_decode(kwargs["uidb64"]))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is None or not default_token_generator.check_token(user, kwargs["token"]):
+            messages.error(request, "This verification link is invalid or has expired.")
+            return redirect("accounts:verification_invalid")
+
+        updates = []
+        if not user.email_verified:
+            user.email_verified = True
+            updates.append("email_verified")
+        if not user.is_active:
+            user.is_active = True
+            updates.append("is_active")
+        if updates:
+            user.save(update_fields=updates)
+
+        request.session.pop("pending_verification_email", None)
+        messages.success(request, "Your email has been verified. You can now log in.")
+        return redirect("accounts:verification_success")
+
+
+class VerificationSuccessView(TemplateView):
+    template_name = "accounts/verification_success.html"
+
+
+class VerificationInvalidView(TemplateView):
+    template_name = "accounts/verification_invalid.html"
 
 
 class LoginView(RedirectToNextMixin, FormView):
@@ -192,7 +244,22 @@ class SettingsView(LoginRequiredMixin, AccountContextMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        email_changed = "email" in form.changed_data
         response = super().form_valid(form)
+
+        if email_changed:
+            self.object.email_verified = False
+            self.object.is_active = False
+            self.object.save(update_fields=["email_verified", "is_active"])
+            send_verification_email(self.object)
+            auth_logout(self.request)
+            self.request.session["pending_verification_email"] = self.object.email
+            messages.info(
+                self.request,
+                "Your email address changed. Please verify the new address before logging in again.",
+            )
+            return redirect("accounts:verification_sent")
+
         messages.success(self.request, "Account details updated.")
         return response
 
@@ -286,6 +353,10 @@ class AccountPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     success_url = reverse_lazy("accounts:password_change_done")
     login_url = reverse_lazy("accounts:login")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Your password has been changed.")
+        return super().form_valid(form)
+
 
 class AccountPasswordChangeDoneView(LoginRequiredMixin, PasswordChangeDoneView):
     template_name = "accounts/password_change_done.html"
@@ -298,6 +369,18 @@ class AccountPasswordResetView(PasswordResetView):
     subject_template_name = "accounts/emails/password_reset_subject.txt"
     success_url = reverse_lazy("accounts:password_reset_done")
     form_class = AccountPasswordResetForm
+
+    def form_valid(self, form):
+        form.save(
+            use_https=app_uses_https(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            email_template_name=self.email_template_name,
+            subject_template_name=self.subject_template_name,
+            request=self.request,
+            domain_override=get_app_domain(),
+            extra_email_context={"site_name": settings.SITE_NAME},
+        )
+        return FormView.form_valid(self, form)
 
 
 class AccountPasswordResetDoneView(PasswordResetDoneView):

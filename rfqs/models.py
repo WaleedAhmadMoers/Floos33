@@ -2,10 +2,11 @@ from django.conf import settings
 from django.db import models
 
 from companies.models import Company
+from core.multilingual import TranslatableContentMixin
 from stocklots.models import Category, Stocklot
 
 
-class RFQ(models.Model):
+class RFQ(TranslatableContentMixin, models.Model):
     class ModerationStatus(models.TextChoices):
         PENDING_REVIEW = "pending_review", "Pending review"
         APPROVED = "approved", "Approved"

@@ -15,6 +15,7 @@ class UserAdmin(BaseUserAdmin):
     list_display = (
         "email",
         "full_name",
+        "email_verified",
         "preferred_language",
         "identity_status",
         "buyer_verification_status_display",
@@ -25,6 +26,7 @@ class UserAdmin(BaseUserAdmin):
         "is_superuser",
     )
     list_filter = (
+        "email_verified",
         "preferred_language",
         "identity_status",
         "is_buyer",
@@ -36,7 +38,7 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ("email", "full_name")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("full_name", "preferred_language")}),
+        ("Personal info", {"fields": ("full_name", "preferred_language", "email_verified")}),
         ("Privacy", {"fields": ("identity_status",)}),
         ("Roles", {"fields": ("is_buyer", "is_seller")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
@@ -47,7 +49,16 @@ class UserAdmin(BaseUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "full_name", "preferred_language", "password1", "password2", "is_active", "is_staff"),
+                "fields": (
+                    "email",
+                    "full_name",
+                    "preferred_language",
+                    "password1",
+                    "password2",
+                    "email_verified",
+                    "is_active",
+                    "is_staff",
+                ),
             },
         ),
     )

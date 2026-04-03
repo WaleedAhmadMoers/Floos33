@@ -1,22 +1,23 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 
+from core.cms import get_cms_map, get_cms_text
+from core.languages import DEFAULT_LANGUAGE_CODE, is_rtl_language, normalize_language_code, site_language_options
+from core.languages import SUPPORTED_LANGUAGE_CODES
 from core.models import Notification, TickerNews
 
 
-SUPPORTED_SITE_LANGUAGES = {"en", "de", "ar"}
-
-
 def resolve_site_language(request):
-    lang = (request.session.get("site_language") or "").lower()
-    if lang not in SUPPORTED_SITE_LANGUAGES and getattr(request, "user", None) and request.user.is_authenticated:
+    lang = (request.GET.get("lang") or "").lower()
+    if lang not in SUPPORTED_LANGUAGE_CODES:
+        lang = (request.session.get("site_language") or "").lower()
+    if lang not in SUPPORTED_LANGUAGE_CODES and getattr(request, "user", None) and request.user.is_authenticated:
         lang = (request.user.preferred_language or "").lower()
-    if lang not in SUPPORTED_SITE_LANGUAGES:
+    if lang not in SUPPORTED_LANGUAGE_CODES:
         lang = (getattr(request, "LANGUAGE_CODE", None) or "").lower()
-    if lang not in SUPPORTED_SITE_LANGUAGES:
-        lang = "en"
-    return lang
+    return normalize_language_code(lang)
 
 
 def notifications(request):
@@ -28,6 +29,12 @@ def notifications(request):
         unread = 0
         recent = []
     return {"notifications_unread_count": unread, "notifications_recent": recent}
+
+
+def cms_content(request):
+    language_code = resolve_site_language(request)
+    request._cms_blocks = get_cms_map(language_code)
+    return {"cms": request._cms_blocks}
 
 
 def ticker_news(request):
@@ -61,15 +68,11 @@ def ticker_news(request):
 
         # choose translation
         translation = None
-        fallback = None
         for t in item.translations.all():
             code = (t.language_code or "").lower()
             if code == lang:
                 translation = t
                 break
-            if code == "en":
-                fallback = t
-        translation = translation or fallback
         if not translation:
             continue
 
@@ -81,7 +84,7 @@ def ticker_news(request):
             }
         )
 
-    direction = "rtl" if lang.startswith("ar") else "ltr"
+    direction = "rtl" if is_rtl_language(lang) else "ltr"
 
     return {
         "ticker_items": items,
@@ -89,6 +92,7 @@ def ticker_news(request):
         "ticker_direction": direction,
         "current_site_language": lang or "en",
         "current_site_direction": direction,
+        "site_language_choices": site_language_options(),
     }
 
 
@@ -96,9 +100,11 @@ def site_identity(request):
     resolver = getattr(request, "resolver_match", None)
     namespace = getattr(resolver, "namespace", "") or ""
     url_name = getattr(resolver, "url_name", "") or ""
+    current_language = resolve_site_language(request)
+    cms_blocks = getattr(request, "_cms_blocks", None) or get_cms_map(current_language)
 
     seo_indexable = True
-    if namespace in {"accounts", "companies", "inquiries"}:
+    if namespace in {"accounts", "companies", "inquiries", "admin"}:
         seo_indexable = False
     elif namespace == "stocklots" and url_name in {
         "mine",
@@ -115,22 +121,38 @@ def site_identity(request):
         seo_indexable = False
     elif namespace == "rfqs" and url_name not in {"list", "detail"}:
         seo_indexable = False
+    elif namespace == "blog" and url_name not in {"list", "detail"}:
+        seo_indexable = False
     elif namespace == "core" and (
         url_name in {"saved", "notifications", "notification_read", "notification_read_all", "deal_status", "deal_identity_request", "support", "set_language"}
         or url_name.startswith("control")
     ):
         seo_indexable = False
+    if any(key != "lang" for key in request.GET.keys()):
+        seo_indexable = False
+    requested_lang = normalize_language_code(request.GET.get("lang"))
+    if request.GET.get("lang") and requested_lang == DEFAULT_LANGUAGE_CODE:
+        seo_indexable = False
 
     site_origin = f"{request.scheme}://{request.get_host()}"
-    canonical_url = f"{site_origin}{request.path}"
+    canonical_path = request.path
+    if namespace == "core" and url_name == "support":
+        canonical_path = reverse("core:contact")
+    canonical_url = f"{site_origin}{canonical_path}"
+    if current_language != DEFAULT_LANGUAGE_CODE:
+        canonical_url = f"{canonical_url}?lang={current_language}"
+    support_whatsapp_url = f"https://wa.me/{''.join(ch for ch in settings.SUPPORT_PHONE if ch.isdigit())}"
 
     return {
         "site_name": settings.SITE_NAME,
         "support_email": settings.SUPPORT_EMAIL,
         "support_phone": settings.SUPPORT_PHONE,
+        "support_whatsapp_url": support_whatsapp_url,
         "site_origin": site_origin,
         "canonical_url": canonical_url,
         "seo_indexable": seo_indexable,
-        "current_site_language": resolve_site_language(request),
-        "default_meta_description": "floos33 is a B2B marketplace for EU stocklots, liquidation inventory, and buyer RFQs connecting EU sellers with MENA buyers.",
+        "current_site_language": current_language,
+        "current_site_direction": "rtl" if is_rtl_language(current_language) else "ltr",
+        "site_language_choices": site_language_options(),
+        "default_meta_description": get_cms_text("shared.default_meta_description", current_language, cms_blocks),
     }

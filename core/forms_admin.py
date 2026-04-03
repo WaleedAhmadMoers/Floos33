@@ -2,6 +2,7 @@ from django import forms
 
 from accounts.models import User
 from companies.models import Company
+from core.languages import translation_field_names
 from core.models import DealTrigger
 from stocklots.models import Stocklot
 from rfqs.models import RFQ
@@ -81,6 +82,7 @@ class AdminStocklotForm(BaseAdminStyledForm):
     class Meta:
         model = Stocklot
         fields = [
+            "original_language",
             "title",
             "description",
             "company",
@@ -96,6 +98,7 @@ class AdminStocklotForm(BaseAdminStyledForm):
             "status",
             "is_active",
             "is_admin_verified",
+            *translation_field_names(),
         ]
 
 
@@ -104,6 +107,7 @@ class AdminRFQForm(BaseAdminStyledForm):
         model = RFQ
         fields = [
             "buyer",
+            "original_language",
             "title",
             "description",
             "category",
@@ -115,6 +119,7 @@ class AdminRFQForm(BaseAdminStyledForm):
             "location_city",
             "moderation_status",
             "status",
+            *translation_field_names(),
         ]
 
 

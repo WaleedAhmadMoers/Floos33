@@ -5,6 +5,7 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 
 from companies.models import Company
+from core.multilingual import TranslatableContentMixin
 
 
 class Category(models.Model):
@@ -46,7 +47,7 @@ class Category(models.Model):
         return descendant_ids
 
 
-class Stocklot(models.Model):
+class Stocklot(TranslatableContentMixin, models.Model):
     class Condition(models.TextChoices):
         BRAND_NEW = "brand_new", "Brand New"
         OVERSTOCK = "overstock", "Overstock"

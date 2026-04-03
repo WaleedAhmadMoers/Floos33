@@ -5,11 +5,16 @@ from .views import AccountPasswordResetCompleteView, AccountPasswordResetConfirm
 from .views import AccountPasswordResetDoneView, AccountPasswordResetView
 from .views import BuyerVerificationRequestView, DashboardView, LoginView, LogoutView
 from .views import SellerVerificationRequestView, SettingsView, SignupView
+from .views import VerificationInvalidView, VerificationSentView, VerificationSuccessView, VerifyEmailView
 
 app_name = "accounts"
 
 urlpatterns = [
     path("signup/", SignupView.as_view(), name="signup"),
+    path("verify-email/sent/", VerificationSentView.as_view(), name="verification_sent"),
+    path("verify-email/success/", VerificationSuccessView.as_view(), name="verification_success"),
+    path("verify-email/invalid/", VerificationInvalidView.as_view(), name="verification_invalid"),
+    path("verify-email/<uidb64>/<token>/", VerifyEmailView.as_view(), name="verify_email"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("password-reset/", AccountPasswordResetView.as_view(), name="password_reset"),

@@ -7,8 +7,6 @@ class UserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("The email address must be set.")
-        if not extra_fields.get("full_name"):
-            raise ValueError("The full name must be set.")
 
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
@@ -27,6 +25,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("email_verified", True)
         extra_fields.setdefault("is_buyer", True)
         extra_fields.setdefault("is_seller", False)
 
