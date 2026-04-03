@@ -53,31 +53,40 @@
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                 <a href="{% url 'core:home' %}" class="inline-flex items-center"><img src="{% static 'logo.png' %}" alt="floos33" class="h-10 w-auto sm:h-11"></a>
                 <nav class="hidden items-center gap-4 lg:flex">
-                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'stocklots:list' %}">{{ cms.shared.nav_marketplace }}</a>
-                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'rfqs:list' %}">{{ cms.shared.nav_rfqs }}</a>
-                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'blog:list' %}">{{ cms.shared.nav_blog }}</a>
-                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_services }}</span>
-                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_machinery }}</span>
-                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_supplier_database }}</span>
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'stocklots:list' %}">{{ cms.nav.marketplace }}</a>
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'rfqs:list' %}">{{ cms.nav.rfqs }}</a>
+                    <a class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600" href="{% url 'blog:list' %}">{{ cms.nav.blog }}</a>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.services }}</span>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.machinery }}</span>
+                    <span class="border-b-2 border-transparent py-2 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.supplier_database }}</span>
                 </nav>
                 <div class="hidden items-center gap-3 lg:flex">
                     <details class="relative">
-                        <summary class="flex h-10 w-10 list-none items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" aria-label="Change language">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z"/></svg>
+                        <summary class="flex min-w-[9.5rem] list-none items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-slate-700 transition hover:border-slate-300 hover:text-slate-900" aria-label="{{ cms.nav.language }}">
+                            <span class="inline-flex items-center gap-3">
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z"/></svg>
+                                </span>
+                                <span class="min-w-0">
+                                    <span class="block text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400">{{ cms.nav.language }}</span>
+                                    <span class="block truncate text-sm font-bold text-slate-900">{{ current_site_language_label }}</span>
+                                </span>
+                            </span>
+                            <span class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{{ current_site_language|default:"en" }}</span>
                         </summary>
-                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-44 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
+                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-52 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
                             <form action="{% url 'core:set_language' %}" method="post" class="space-y-1">
                                 {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <input type="hidden" name="next" value="{{ language_switch_next_url }}">
                                 {% for language in site_language_choices %}
-                                <button type="submit" name="language" value="{{ language.code }}" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == language.code %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>{{ language.code|upper }}</span><span class="text-xs text-slate-400">{{ language.label }}</span></button>
+                                <button type="submit" name="language" value="{{ language.code }}" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == language.code %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>{{ language.label }}</span><span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{{ language.code }}</span></button>
                                 {% endfor %}
                             </form>
                         </div>
                     </details>
-                        <a class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900" href="{% url 'core:contact' %}" aria-label="{{ cms.shared.contact_button }}">
+                        <a class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900" href="{% url 'core:contact' %}" aria-label="{{ cms.nav.support }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 5.15 12.8 19.8 19.8 0 0 1 2.08 4.09 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72l.32 2.57a2 2 0 0 1-.57 1.73L7.1 9.73a16 16 0 0 0 7.17 7.17l1.71-1.71a2 2 0 0 1 1.73-.57l2.57.32A2 2 0 0 1 22 16.92z"/></svg>
-                        <span>{{ cms.shared.support }}</span>
+                        <span>{{ cms.nav.support }}</span>
                     </a>
                     {% if request.user.is_authenticated %}
                         <a class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900" href="{% url 'core:saved' %}" aria-label="{{ cms.shared.saved_items }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></a>
@@ -102,34 +111,35 @@
                 </div>
                 <div class="flex items-center gap-2 lg:hidden">
                     <details class="relative">
-                        <summary class="flex list-none items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
-                            {{ current_site_language|default:"en" }}
+                        <summary class="flex list-none items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z"/></svg>
+                            <span class="uppercase tracking-[0.16em]">{{ current_site_language|default:"en" }}</span>
                         </summary>
-                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-44 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
+                        <div class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-52 rounded-3xl border border-slate-200 bg-white p-2 shadow-panel">
                             <form action="{% url 'core:set_language' %}" method="post" class="space-y-1">
                                 {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <input type="hidden" name="next" value="{{ language_switch_next_url }}">
                                 {% for language in site_language_choices %}
-                                <button type="submit" name="language" value="{{ language.code }}" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == language.code %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>{{ language.code|upper }}</span><span class="text-xs text-slate-400">{{ language.label }}</span></button>
+                                <button type="submit" name="language" value="{{ language.code }}" class="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-sm font-semibold transition {% if current_site_language == language.code %}bg-brand-50 text-brand-700{% else %}text-slate-700 hover:bg-slate-50{% endif %}"><span>{{ language.label }}</span><span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{{ language.code }}</span></button>
                                 {% endfor %}
                             </form>
                         </div>
                     </details>
-                    <a href="{% url 'core:contact' %}" class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900" aria-label="{{ cms.shared.contact_button }}">
+                    <a href="{% url 'core:contact' %}" class="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900" aria-label="{{ cms.nav.support }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 5.15 12.8 19.8 19.8 0 0 1 2.08 4.09 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72l.32 2.57a2 2 0 0 1-.57 1.73L7.1 9.73a16 16 0 0 0 7.17 7.17l1.71-1.71a2 2 0 0 1 1.73-.57l2.57.32A2 2 0 0 1 22 16.92z"/></svg>
-                        <span class="ml-2">{{ cms.shared.contact_button }}</span>
+                        <span class="ml-2">{{ cms.nav.support }}</span>
                     </a>
                     <button class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" type="button" aria-label="Toggle menu" id="mobile-menu-toggle"><span id="mobile-menu-icon" class="text-xl leading-none">&#9776;</span></button>
                 </div>
             </div>
             <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white lg:hidden">
                 <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
-                    <a href="{% url 'stocklots:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.shared.nav_marketplace }}</a>
-                    <a href="{% url 'rfqs:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.shared.nav_rfqs }}</a>
-                    <a href="{% url 'blog:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.shared.nav_blog }}</a>
-                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_services }}</div>
-                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_machinery }}</div>
-                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.shared.nav_supplier_database }}</div>
+                    <a href="{% url 'stocklots:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.nav.marketplace }}</a>
+                    <a href="{% url 'rfqs:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.nav.rfqs }}</a>
+                    <a href="{% url 'blog:list' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.nav.blog }}</a>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.services }}</div>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.machinery }}</div>
+                    <div class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 opacity-70 cursor-not-allowed select-none" aria-disabled="true">{{ cms.nav.supplier_database }}</div>
                     {% if request.user.is_authenticated %}
                         <a href="{% url 'core:saved' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.shared.saved_items }}</a>
                         <a href="{% url 'accounts:dashboard' %}" class="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">{{ cms.shared.dashboard }}</a>
@@ -151,11 +161,40 @@
             <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
                 <form class="mx-auto flex w-full max-w-2xl items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm" action="{% url 'stocklots:list' %}" method="get">
                     <span class="text-slate-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
-                    <input type="search" name="q" placeholder="{{ cms.shared.search_placeholder }}" aria-label="{{ cms.shared.search_button }}" value="{{ request.GET.q }}" class="min-w-0 flex-1 border-0 bg-transparent px-0 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400">
-                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600">{{ cms.shared.search_button }}</button>
+                    <input type="search" name="q" placeholder="{{ cms.nav.search_placeholder }}" aria-label="{{ cms.nav.search_button }}" value="{{ request.GET.q }}" class="min-w-0 flex-1 border-0 bg-transparent px-0 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600">{{ cms.nav.search_button }}</button>
                 </form>
             </div>
         </div>
+        {% if language_suggestion.show %}
+        <section class="border-b border-brand-100 bg-brand-50/70">
+            <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+                <div class="min-w-0">
+                    <p class="text-sm font-bold text-slate-900">{{ cms.nav.detected_title }} {{ language_suggestion.language_label }}.</p>
+                    <p class="mt-1 text-sm text-slate-600">{{ cms.nav.detected_body }}</p>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                    <form action="{% url 'core:set_language' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ language_switch_next_url }}">
+                        <input type="hidden" name="language" value="{{ language_suggestion.language_code }}">
+                        <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800 sm:w-auto">{{ cms.nav.keep_language }} {{ language_suggestion.language_label }}</button>
+                    </form>
+                    <form action="{% url 'core:set_language' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ language_switch_next_url }}">
+                        <input type="hidden" name="language" value="en">
+                        <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto">{{ cms.nav.use_english }} {{ language_suggestion.use_english_label }}</button>
+                    </form>
+                    <form action="{% url 'core:dismiss_language_suggestion' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ language_switch_next_url }}">
+                        <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl border border-transparent px-4 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-white/70 hover:text-slate-700 sm:w-auto">{{ cms.nav.dismiss }}</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+        {% endif %}
         {% if messages %}
         <section class="mx-auto mt-4 flex max-w-7xl flex-col gap-3 px-4 sm:px-6 lg:px-8">
             {% for message in messages %}

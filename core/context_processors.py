@@ -4,20 +4,14 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.cms import get_cms_map, get_cms_text
+from core.language_runtime import get_language_resolution, language_label, remove_language_query_param
 from core.languages import DEFAULT_LANGUAGE_CODE, is_rtl_language, normalize_language_code, site_language_options
 from core.languages import SUPPORTED_LANGUAGE_CODES
 from core.models import Notification, TickerNews
 
 
 def resolve_site_language(request):
-    lang = (request.GET.get("lang") or "").lower()
-    if lang not in SUPPORTED_LANGUAGE_CODES:
-        lang = (request.session.get("site_language") or "").lower()
-    if lang not in SUPPORTED_LANGUAGE_CODES and getattr(request, "user", None) and request.user.is_authenticated:
-        lang = (request.user.preferred_language or "").lower()
-    if lang not in SUPPORTED_LANGUAGE_CODES:
-        lang = (getattr(request, "LANGUAGE_CODE", None) or "").lower()
-    return normalize_language_code(lang)
+    return get_language_resolution(request)["active_language"]
 
 
 def notifications(request):
@@ -100,7 +94,8 @@ def site_identity(request):
     resolver = getattr(request, "resolver_match", None)
     namespace = getattr(resolver, "namespace", "") or ""
     url_name = getattr(resolver, "url_name", "") or ""
-    current_language = resolve_site_language(request)
+    language_resolution = get_language_resolution(request)
+    current_language = language_resolution["active_language"]
     cms_blocks = getattr(request, "_cms_blocks", None) or get_cms_map(current_language)
 
     seo_indexable = True
@@ -142,6 +137,14 @@ def site_identity(request):
     if current_language != DEFAULT_LANGUAGE_CODE:
         canonical_url = f"{canonical_url}?lang={current_language}"
     support_whatsapp_url = f"https://wa.me/{''.join(ch for ch in settings.SUPPORT_PHONE if ch.isdigit())}"
+    browser_detected_language = language_resolution["detected_language"]
+    language_switch_next_url = remove_language_query_param(request.get_full_path())
+    language_suggestion = {
+        "show": language_resolution["show_prompt"],
+        "language_code": browser_detected_language,
+        "language_label": language_label(browser_detected_language) if browser_detected_language else "",
+        "use_english_label": language_label(DEFAULT_LANGUAGE_CODE),
+    }
 
     return {
         "site_name": settings.SITE_NAME,
@@ -152,7 +155,10 @@ def site_identity(request):
         "canonical_url": canonical_url,
         "seo_indexable": seo_indexable,
         "current_site_language": current_language,
+        "current_site_language_label": language_label(current_language),
         "current_site_direction": "rtl" if is_rtl_language(current_language) else "ltr",
         "site_language_choices": site_language_options(),
+        "language_switch_next_url": language_switch_next_url,
+        "language_suggestion": language_suggestion,
         "default_meta_description": get_cms_text("shared.default_meta_description", current_language, cms_blocks),
     }

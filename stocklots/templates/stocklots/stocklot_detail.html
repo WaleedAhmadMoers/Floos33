@@ -89,9 +89,9 @@
 
         <div class="flex flex-col sm:flex-row gap-2">
           {% if can_contact %}
-            <a class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold shadow hover:bg-amber-600 w-full sm:w-auto" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+            <a class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold shadow hover:bg-amber-600 w-full sm:w-auto" href="{% url 'inquiries:create' stocklot.slug %}">{{ cms.listing_ui.contact_seller }}</a>
           {% else %}
-            <button class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed w-full sm:w-auto">Contact seller (verification required)</button>
+            <button class="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed w-full sm:w-auto">{{ cms.listing_ui.contact_seller_verification_required }}</button>
           {% endif %}
           {% if request.user.is_authenticated %}
             <form method="post" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}" class="w-full sm:w-auto">
@@ -109,7 +109,7 @@
       <!-- Seller -->
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <div class="text-sm text-slate-500">Seller</div>
+          <div class="text-sm text-slate-500">{{ cms.listing_ui.seller_label }}</div>
           <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">ID #{{ stocklot.company.owner.id }}</span>
         </div>
         <div class="text-lg font-semibold text-slate-900 break-words">{% display_company stocklot.company %}</div>
@@ -121,9 +121,9 @@
           Location: {{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}
         </div>
         {% if can_contact %}
-        <a class="block w-full text-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600" href="{% url 'inquiries:create' stocklot.slug %}">Contact seller</a>
+        <a class="block w-full text-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600" href="{% url 'inquiries:create' stocklot.slug %}">{{ cms.listing_ui.contact_seller }}</a>
         {% else %}
-        <a class="block w-full text-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed">Contact seller (verification required)</a>
+        <a class="block w-full text-center px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold cursor-not-allowed">{{ cms.listing_ui.contact_seller_verification_required }}</a>
         {% endif %}
       </section>
 
@@ -149,7 +149,7 @@
   <div class="grid grid-cols-1 gap-4">
     <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <h2 class="text-base font-bold text-slate-900">Files &amp; documents</h2>
+        <h2 class="text-base font-bold text-slate-900">{{ cms.listing_ui.files_documents }}</h2>
         {% with count=stocklot.documents.count %}{% if count %}<span class="text-xs text-slate-500">{{ count }} file{% if count|pluralize %}s{% endif %}</span>{% endif %}{% endwith %}
       </div>
       {% with docs=stocklot.documents.all %}
@@ -170,13 +170,13 @@
           {% endfor %}
         </div>
         {% else %}
-        <div class="text-sm text-slate-500">No files available</div>
+        <div class="text-sm text-slate-500">{{ cms.listing_ui.no_files_available }}</div>
         {% endif %}
       {% endwith %}
     </section>
 
     <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-2">
-      <h2 class="text-base font-bold text-slate-900">Description</h2>
+      <h2 class="text-base font-bold text-slate-900">{{ cms.listing_ui.description_label }}</h2>
       <div dir="{{ stocklot.public_content_direction }}" class="text-sm text-slate-700 leading-relaxed">{{ stocklot.public_description|linebreaksbr }}</div>
     </section>
   </div>
@@ -244,11 +244,11 @@
     {% endwith %}
 
     <section class="space-y-2">
-      <h2 class="text-lg font-bold text-slate-900">Useful links</h2>
+        <h2 class="text-lg font-bold text-slate-900">{{ cms.listing_ui.useful_links }}</h2>
       <div class="flex flex-wrap gap-2 text-sm">
         <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'core:home' %}#how">How it works</a>
         <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'rfqs:list' %}">Browse RFQs</a>
-        <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'core:contact' %}">Contact support</a>
+        <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{% url 'core:contact' %}">{{ cms.support.contact_support }}</a>
         {% if useful_links %}
           {% for link in useful_links %}
             <a class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700" href="{{ link.url }}">{{ link.title }}</a>

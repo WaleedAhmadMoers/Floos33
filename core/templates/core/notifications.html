@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Notifications | floos33{% endblock title %}
+{% block title %}{{ cms.notifications.page_title }} | floos33{% endblock title %}
 
 {% block content %}
 <div class="bg-slate-50">
@@ -8,20 +8,20 @@
     <section class="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-orange-50/70 to-amber-50 p-5 shadow-panel sm:p-6 lg:p-8">
       <div class="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_18rem] lg:items-end">
         <div>
-          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-600">Notifications</p>
-          <h1 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Track platform updates, moderation events, and trade activity.</h1>
-          <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">This feed keeps account alerts, marketplace actions, and trade workflow updates in one clean place.</p>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-600">{{ cms.notifications.hero_eyebrow }}</p>
+          <h1 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ cms.notifications.hero_title }}</h1>
+          <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{{ cms.notifications.hero_body }}</p>
         </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
             <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Feed items</p>
             <p class="mt-2 text-3xl font-black tracking-tight text-slate-900">{{ notifications|length }}</p>
-            <p class="mt-2 text-sm leading-6 text-slate-500">Notifications currently visible on this page.</p>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.notifications.feed_items_body }}</p>
           </article>
           <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
             <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Control</p>
-            <p class="mt-2 text-lg font-black tracking-tight text-slate-900">Stay up to date</p>
-            <p class="mt-2 text-sm leading-6 text-slate-500">Review new events quickly and clear your unread feed when needed.</p>
+            <p class="mt-2 text-lg font-black tracking-tight text-slate-900">{{ cms.notifications.control_title }}</p>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.notifications.control_body }}</p>
           </article>
         </div>
       </div>
@@ -30,10 +30,10 @@
     <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
       <div class="flex flex-col gap-3 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <form method="get" action="" class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label class="text-sm font-bold text-slate-700">Filter:</label>
+          <label class="text-sm font-bold text-slate-700">{{ cms.notifications.filter_label }}</label>
           <select name="filter" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-48">
-            <option value="">All</option>
-            <option value="unread" {% if request.GET.filter == "unread" %}selected{% endif %}>Unread</option>
+            <option value="">{{ cms.notifications.filter_all }}</option>
+            <option value="unread" {% if request.GET.filter == "unread" %}selected{% endif %}>{{ cms.notifications.filter_unread }}</option>
           </select>
           <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Apply</button>
         </form>
@@ -97,8 +97,8 @@
         {% endif %}
       {% else %}
         <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-          <h2 class="text-2xl font-black text-slate-900">No notifications</h2>
-          <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">You are fully caught up. New moderation updates, trade activity, and account alerts will appear here.</p>
+          <h2 class="text-2xl font-black text-slate-900">{{ cms.notifications.empty_title }}</h2>
+          <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">{{ cms.notifications.empty_body }}</p>
         </div>
       {% endif %}
     </section>

@@ -1,248 +1,418 @@
 {% extends "accounts/account_shell.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Dashboard" %} | floos33{% endblock title %}
-{% block account_eyebrow %}{% trans "Control Center" %}{% endblock account_eyebrow %}
-{% block account_title %}{% trans "Account dashboard" %}{% endblock account_title %}
-{% block account_intro %}{% trans "Track your marketplace activity, keep profile details complete, and move quickly between listings, inquiries, and RFQs." %}{% endblock account_intro %}
+{% block title %}{{ cms.dashboard.page_title }} | floos33{% endblock title %}
+{% block account_eyebrow %}{{ cms.dashboard.eyebrow }}{% endblock account_eyebrow %}
+{% block account_title %}{{ cms.dashboard.page_title }}{% endblock account_title %}
+{% block account_intro %}{{ cms.dashboard.intro }}{% endblock account_intro %}
 
 {% block account_header_actions %}
-<a href="{% if request.user.is_seller %}{% url 'stocklots:create' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800">
+<a href="{% if request.user.is_seller %}{% url 'stocklots:create' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800">
   {% if request.user.is_seller %}{% trans "Create listing" %}{% else %}{% trans "Enable seller access" %}{% endif %}
 </a>
-<a href="{% url 'rfqs:create' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">
+<a href="{% url 'rfqs:create' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">
   {% trans "Post RFQ" %}
 </a>
-<a href="{% if request.user.is_seller %}{% url 'inquiries:received' %}{% else %}{% url 'inquiries:sent' %}{% endif %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white">
-  {% trans "View messages" %}
+<a href="{{ dashboard_messages_url }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">
+  {% trans "Open inbox" %}
+</a>
+<a href="{{ dashboard_saved_items_url }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white">
+  {% trans "Saved items" %}
 </a>
 {% endblock account_header_actions %}
 
 {% block account_content %}
-<section class="rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white shadow-panel sm:p-6">
-  <div class="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.9fr)] lg:items-center">
+<section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 text-white shadow-panel sm:p-6 lg:p-7">
+  <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_22rem] xl:items-start">
     <div>
-      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Today at a glance" %}</p>
-      <h2 class="mt-2 text-2xl font-black tracking-tight">{% trans "Your account is ready for marketplace work." %}</h2>
-      <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{% trans "Use the control center to publish stock, track buyer demand, and keep conversations moving without jumping between disconnected pages." %}</p>
-    </div>
-    <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-      <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Open work" %}</p>
-        <p class="mt-2 text-2xl font-black">{{ dashboard_metrics.open_inquiries }}</p>
-        <p class="mt-1 text-sm text-slate-300">{% trans "Inquiry threads need attention." %}</p>
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{{ cms.dashboard.hero_welcome }}</p>
+      <h2 class="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{{ request.user.full_name|default:request.user.email }}</h2>
+      <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+        {{ cms.dashboard.hero_body }}
+      </p>
+
+      <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-2xl border border-white/10 bg-white/10 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Active listings" %}</p>
+          <p class="mt-2 text-3xl font-black">{{ dashboard_metrics.active_listings }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Live stocklots buyers can see right now." %}</p>
+        </article>
+        <article class="rounded-2xl border border-white/10 bg-white/10 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Open RFQs" %}</p>
+          <p class="mt-2 text-3xl font-black">{{ dashboard_metrics.rfqs }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Requests you currently have open." %}</p>
+        </article>
+        <article class="rounded-2xl border border-white/10 bg-white/10 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Saved items" %}</p>
+          <p class="mt-2 text-3xl font-black">{{ dashboard_metrics.saved_items }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Listings and RFQs you saved for later." %}</p>
+        </article>
+        <article class="rounded-2xl border border-white/10 bg-white/10 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Unread alerts" %}</p>
+          <p class="mt-2 text-3xl font-black">{{ dashboard_metrics.notifications }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Notifications that still need a look." %}</p>
+        </article>
       </div>
-      <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
-        <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Watchlist" %}</p>
-        <p class="mt-2 text-2xl font-black">{{ dashboard_metrics.saved_items }}</p>
-        <p class="mt-1 text-sm text-slate-300">{% trans "Saved items ready for follow-up." %}</p>
-      </div>
     </div>
+
+    <aside class="rounded-[1.75rem] border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{{ cms.dashboard.do_next }}</p>
+      {% if dashboard_spotlight_step %}
+        <h3 class="mt-3 text-xl font-black text-white">{{ dashboard_spotlight_step.title }}</h3>
+        <p class="mt-3 text-sm leading-6 text-slate-300">{{ dashboard_spotlight_step.body }}</p>
+        <a href="{{ dashboard_spotlight_step.url }}" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-100">
+          {{ dashboard_spotlight_step.action_label }}
+        </a>
+      {% else %}
+        <h3 class="mt-3 text-xl font-black text-white">{{ cms.dashboard.good_place_title }}</h3>
+        <p class="mt-3 text-sm leading-6 text-slate-300">{{ cms.dashboard.good_place_body }}</p>
+        <a href="{{ dashboard_messages_url }}" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-100">
+          {% trans "Open inbox" %}
+        </a>
+      {% endif %}
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        <div class="rounded-2xl border border-white/10 bg-slate-950/20 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Message threads" %}</p>
+          <p class="mt-2 text-2xl font-black text-white">{{ dashboard_metrics.open_threads }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Open conversations across inquiries and RFQ replies." %}</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-slate-950/20 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-300">{% trans "Pending reviews" %}</p>
+          <p class="mt-2 text-2xl font-black text-white">{{ dashboard_metrics.pending_listings|add:dashboard_metrics.pending_rfqs }}</p>
+          <p class="mt-2 text-sm text-slate-300">{% trans "Listings or RFQs currently waiting for approval." %}</p>
+        </div>
+      </div>
+    </aside>
   </div>
 </section>
 
-<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+<section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
     <div>
-      <h2 class="text-xl font-black text-slate-900">{% trans "Overview" %}</h2>
-      <p class="mt-1 text-sm leading-6 text-slate-500">{% trans "The key signals for your account and marketplace activity." %}</p>
+      <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.dashboard.quick_actions_title }}</h2>
+      <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.dashboard.quick_actions_body }}</p>
     </div>
   </div>
 
-  <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{% trans "Active listings" %}</p>
-      <p class="mt-3 text-3xl font-black tracking-tight text-slate-900">{{ dashboard_metrics.active_listings }}</p>
-      <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Approved and currently active marketplace listings." %}</p>
+  <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-brand-50 via-white to-orange-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-700">{% trans "Sell" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% if request.user.is_seller %}{% trans "Create listing" %}{% else %}{% trans "Enable seller access" %}{% endif %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-brand-200 bg-white px-3 py-1 text-sm font-black text-brand-700">{{ dashboard_metrics.total_listings }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if request.user.is_seller %}
+          {% if dashboard_metrics.total_listings %}
+            {% trans "Add another stocklot and keep your marketplace shelf active." %}
+          {% else %}
+            {% trans "No listings yet. Add your first stocklot so buyers have something to discover." %}
+          {% endif %}
+        {% else %}
+          {% trans "Seller access is required before you can publish listings." %}
+        {% endif %}
+      </p>
+      <a href="{% if request.user.is_seller %}{% url 'stocklots:create' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="mt-5 inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
+        {% if request.user.is_seller %}{% trans "Create listing" %}{% else %}{% trans "Request seller access" %}{% endif %}
+      </a>
     </article>
-    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{% trans "Saved items" %}</p>
-      <p class="mt-3 text-3xl font-black tracking-tight text-slate-900">{{ dashboard_metrics.saved_items }}</p>
-      <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Listings you bookmarked for follow-up." %}</p>
+
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{% trans "Manage" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% trans "Manage listings" %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700">{{ dashboard_metrics.total_listings }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if dashboard_metrics.total_listings %}
+          {% trans "Open your listings workspace to edit stock, check status, or reactivate inventory." %}
+        {% else %}
+          {% trans "No listings are on your account yet, but this workspace is where they will live once you start." %}
+        {% endif %}
+      </p>
+      <a href="{% url 'stocklots:mine' %}" class="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">
+        {% trans "Open listings workspace" %}
+      </a>
     </article>
-    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{% trans "Open inquiries" %}</p>
-      <p class="mt-3 text-3xl font-black tracking-tight text-slate-900">{{ dashboard_metrics.open_inquiries }}</p>
-      <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Active inquiry threads that still need attention." %}</p>
+
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{% trans "Buy" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% trans "Post RFQ" %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700">{{ dashboard_metrics.total_rfqs }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if dashboard_metrics.total_rfqs %}
+          {% trans "Create another request when you want suppliers to come to you with offers." %}
+        {% else %}
+          {% trans "No RFQs yet. Post your first one to collect offers and compare suppliers faster." %}
+        {% endif %}
+      </p>
+      <a href="{% url 'rfqs:create' %}" class="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">
+        {% trans "Create RFQ" %}
+      </a>
     </article>
-    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{% trans "RFQs" %}</p>
-      <p class="mt-3 text-3xl font-black tracking-tight text-slate-900">{{ dashboard_metrics.rfqs }}</p>
-      <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Your currently open RFQs." %}</p>
+
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{% trans "Manage" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% trans "My RFQs" %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700">{{ dashboard_metrics.rfqs }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if dashboard_metrics.rfqs %}
+          {% trans "Review your open requests, responses, and approval status from one place." %}
+        {% else %}
+          {% trans "Your RFQ workspace is ready when you start posting demand." %}
+        {% endif %}
+      </p>
+      <a href="{% url 'rfqs:my_rfqs' %}" class="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">
+        {% trans "Open my RFQs" %}
+      </a>
+    </article>
+
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{% trans "Messages" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% trans "Open inbox" %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700">{{ dashboard_metrics.open_threads }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if dashboard_metrics.open_threads %}
+          {% trans "You already have active conversations. Open them and keep replies moving." %}
+        {% else %}
+          {% trans "No active message threads yet. Messages will show up here once you start reaching out or receiving replies." %}
+        {% endif %}
+      </p>
+      <a href="{{ dashboard_messages_url }}" class="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">
+        {% trans "Open inbox" %}
+      </a>
+    </article>
+
+    <article class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-500">{% trans "Saved" %}</p>
+          <h3 class="mt-2 text-xl font-black text-slate-900">{% trans "Saved items" %}</h3>
+        </div>
+        <span class="inline-flex min-w-[3rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-black text-slate-700">{{ dashboard_metrics.saved_items }}</span>
+      </div>
+      <p class="mt-4 text-sm leading-6 text-slate-600">
+        {% if dashboard_metrics.saved_items %}
+          {% trans "Your watchlist is ready. Reopen saved listings and RFQs without searching again." %}
+        {% else %}
+          {% trans "No saved items yet. Save good opportunities so you can compare them later." %}
+        {% endif %}
+      </p>
+      <a href="{{ dashboard_saved_items_url }}" class="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">
+        {% trans "View saved items" %}
+      </a>
     </article>
   </div>
 </section>
 
-<div class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.95fr)]">
-  <div class="space-y-4">
-    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 class="text-xl font-black text-slate-900">{% trans "Recent activity" %}</h2>
-          <p class="mt-1 text-sm leading-6 text-slate-500">{% trans "A fast view of the latest items you touched across the platform." %}</p>
+<section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.dashboard.needs_attention_title }}</h2>
+      <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.dashboard.needs_attention_body }}</p>
+    </div>
+  </div>
+
+  {% if dashboard_attention %}
+    <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {% for item in dashboard_attention %}
+        <article class="rounded-[1.75rem] border border-brand-200 bg-brand-50/60 p-5">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-700">{% trans "Attention" %}</p>
+          <p class="mt-3 text-3xl font-black tracking-tight text-slate-900">{{ item.value }}</p>
+          <h3 class="mt-2 text-lg font-black text-slate-900">{{ item.title }}</h3>
+          <p class="mt-3 text-sm leading-6 text-slate-600">{{ item.body }}</p>
+          <a href="{{ item.url }}" class="mt-5 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{{ item.action_label }}</a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="mt-5 rounded-[1.75rem] border border-emerald-200 bg-emerald-50 p-6">
+      <h3 class="text-xl font-black text-emerald-900">{{ cms.dashboard.nothing_urgent_title }}</h3>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-emerald-800">{{ cms.dashboard.nothing_urgent_body }}</p>
+      <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+        <a href="{{ dashboard_messages_url }}" class="inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100">{% trans "Open inbox" %}</a>
+        <a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-900 transition hover:bg-emerald-100">{% trans "Browse marketplace" %}</a>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<div class="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(19rem,0.95fr)]">
+  <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.dashboard.recent_activity_title }}</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.dashboard.recent_activity_body }}</p>
+      </div>
+      <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{% trans "Latest 6" %}</span>
+    </div>
+
+    {% if dashboard_recent_activity %}
+      <div class="mt-5 space-y-3">
+        {% for item in dashboard_recent_activity %}
+          <a href="{{ item.url }}" class="flex flex-col gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+              <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">{{ item.kind }}</span>
+              <span class="mt-3 block text-sm font-bold leading-6 text-slate-900">{{ item.title }}</span>
+              <span class="mt-1 block text-sm text-slate-500">{{ item.meta }}</span>
+            </div>
+            <span class="shrink-0 text-xs font-medium text-slate-400">{{ item.timestamp|date:"Y-m-d H:i" }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="mt-5 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+        <h3 class="text-2xl font-black text-slate-900">{{ cms.dashboard.recent_activity_empty_title }}</h3>
+        <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">{{ cms.dashboard.recent_activity_empty_body }}</p>
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <a href="{% if request.user.is_seller %}{% url 'stocklots:create' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
+            {% if request.user.is_seller %}{% trans "Create listing" %}{% else %}{% trans "Enable seller access" %}{% endif %}
+          </a>
+          <a href="{% url 'rfqs:create' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">{% trans "Post RFQ" %}</a>
         </div>
-        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{% trans "Latest 6" %}</span>
+      </div>
+    {% endif %}
+  </section>
+
+  <div class="space-y-4">
+    <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+      <div>
+        <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.dashboard.helpful_next_steps_title }}</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.dashboard.helpful_next_steps_body }}</p>
       </div>
 
-      {% if dashboard_recent_activity %}
+      {% if dashboard_secondary_steps %}
         <div class="mt-5 space-y-3">
-          {% for item in dashboard_recent_activity %}
-            <a href="{{ item.url }}" class="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white">
-              <div class="min-w-0">
-                <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">{{ item.kind }}</span>
-                <span class="mt-3 block text-sm font-bold leading-6 text-slate-900">{{ item.title }}</span>
-                <span class="mt-1 block text-sm text-slate-500">{{ item.meta }}</span>
-              </div>
-              <span class="shrink-0 pt-1 text-xs font-medium text-slate-400">{{ item.timestamp|date:"Y-m-d H:i" }}</span>
-            </a>
+          {% for step in dashboard_secondary_steps %}
+            <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+              <h3 class="text-base font-black text-slate-900">{{ step.title }}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">{{ step.body }}</p>
+              <a href="{{ step.url }}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{{ step.action_label }}</a>
+            </article>
           {% endfor %}
         </div>
+      {% elif dashboard_spotlight_step %}
+        <div class="mt-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          {{ cms.dashboard.spotlight_only_body }}
+        </div>
       {% else %}
-        <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
-          <h3 class="text-xl font-black text-slate-900">{% trans "No recent activity yet" %}</h3>
-          <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{% trans "Your latest listings, saves, inquiries, and RFQs will appear here once you start using the marketplace." %}</p>
+        <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
+          {{ cms.dashboard.basics_good_body }}
         </div>
       {% endif %}
     </section>
 
-    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
       <div>
-        <h2 class="text-xl font-black text-slate-900">{% trans "Profile and company" %}</h2>
-        <p class="mt-1 text-sm leading-6 text-slate-500">{% trans "Keep core account and business details complete so deals move faster." %}</p>
-      </div>
-
-      <div class="mt-5 grid gap-4 lg:grid-cols-2">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Account details" %}</h3>
-          <div class="mt-4 divide-y divide-slate-200">
-            <div class="flex items-start justify-between gap-4 py-3">
-              <div>
-                <p class="text-sm font-bold text-slate-900">{% trans "Full name" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ request.user.full_name|default:"-" }}</p>
-              </div>
-            </div>
-            <div class="flex items-start justify-between gap-4 py-3">
-              <div>
-                <p class="text-sm font-bold text-slate-900">{% trans "Email address" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ request.user.email }}</p>
-              </div>
-            </div>
-            <div class="flex items-start justify-between gap-4 py-3">
-              <div>
-                <p class="text-sm font-bold text-slate-900">{% trans "Account type" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ request.user.account_type_label }}</p>
-              </div>
-            </div>
-            <div class="flex items-start justify-between gap-4 py-3">
-              <div>
-                <p class="text-sm font-bold text-slate-900">{% trans "Preferred language" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ request.user.get_preferred_language_display }}</p>
-              </div>
-            </div>
-          </div>
-          <a href="{% url 'accounts:settings' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Update profile" %}</a>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Company profile" %}</h3>
-          {% if user_company %}
-            <div class="mt-4 divide-y divide-slate-200">
-              <div class="py-3">
-                <p class="text-sm font-bold text-slate-900">{{ user_company.name }}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ user_company.country }}{% if user_company.city %} · {{ user_company.city }}{% endif %}</p>
-              </div>
-              <div class="py-3">
-                <p class="text-sm font-bold text-slate-900">{% trans "Company email" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ user_company.email }}</p>
-              </div>
-              <div class="py-3">
-                <p class="text-sm font-bold text-slate-900">{% trans "Phone" %}</p>
-                <p class="mt-1 text-sm text-slate-500">{{ user_company.phone }}</p>
-              </div>
-            </div>
-            <a href="{% url 'companies:profile' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Open company profile" %}</a>
-          {% else %}
-            <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
-              {% trans "No company profile on file yet. Create one to unlock smoother selling and stronger trust with buyers." %}
-            </div>
-            <a href="{% url 'companies:create' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Create company profile" %}</a>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div class="space-y-4">
-    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
-      <div>
-        <h2 class="text-xl font-black text-slate-900">{% trans "Quick actions" %}</h2>
-        <p class="mt-1 text-sm leading-6 text-slate-500">{% trans "The most common next steps from your workspace." %}</p>
-      </div>
-
-      <div class="mt-5 grid gap-3">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Create listing" %}</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Publish a new stocklot or continue building your seller-side inventory." %}</p>
-          <a href="{% if request.user.is_seller %}{% url 'stocklots:create' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% if request.user.is_seller %}{% trans "Open listing form" %}{% else %}{% trans "Request seller access" %}{% endif %}</a>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Post RFQ" %}</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Capture demand, invite offers, and organize buyer-side sourcing in one place." %}</p>
-          <a href="{% url 'rfqs:create' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Create RFQ" %}</a>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "View messages" %}</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-500">{% trans "Jump into active inquiry threads and keep conversations moving." %}</p>
-          <a href="{% if request.user.is_seller %}{% url 'inquiries:received' %}{% else %}{% url 'inquiries:sent' %}{% endif %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Open inquiries" %}</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
-      <div>
-        <h2 class="text-xl font-black text-slate-900">{% trans "Account status" %}</h2>
-        <p class="mt-1 text-sm leading-6 text-slate-500">{% trans "Verification and access checkpoints that affect how you work in the marketplace." %}</p>
+        <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.dashboard.account_setup_title }}</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.dashboard.account_setup_body }}</p>
       </div>
 
       <div class="mt-5 space-y-3">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Buyer verification" %}</h3>
-          {% if buyer_request %}
-            <div class="mt-4 rounded-2xl border px-4 py-3 text-sm leading-6 {% if buyer_request.status == 'verified' or buyer_request.status == 'approved' %}border-emerald-200 bg-emerald-50 text-emerald-800{% elif buyer_request.status == 'pending' %}border-brand-200 bg-brand-50 text-brand-700{% else %}border-rose-200 bg-rose-50 text-rose-700{% endif %}">
-              {% trans "Current status" %}: {{ buyer_request.get_status_display }}
-              {% if buyer_request.review_notes %}<br>{{ buyer_request.review_notes }}{% endif %}
+        <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">{% trans "Profile basics" %}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {% if profile_is_complete %}
+                  {% trans "Your main account details are in place." %}
+                {% else %}
+                  {% trans "Your profile still needs a quick pass so the account feels complete." %}
+                {% endif %}
+              </p>
             </div>
-            <a href="{% url 'accounts:buyer_verification' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Manage verification" %}</a>
-          {% else %}
-            <div class="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-              {% trans "No buyer verification request has been submitted yet." %}
-            </div>
-            <a href="{% url 'accounts:buyer_verification' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Start verification" %}</a>
-          {% endif %}
-        </div>
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if profile_is_complete %}border border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+              {% if profile_is_complete %}{% trans "Ready" %}{% else %}{% trans "Needs work" %}{% endif %}
+            </span>
+          </div>
+          <a href="{% url 'accounts:settings' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Update profile" %}</a>
+        </article>
 
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 class="text-base font-black text-slate-900">{% trans "Seller access" %}</h3>
-          {% if request.user.is_seller %}
-            <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800">
-              {% trans "Seller access is active. You can create and manage marketplace listings." %}
+        <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">{% trans "Company profile" %}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {% if user_company %}
+                  {% if company_is_complete %}
+                    {% trans "Your company profile exists and has the main details buyers and sellers expect." %}
+                  {% else %}
+                    {% trans "Your company profile exists, but it still needs a few details filled in." %}
+                  {% endif %}
+                {% else %}
+                  {% trans "No company profile yet. Add one to make selling and trust-building easier." %}
+                {% endif %}
+              </p>
             </div>
-            <a href="{% url 'stocklots:mine' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Open listings workspace" %}</a>
-          {% elif seller_request %}
-            <div class="mt-4 rounded-2xl border px-4 py-3 text-sm leading-6 {% if seller_request.status == 'approved' %}border-emerald-200 bg-emerald-50 text-emerald-800{% elif seller_request.status == 'pending' %}border-brand-200 bg-brand-50 text-brand-700{% else %}border-rose-200 bg-rose-50 text-rose-700{% endif %}">
-              {% trans "Current status" %}: {{ seller_request.get_status_display }}
-              {% if seller_request.review_notes %}<br>{{ seller_request.review_notes }}{% endif %}
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if company_is_complete %}border border-emerald-200 bg-emerald-50 text-emerald-700{% elif user_company %}border border-amber-200 bg-amber-50 text-amber-700{% else %}border border-slate-200 bg-white text-slate-600{% endif %}">
+              {% if company_is_complete %}{% trans "Ready" %}{% elif user_company %}{% trans "Almost there" %}{% else %}{% trans "Missing" %}{% endif %}
+            </span>
+          </div>
+          <a href="{{ dashboard_company_url }}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">
+            {% if user_company %}{% trans "Open company profile" %}{% else %}{% trans "Create company profile" %}{% endif %}
+          </a>
+        </article>
+
+        <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">{% trans "Buyer verification" %}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {% if buyer_request %}
+                  {% trans "Current status" %}: {{ buyer_request.get_status_display }}{% if buyer_request.review_notes %}. {{ buyer_request.review_notes }}{% endif %}
+                {% else %}
+                  {% trans "No buyer verification request has been submitted yet." %}
+                {% endif %}
+              </p>
             </div>
-            <a href="{% url 'accounts:seller_request' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Review seller request" %}</a>
-          {% else %}
-            <div class="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-              {% trans "Seller access is not active yet. Request it to start publishing listings." %}
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if buyer_request and buyer_request.status == 'verified' %}border border-emerald-200 bg-emerald-50 text-emerald-700{% elif buyer_request and buyer_request.status == 'pending' %}border border-amber-200 bg-amber-50 text-amber-700{% elif buyer_request and buyer_request.status == 'rejected' %}border border-rose-200 bg-rose-50 text-rose-700{% else %}border border-slate-200 bg-white text-slate-600{% endif %}">
+              {% if buyer_request %}{{ buyer_request.get_status_display }}{% else %}{% trans "Not started" %}{% endif %}
+            </span>
+          </div>
+          <a href="{% url 'accounts:buyer_verification' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">
+            {% if buyer_request %}{% trans "Manage verification" %}{% else %}{% trans "Start verification" %}{% endif %}
+          </a>
+        </article>
+
+        <article class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-base font-black text-slate-900">{% trans "Seller access" %}</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {% if request.user.is_seller %}
+                  {% trans "Seller access is active. You can create and manage listings." %}
+                {% elif seller_request %}
+                  {% trans "Current status" %}: {{ seller_request.get_status_display }}{% if seller_request.review_notes %}. {{ seller_request.review_notes }}{% endif %}
+                {% else %}
+                  {% trans "Seller access is not active yet." %}
+                {% endif %}
+              </p>
             </div>
-            <a href="{% url 'accounts:seller_request' %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">{% trans "Request seller access" %}</a>
-          {% endif %}
-        </div>
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if request.user.is_seller or seller_request and seller_request.status == 'approved' %}border border-emerald-200 bg-emerald-50 text-emerald-700{% elif seller_request and seller_request.status == 'pending' %}border border-amber-200 bg-amber-50 text-amber-700{% elif seller_request and seller_request.status == 'rejected' %}border border-rose-200 bg-rose-50 text-rose-700{% else %}border border-slate-200 bg-white text-slate-600{% endif %}">
+              {% if request.user.is_seller %}{% trans "Active" %}{% elif seller_request %}{{ seller_request.get_status_display }}{% else %}{% trans "Not started" %}{% endif %}
+            </span>
+          </div>
+          <a href="{% if request.user.is_seller %}{% url 'stocklots:mine' %}{% else %}{% url 'accounts:seller_request' %}{% endif %}" class="mt-4 inline-flex items-center text-sm font-bold text-slate-900 transition hover:text-brand-700">
+            {% if request.user.is_seller %}{% trans "Open listings workspace" %}{% elif seller_request %}{% trans "Review seller request" %}{% else %}{% trans "Request seller access" %}{% endif %}
+          </a>
+        </article>
       </div>
     </section>
   </div>

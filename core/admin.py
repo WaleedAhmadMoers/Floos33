@@ -3,19 +3,31 @@ from django.contrib import admin
 from core.cms import cms_text_field_names
 from core.models import (
     AboutCMSBlock,
+    AccountCMSBlock,
+    BlogCMSBlock,
     BuyerVisibilityGrant,
     CMSBlock,
+    ChatCMSBlock,
     CompanyVisibilityGrant,
     ContactCMSBlock,
+    DashboardCMSBlock,
+    DealCMSBlock,
     DealHistory,
     DealTrigger,
     FooterCMSBlock,
     HomepageCMSBlock,
     ImpressumCMSBlock,
+    InboxCMSBlock,
+    ListingUICMSBlock,
+    NavigationCMSBlock,
     Notification,
+    NotificationsCMSBlock,
     PrivacyCMSBlock,
+    RFQUICMSBlock,
+    SavedCMSBlock,
     SharedCMSBlock,
     SupportMessage,
+    SupportCMSBlock,
     TermsCMSBlock,
     TickerNews,
     TickerNewsTranslation,
@@ -60,14 +72,74 @@ class AboutCMSBlockAdmin(PageScopedCMSBlockAdmin):
     page_code = CMSBlock.Page.ABOUT
 
 
+@admin.register(AccountCMSBlock)
+class AccountCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.ACCOUNT
+
+
+@admin.register(BlogCMSBlock)
+class BlogCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.BLOG
+
+
+@admin.register(ChatCMSBlock)
+class ChatCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.CHAT
+
+
 @admin.register(ContactCMSBlock)
 class ContactCMSBlockAdmin(PageScopedCMSBlockAdmin):
     page_code = CMSBlock.Page.CONTACT
 
 
+@admin.register(DashboardCMSBlock)
+class DashboardCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.DASHBOARD
+
+
+@admin.register(DealCMSBlock)
+class DealCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.DEAL
+
+
+@admin.register(InboxCMSBlock)
+class InboxCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.INBOX
+
+
+@admin.register(ListingUICMSBlock)
+class ListingUICMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.LISTING_UI
+
+
+@admin.register(NavigationCMSBlock)
+class NavigationCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.NAV
+
+
+@admin.register(NotificationsCMSBlock)
+class NotificationsCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.NOTIFICATIONS
+
+
 @admin.register(PrivacyCMSBlock)
 class PrivacyCMSBlockAdmin(PageScopedCMSBlockAdmin):
     page_code = CMSBlock.Page.PRIVACY
+
+
+@admin.register(RFQUICMSBlock)
+class RFQUICMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.RFQ_UI
+
+
+@admin.register(SavedCMSBlock)
+class SavedCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.SAVED
+
+
+@admin.register(SupportCMSBlock)
+class SupportCMSBlockAdmin(PageScopedCMSBlockAdmin):
+    page_code = CMSBlock.Page.SUPPORT
 
 
 @admin.register(TermsCMSBlock)

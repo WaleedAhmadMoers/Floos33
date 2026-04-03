@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     AboutView,
     ContactView,
+    DismissLanguageSuggestionView,
     ImpressumView,
     PrivacyView,
     SetLanguageView,
@@ -77,6 +78,7 @@ urlpatterns = [
     path("impressum/", ImpressumView.as_view(), name="impressum"),
     path("support/", ContactView.as_view(), name="support"),
     path("language/", SetLanguageView.as_view(), name="set_language"),
+    path("language/dismiss/", DismissLanguageSuggestionView.as_view(), name="dismiss_language_suggestion"),
     path("saved/", SavedItemsView.as_view(), name="saved"),
     path("notifications/", NotificationListView.as_view(), name="notifications"),
     path("notifications/<int:pk>/read/", NotificationMarkReadView.as_view(), name="notification_read"),

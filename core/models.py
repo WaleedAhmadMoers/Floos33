@@ -6,8 +6,20 @@ class CMSBlock(models.Model):
     class Page(models.TextChoices):
         HOME = "home", "Homepage"
         ABOUT = "about", "About"
+        ACCOUNT = "account", "Account"
+        BLOG = "blog", "Blog"
+        CHAT = "chat", "Chat"
         CONTACT = "contact", "Contact"
+        DASHBOARD = "dashboard", "Dashboard"
+        DEAL = "deal", "Deals"
+        INBOX = "inbox", "Inbox"
+        LISTING_UI = "listing_ui", "Listing UI"
+        NAV = "nav", "Navigation"
+        NOTIFICATIONS = "notifications", "Notifications"
         PRIVACY = "privacy", "Privacy"
+        RFQ_UI = "rfq_ui", "RFQ UI"
+        SAVED = "saved", "Saved"
+        SUPPORT = "support", "Support"
         TERMS = "terms", "Terms"
         IMPRESSUM = "impressum", "Impressum"
         FOOTER = "footer", "Footer"
@@ -112,6 +124,90 @@ class SharedCMSBlock(CMSBlock):
         proxy = True
         verbose_name = "CMS · Shared / Global"
         verbose_name_plural = "CMS · Shared / Global"
+
+
+class AccountCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Account"
+        verbose_name_plural = "CMS - Account"
+
+
+class BlogCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Blog"
+        verbose_name_plural = "CMS - Blog"
+
+
+class ChatCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Chat"
+        verbose_name_plural = "CMS - Chat"
+
+
+class DashboardCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Dashboard"
+        verbose_name_plural = "CMS - Dashboard"
+
+
+class DealCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Deals"
+        verbose_name_plural = "CMS - Deals"
+
+
+class InboxCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Inbox"
+        verbose_name_plural = "CMS - Inbox"
+
+
+class ListingUICMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Listing UI"
+        verbose_name_plural = "CMS - Listing UI"
+
+
+class NavigationCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Navigation"
+        verbose_name_plural = "CMS - Navigation"
+
+
+class NotificationsCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Notifications"
+        verbose_name_plural = "CMS - Notifications"
+
+
+class RFQUICMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - RFQ UI"
+        verbose_name_plural = "CMS - RFQ UI"
+
+
+class SavedCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Saved"
+        verbose_name_plural = "CMS - Saved"
+
+
+class SupportCMSBlock(CMSBlock):
+    class Meta:
+        proxy = True
+        verbose_name = "CMS - Support"
+        verbose_name_plural = "CMS - Support"
 
 
 class SupportMessage(models.Model):

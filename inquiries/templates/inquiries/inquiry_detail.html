@@ -3,15 +3,15 @@
 
 {% block extra_head %}{{ block.super }}<script src="{% static 'js/live.js' %}"></script>{% endblock extra_head %}
 
-{% block title %}Inquiry details | floos33{% endblock title %}
-{% block account_eyebrow %}Inquiries{% endblock account_eyebrow %}
-{% block account_title %}Inquiry details{% endblock account_title %}
-{% block account_intro %}View and reply to this inquiry thread.{% endblock account_intro %}
+{% block title %}{{ cms.inbox.detail_page_title }} | floos33{% endblock title %}
+{% block account_eyebrow %}{{ cms.inbox.eyebrow }}{% endblock account_eyebrow %}
+{% block account_title %}{{ cms.inbox.detail_page_title }}{% endblock account_title %}
+{% block account_intro %}{{ cms.inbox.detail_page_intro }}{% endblock account_intro %}
 
 {% block account_content %}
 <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
     <div class="mb-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm leading-6 text-slate-600">Use this thread to review the listing context, track moderation and deal status, and keep the conversation moving from inquiry to agreement.</p>
+        <p class="text-sm leading-6 text-slate-600">{{ cms.inbox.thread_intro }}</p>
     </div>
 
     <div id="deal-live"
@@ -22,8 +22,8 @@
          class="space-y-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <div class="flex flex-col gap-3 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Deal status</p>
-                <h2 class="mt-2 text-xl font-black text-slate-900">Conversation progress</h2>
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.status_eyebrow }}</p>
+                <h2 class="mt-2 text-xl font-black text-slate-900">{{ cms.deal.conversation_progress_title }}</h2>
             </div>
             <div class="flex flex-wrap gap-2">
                 <span id="deal-overall" class="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{{ deal.get_status_display }}</span>
@@ -32,10 +32,10 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Buyer decision</div><div id="deal-buyer" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Seller decision</div><div id="deal-seller" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Admin</div><div id="deal-admin" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Next action</div><div id="deal-next" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.buyer_decision }}</div><div id="deal-buyer" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.seller_decision }}</div><div id="deal-seller" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.admin_label }}</div><div id="deal-admin" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.next_action }}</div><div id="deal-next" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
         </div>
 
         <p id="deal-latest" class="text-sm text-slate-500"></p>
@@ -52,15 +52,15 @@
 
         <div class="grid gap-5 xl:grid-cols-2">
             <section class="rounded-3xl border border-slate-200 bg-white p-5">
-                <h3 class="text-lg font-black text-slate-900">Recent activity</h3>
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.recent_activity }}</h3>
                 <ul id="deal-history-list" class="mt-4 space-y-3 text-sm text-slate-600"></ul>
             </section>
 
             <section class="rounded-3xl border border-slate-200 bg-white p-5">
-                <h3 class="text-lg font-black text-slate-900">Identity</h3>
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.identity }}</h3>
                 <div class="mt-4 space-y-4">
                     <div>
-                        <p class="text-sm font-semibold text-slate-900">Seller</p>
+                        <p class="text-sm font-semibold text-slate-900">{{ cms.deal.seller_label }}</p>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
                             <span id="identity-seller-status" class="{% if identity_status.seller == 'revealed' %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% elif identity_status.seller == 'pending' %}inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">
                                 {% if identity_status.seller == "revealed" %}Identity revealed{% elif identity_status.seller == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
@@ -69,7 +69,7 @@
                         </div>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-slate-900">Buyer</p>
+                        <p class="text-sm font-semibold text-slate-900">{{ cms.deal.buyer_label }}</p>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
                             <span id="identity-buyer-status" class="{% if identity_status.buyer == 'revealed' %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% elif identity_status.buyer == 'pending' %}inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">
                                 {% if identity_status.buyer == "revealed" %}Identity revealed{% elif identity_status.buyer == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
@@ -99,10 +99,10 @@
                         {% endif %}
                     </div>
                     {% if identity_status.seller == "pending" or identity_status.buyer == "pending" %}
-                        <p class="mt-4 text-sm text-slate-500">Waiting for admin approval.</p>
+                        <p class="mt-4 text-sm text-slate-500">{{ cms.deal.waiting_admin }}</p>
                     {% endif %}
                 {% else %}
-                    <p class="mt-5 text-sm text-slate-500">Verification required to manage identity reveal.</p>
+                    <p class="mt-5 text-sm text-slate-500">{{ cms.deal.verification_required_identity }}</p>
                 {% endif %}
             </section>
         </div>
@@ -112,23 +112,23 @@
 <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Stocklot</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_stocklot }}</div>
             <div class="mt-3 text-sm font-semibold text-slate-900"><a class="hover:text-brand-700" href="{{ inquiry.stocklot.get_absolute_url }}">{{ inquiry.stocklot.title }}</a></div>
         </article>
         <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Seller company</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.seller_company }}</div>
             <div class="mt-3 text-sm font-semibold text-slate-900">{% display_company inquiry.seller_company %}</div>
         </article>
         <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Buyer</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_buyer }}</div>
             <div class="mt-3 text-sm font-semibold text-slate-900">{% display_user inquiry.buyer 'buyer' %}</div>
         </article>
         <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Status</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_status }}</div>
             <div class="mt-3 text-sm font-semibold text-slate-900">{{ inquiry.get_status_display }}</div>
         </article>
         <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Created</div>
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.created_label }}</div>
             <div class="mt-3 text-sm font-semibold text-slate-900">{{ inquiry.created_at|date:"Y-m-d H:i" }}</div>
         </article>
     </div>
@@ -145,13 +145,13 @@
                 {% endif %}
             </div>
         {% else %}
-            <p class="mt-3 text-sm text-slate-500">Message is pending admin approval.</p>
+            <p class="mt-3 text-sm text-slate-500">{{ cms.inbox.message_pending_approval }}</p>
         {% endif %}
     </section>
 
     {% if visible_replies %}
         <section class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <h3 class="text-lg font-black text-slate-900">Thread</h3>
+            <h3 class="text-lg font-black text-slate-900">{{ cms.inbox.thread_title }}</h3>
             <div class="mt-5 space-y-4">
                 {% for reply in visible_replies %}
                     {% include "inquiries/_reply_item.html" with reply=reply %}
@@ -161,7 +161,7 @@
     {% endif %}
 
     <section class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <h3 class="text-lg font-black text-slate-900">Reply</h3>
+        <h3 class="text-lg font-black text-slate-900">{{ cms.inbox.reply_title }}</h3>
         {% if can_interact %}
         <form method="post" class="mt-5 space-y-5 border-t border-slate-200 pt-5" enctype="multipart/form-data">
             {% csrf_token %}
@@ -186,7 +186,7 @@
             <div class="space-y-2">
                 {{ reply_form.attachment.label_tag }}
                 {{ reply_form.attachment }}
-                <p class="text-sm text-slate-500">Attach an image or video (optional).</p>
+                <p class="text-sm text-slate-500">{{ cms.inbox.attachment_hint }}</p>
                 {% if reply_form.attachment.errors %}
                     <ul class="text-sm text-rose-600">
                         {% for error in reply_form.attachment.errors %}
@@ -195,10 +195,10 @@
                     </ul>
                 {% endif %}
             </div>
-            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Send reply</button>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ cms.inbox.send_reply }}</button>
         </form>
         {% else %}
-            <p class="mt-4 text-sm text-slate-500">Verification required to reply. Please complete verification in your account.</p>
+            <p class="mt-4 text-sm text-slate-500">{{ cms.inbox.verification_required_reply }}</p>
         {% endif %}
     </section>
 </section>

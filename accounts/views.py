@@ -16,6 +16,9 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView, UpdateView
 
+from core.cms import get_cms_map, get_cms_text
+from core.context_processors import resolve_site_language
+
 from .forms import AccountPasswordChangeForm, AccountPasswordResetForm, AccountSetPasswordForm
 from .forms import AccountSettingsForm, BuyerVerificationRequestForm, LoginForm
 from .forms import SellerVerificationRequestForm, SignupForm
@@ -157,29 +160,218 @@ class DashboardView(LoginRequiredMixin, AccountContextMixin, TemplateView):
     login_url = reverse_lazy("accounts:login")
 
     def get_context_data(self, **kwargs):
+        from core.models import Notification
         from inquiries.models import Inquiry
-        from rfqs.models import RFQ
+        from rfqs.models import RFQ, RFQConversation
         from stocklots.models import Favorite, Stocklot
 
         context = super().get_context_data(**kwargs)
         context.update(self.get_account_context())
+        language_code = resolve_site_language(self.request)
+        cms_blocks = get_cms_map(language_code)
+        t = lambda key: get_cms_text(key, language_code, cms_blocks)
         user_company = context.get("user_company")
+        buyer_request = context.get("buyer_request")
+        seller_request = context.get("seller_request")
 
-        active_listings_qs = (
-            user_company.stocklots.filter(status=Stocklot.Status.APPROVED, is_active=True) if user_company else []
-        )
-        sent_inquiries_qs = self.request.user.sent_inquiries.exclude(status=Inquiry.Status.CLOSED)
+        company_stocklots_qs = user_company.stocklots.all() if user_company else Stocklot.objects.none()
+        active_listings_qs = company_stocklots_qs.filter(status=Stocklot.Status.APPROVED, is_active=True)
+        pending_listings_qs = company_stocklots_qs.filter(status=Stocklot.Status.PENDING_REVIEW)
+        sent_inquiries_qs = self.request.user.sent_inquiries.select_related("stocklot").exclude(status=Inquiry.Status.CLOSED)
         received_inquiries_qs = (
-            user_company.received_inquiries.exclude(status=Inquiry.Status.CLOSED) if user_company else []
+            user_company.received_inquiries.select_related("stocklot", "buyer").exclude(status=Inquiry.Status.CLOSED)
+            if user_company
+            else Inquiry.objects.none()
         )
-        my_rfqs_qs = self.request.user.rfqs.exclude(status=RFQ.Status.CLOSED)
+        my_rfqs_qs = self.request.user.rfqs.select_related("category")
+        open_rfqs_qs = my_rfqs_qs.exclude(status=RFQ.Status.CLOSED)
+        pending_rfqs_qs = open_rfqs_qs.filter(moderation_status=RFQ.ModerationStatus.PENDING_REVIEW)
+        saved_listings_qs = Favorite.objects.select_related("stocklot").filter(
+            user=self.request.user,
+            stocklot__status=Stocklot.Status.APPROVED,
+            stocklot__is_active=True,
+        )
+        saved_rfqs_qs = self.request.user.saved_rfqs.select_related("rfq")
+        buyer_conversations_qs = RFQConversation.objects.filter(buyer=self.request.user)
+        seller_conversations_qs = RFQConversation.objects.filter(seller_user=self.request.user)
+
+        total_listings = company_stocklots_qs.count()
+        active_listings = active_listings_qs.count()
+        pending_listings = pending_listings_qs.count()
+        saved_items = saved_listings_qs.count() + saved_rfqs_qs.count()
+        sent_inquiries = sent_inquiries_qs.count()
+        received_inquiries = received_inquiries_qs.count()
+        open_inquiries = sent_inquiries + received_inquiries
+        total_rfqs = my_rfqs_qs.count()
+        open_rfqs = open_rfqs_qs.count()
+        pending_rfqs = pending_rfqs_qs.count()
+        buyer_conversations = buyer_conversations_qs.count()
+        seller_conversations = seller_conversations_qs.count()
+        open_threads = open_inquiries + buyer_conversations + seller_conversations
+        unread_notifications = Notification.objects.filter(recipient=self.request.user, is_read=False).count()
 
         context["dashboard_metrics"] = {
-            "active_listings": active_listings_qs.count() if user_company else 0,
-            "saved_items": self.request.user.favorites.count(),
-            "open_inquiries": sent_inquiries_qs.count() + (received_inquiries_qs.count() if user_company else 0),
-            "rfqs": my_rfqs_qs.count(),
+            "active_listings": active_listings,
+            "total_listings": total_listings,
+            "pending_listings": pending_listings,
+            "saved_items": saved_items,
+            "open_inquiries": open_inquiries,
+            "open_threads": open_threads,
+            "rfqs": open_rfqs,
+            "total_rfqs": total_rfqs,
+            "pending_rfqs": pending_rfqs,
+            "buyer_conversations": buyer_conversations,
+            "seller_conversations": seller_conversations,
+            "notifications": unread_notifications,
         }
+
+        if self.request.user.is_seller:
+            messages_url = reverse("inquiries:received")
+        elif buyer_conversations:
+            messages_url = reverse("rfqs:buyer_conversations")
+        elif seller_conversations:
+            messages_url = reverse("rfqs:seller_conversations")
+        else:
+            messages_url = reverse("inquiries:sent")
+        context["dashboard_messages_url"] = messages_url
+        context["dashboard_saved_items_url"] = reverse("core:saved")
+        context["dashboard_company_url"] = (
+            reverse("companies:profile") if user_company else reverse("companies:create")
+        )
+
+        profile_is_complete = bool(self.request.user.full_name and self.request.user.email_verified)
+        company_is_complete = bool(
+            user_company
+            and user_company.name
+            and user_company.description
+            and user_company.email
+            and user_company.phone
+            and user_company.country
+        )
+        context["profile_is_complete"] = profile_is_complete
+        context["company_is_complete"] = company_is_complete
+
+        dashboard_attention = []
+        if pending_listings:
+            dashboard_attention.append(
+                {
+                    "title": t("dashboard.attention_listings_title"),
+                    "value": pending_listings,
+                    "body": t("dashboard.attention_listings_body"),
+                    "url": reverse("stocklots:mine"),
+                    "action_label": t("dashboard.attention_listings_action"),
+                }
+            )
+        if pending_rfqs:
+            dashboard_attention.append(
+                {
+                    "title": t("dashboard.attention_rfqs_title"),
+                    "value": pending_rfqs,
+                    "body": t("dashboard.attention_rfqs_body"),
+                    "url": reverse("rfqs:my_rfqs"),
+                    "action_label": t("dashboard.attention_rfqs_action"),
+                }
+            )
+        if unread_notifications:
+            dashboard_attention.append(
+                {
+                    "title": t("dashboard.attention_notifications_title"),
+                    "value": unread_notifications,
+                    "body": t("dashboard.attention_notifications_body"),
+                    "url": reverse("core:notifications"),
+                    "action_label": t("dashboard.attention_notifications_action"),
+                }
+            )
+        if open_threads:
+            dashboard_attention.append(
+                {
+                    "title": t("dashboard.attention_threads_title"),
+                    "value": open_threads,
+                    "body": t("dashboard.attention_threads_body"),
+                    "url": messages_url,
+                    "action_label": t("dashboard.attention_threads_action"),
+                }
+            )
+        context["dashboard_attention"] = dashboard_attention[:4]
+
+        dashboard_next_steps = []
+        if not profile_is_complete:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_profile_title"),
+                    "body": t("dashboard.next_profile_body"),
+                    "url": reverse("accounts:settings"),
+                    "action_label": t("dashboard.next_profile_action"),
+                }
+            )
+        if not user_company:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_company_title"),
+                    "body": t("dashboard.next_company_body"),
+                    "url": reverse("companies:create"),
+                    "action_label": t("dashboard.next_company_action"),
+                }
+            )
+        if buyer_request is None or buyer_request.status in {
+            BuyerVerificationRequest.Status.UNVERIFIED,
+            BuyerVerificationRequest.Status.REJECTED,
+        }:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_buyer_verification_title"),
+                    "body": t("dashboard.next_buyer_verification_body"),
+                    "url": reverse("accounts:buyer_verification"),
+                    "action_label": t("dashboard.next_buyer_verification_action"),
+                }
+            )
+        if not self.request.user.is_seller and not seller_request:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_seller_access_title"),
+                    "body": t("dashboard.next_seller_access_body"),
+                    "url": reverse("accounts:seller_request"),
+                    "action_label": t("dashboard.next_seller_access_action"),
+                }
+            )
+        elif seller_request and seller_request.status == SellerVerificationRequest.Status.REJECTED:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_seller_review_title"),
+                    "body": t("dashboard.next_seller_review_body"),
+                    "url": reverse("accounts:seller_request"),
+                    "action_label": t("dashboard.next_seller_review_action"),
+                }
+            )
+        if self.request.user.is_seller and total_listings == 0:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_first_listing_title"),
+                    "body": t("dashboard.next_first_listing_body"),
+                    "url": reverse("stocklots:create"),
+                    "action_label": t("dashboard.next_first_listing_action"),
+                }
+            )
+        if total_rfqs == 0:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_first_rfq_title"),
+                    "body": t("dashboard.next_first_rfq_body"),
+                    "url": reverse("rfqs:create"),
+                    "action_label": t("dashboard.next_first_rfq_action"),
+                }
+            )
+        if saved_items == 0:
+            dashboard_next_steps.append(
+                {
+                    "title": t("dashboard.next_saved_title"),
+                    "body": t("dashboard.next_saved_body"),
+                    "url": reverse("stocklots:list"),
+                    "action_label": t("dashboard.next_saved_action"),
+                }
+            )
+        context["dashboard_spotlight_step"] = dashboard_next_steps[0] if dashboard_next_steps else None
+        context["dashboard_secondary_steps"] = dashboard_next_steps[1:5]
         context["dashboard_recent_activity"] = sorted(
             [
                 *(

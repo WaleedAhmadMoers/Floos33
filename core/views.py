@@ -8,6 +8,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, ListView, View, DetailView, CreateView, UpdateView, DeleteView, FormView
 from django.http import JsonResponse, HttpResponse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -20,6 +21,9 @@ from companies.models import Company
 from accounts.models import User
 from core.cms import get_cms_map, get_cms_text
 from core.context_processors import resolve_site_language
+from core.language_runtime import LANGUAGE_COOKIE_NAME, LANGUAGE_PREFERENCE_SOURCE_COOKIE
+from core.language_runtime import LANGUAGE_PROMPT_DISMISSED_COOKIE, LANGUAGE_SOURCE_EXPLICIT
+from core.language_runtime import detect_browser_language, remove_language_query_param
 from core.languages import SUPPORTED_LANGUAGE_CODES
 from core.multilingual import prepare_objects_for_language
 from core.utils.notifications import create_notification
@@ -309,18 +313,65 @@ class ContactView(CMSContentMixin, FormView):
 
 
 class SetLanguageView(View):
+    cookie_max_age = 60 * 60 * 24 * 365
+
+    def get_next_url(self, request):
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("core:home")
+        if not url_has_allowed_host_and_scheme(
+            url=next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return reverse("core:home")
+        return remove_language_query_param(next_url)
+
+    def apply_language_preference(self, request, response, language):
+        request.session["site_language"] = language
+        response.set_cookie(LANGUAGE_COOKIE_NAME, language, max_age=self.cookie_max_age, samesite="Lax")
+        response.set_cookie(
+            LANGUAGE_PREFERENCE_SOURCE_COOKIE,
+            LANGUAGE_SOURCE_EXPLICIT,
+            max_age=self.cookie_max_age,
+            samesite="Lax",
+        )
+        response.delete_cookie(LANGUAGE_PROMPT_DISMISSED_COOKIE)
+        if request.user.is_authenticated and getattr(request.user, "preferred_language", None) != language:
+            request.user.preferred_language = language
+            request.user.save(update_fields=["preferred_language"])
+
     def post(self, request, *args, **kwargs):
         language = (request.POST.get("language") or "en").lower()
-        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("core:home")
+        next_url = self.get_next_url(request)
         if language not in SUPPORTED_LANGUAGE_CODES:
             messages.warning(request, "That language is not available yet.")
             return redirect(next_url)
 
-        request.session["site_language"] = language
-        if request.user.is_authenticated and getattr(request.user, "preferred_language", None) != language:
-            request.user.preferred_language = language
-            request.user.save(update_fields=["preferred_language"])
-        return redirect(next_url)
+        response = redirect(next_url)
+        self.apply_language_preference(request, response, language)
+        return response
+
+
+class DismissLanguageSuggestionView(View):
+    cookie_max_age = 60 * 60 * 24 * 365
+
+    def post(self, request, *args, **kwargs):
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("core:home")
+        if not url_has_allowed_host_and_scheme(
+            url=next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            next_url = reverse("core:home")
+        next_url = remove_language_query_param(next_url)
+        dismissed_language = detect_browser_language(request) or "en"
+        response = redirect(next_url)
+        response.set_cookie(
+            LANGUAGE_PROMPT_DISMISSED_COOKIE,
+            dismissed_language,
+            max_age=self.cookie_max_age,
+            samesite="Lax",
+        )
+        return response
 
 
 def robots_txt(request):
