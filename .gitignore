@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 
 # Virtual environments
 .venv/
@@ -9,13 +11,55 @@ venv/
 env/
 myenv/
 
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+
 # Django
 db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
 *.mo
+local_settings.py
 
-# Tooling
+# Logs
+*.log
+logs/
+*.pid
+
+# Coverage / test / cache
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE / editor
 .idea/
 .vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / misc
+tmp/
+temp/
