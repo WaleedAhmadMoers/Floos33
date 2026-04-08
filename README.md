@@ -1,4 +1,4 @@
-# floos33
+# floos33.de
 
 B2B stocklot marketplace connecting EU and MENA businesses.
 
