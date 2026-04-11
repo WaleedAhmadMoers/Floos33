@@ -1,4 +1,4 @@
-Django==5.2.12
+Django==4.2
 channels==4.0.0
 channels_redis==4.2.0
 channels==4.0.0
