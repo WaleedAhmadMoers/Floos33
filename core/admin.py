@@ -1,6 +1,8 @@
+from django import forms
 from django.contrib import admin
 
 from core.cms import cms_text_field_names
+from core.languages import SUPPORTED_LANGUAGE_CHOICES
 from core.models import (
     AboutCMSBlock,
     AccountCMSBlock,
@@ -265,23 +267,58 @@ class DealHistoryAdmin(admin.ModelAdmin):
     raw_id_fields = ("deal", "actor")
 
 
-class TickerNewsTranslationInline(admin.TabularInline):
-    model = TickerNewsTranslation
-    extra = 1
-    fields = ("language_code", "message")
-    min_num = 1
-    max_num = 3
+class TickerNewsAdminForm(forms.ModelForm):
+    class Meta:
+        model = TickerNews
+        fields = ("is_active", "news_type", "audience", "priority", "start_at", "end_at", "link_url")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        existing = {}
+        if self.instance and self.instance.pk:
+            existing = {
+                code: message
+                for code, message in self.instance.translations.values_list("language_code", "message")
+            }
+        for code, label in SUPPORTED_LANGUAGE_CHOICES:
+            self.fields[f"message_{code}"].initial = existing.get(code, "")
+
+
+for code, label in SUPPORTED_LANGUAGE_CHOICES:
+    field = forms.CharField(
+        label=f"Message ({label})",
+        required=False,
+        widget=forms.TextInput(attrs={"style": "width: 95%;"}),
+    )
+    TickerNewsAdminForm.declared_fields[f"message_{code}"] = field
+    TickerNewsAdminForm.base_fields[f"message_{code}"] = field
 
 
 @admin.register(TickerNews)
 class TickerNewsAdmin(admin.ModelAdmin):
+    form = TickerNewsAdminForm
     list_display = ("__str__", "is_active", "news_type", "audience", "priority", "start_at", "end_at")
     list_filter = ("is_active", "news_type", "audience")
     search_fields = ("translations__message",)
     ordering = ("-priority", "-created_at")
-    inlines = [TickerNewsTranslationInline]
     fieldsets = (
         (None, {"fields": ("is_active", "news_type", "audience", "priority")}),
         ("Schedule", {"fields": ("start_at", "end_at")}),
         ("Link", {"fields": ("link_url",)}),
+        (
+            "Translations",
+            {
+                "fields": tuple(f"message_{code}" for code, _label in SUPPORTED_LANGUAGE_CHOICES),
+                "description": "Add ticker text for all supported languages in one place.",
+            },
+        ),
     )
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        for code, _label in SUPPORTED_LANGUAGE_CHOICES:
+            TickerNewsTranslation.objects.update_or_create(
+                ticker_news=form.instance,
+                language_code=code,
+                defaults={"message": form.cleaned_data.get(f"message_{code}", "").strip()},
+            )

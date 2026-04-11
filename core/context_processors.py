@@ -6,7 +6,6 @@ from django.utils import timezone
 from core.cms import get_cms_map, get_cms_text
 from core.language_runtime import get_language_resolution, language_label, remove_language_query_param
 from core.languages import DEFAULT_LANGUAGE_CODE, is_rtl_language, normalize_language_code, site_language_options
-from core.languages import SUPPORTED_LANGUAGE_CODES
 from core.models import Notification, TickerNews
 
 
@@ -33,14 +32,12 @@ def cms_content(request):
 
 def ticker_news(request):
     """
-    Expose ticker items based on user language and audience.
+    Expose ticker items from the dedicated ticker news model.
     """
-    # Determine language preference
     lang = resolve_site_language(request)
-
     now = timezone.now()
-
-    qs = (
+    user = getattr(request, "user", None)
+    queryset = (
         TickerNews.objects.filter(is_active=True)
         .filter(models.Q(start_at__lte=now) | models.Q(start_at__isnull=True))
         .filter(models.Q(end_at__gte=now) | models.Q(end_at__isnull=True))
@@ -48,11 +45,23 @@ def ticker_news(request):
         .order_by("-priority", "-created_at")
     )
 
-    user = getattr(request, "user", None)
-    items = []
+    def pick_translation(item):
+        translations = list(item.translations.all())
+        if not translations:
+            return None
+        requested = normalize_language_code(lang)
+        english = DEFAULT_LANGUAGE_CODE
+        for code in (requested, english):
+            for translation in translations:
+                if (translation.language_code or "").lower().strip() == code:
+                    return translation
+        for translation in translations:
+            if (translation.message or "").strip():
+                return translation
+        return None
 
-    for item in qs:
-        # audience filtering
+    items = []
+    for item in queryset:
         if item.audience == TickerNews.Audience.BUYERS and not (user and user.is_authenticated and user.is_buyer):
             continue
         if item.audience == TickerNews.Audience.SELLERS and not (user and user.is_authenticated and user.is_seller):
@@ -60,21 +69,14 @@ def ticker_news(request):
         if item.audience == TickerNews.Audience.VERIFIED and not (user and user.is_authenticated and user.is_verified_user):
             continue
 
-        # choose translation
-        translation = None
-        for t in item.translations.all():
-            code = (t.language_code or "").lower()
-            if code == lang:
-                translation = t
-                break
+        translation = pick_translation(item)
         if not translation:
             continue
-
         items.append(
             {
                 "message": translation.message,
                 "news_type": item.news_type,
-                "link_url": item.link_url,
+                "link_url": item.link_url or "",
             }
         )
 

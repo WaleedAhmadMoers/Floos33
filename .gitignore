@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 *.pyo
 *.pyd
+.python-version
+.ipynb_checkpoints/
 
 # Virtual environments
 .venv/
@@ -16,9 +18,11 @@ myenv/
 .env.*
 !.env.example
 !.env.sample
+.envrc
 
 # Django
 db.sqlite3
+*.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
@@ -35,21 +39,27 @@ logs/
 .coverage.*
 htmlcov/
 .pytest_cache/
+.hypothesis/
+.tox/
+.nox/
 .mypy_cache/
 .ruff_cache/
 .cache/
+coverage.xml
 
 # Build / packaging
 build/
 dist/
 *.egg-info/
 .eggs/
+pip-wheel-metadata/
 
 # IDE / editor
 .idea/
 .vscode/
 *.swp
 *.swo
+*.orig
 .DS_Store
 Thumbs.db
 
@@ -63,3 +73,6 @@ pnpm-debug.log*
 # OS / misc
 tmp/
 temp/
+
+# Local tooling
+.codex
