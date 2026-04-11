@@ -1,0 +1,8 @@
+Hello {% if user.full_name %}{{ user.full_name }}{% else %}{{ user.email }}{% endif %},
+
+Your email has been verified and your {{ site_name }} account is now active.
+
+You can now sign in here:
+{{ login_url }}
+
+If you need help, contact {{ support_email }}.

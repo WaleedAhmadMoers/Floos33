@@ -1,0 +1,30 @@
+{% extends "accounts/emails/_email_base.html" %}
+
+{% block title %}Verify your email on {{ site_name }}{% endblock %}
+
+{% block heading %}Verify your email address{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+    Hello {% if user.full_name %}{{ user.full_name }}{% else %}{{ user.email }}{% endif %},
+</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+    Your floos33 account has been created. Please confirm your email address to activate your account and sign in.
+</p>
+<p style="margin:0;font-size:14px;line-height:1.7;color:#64748b;">
+    This verification link is time-limited for your security.
+</p>
+{% endblock %}
+
+{% block action %}
+<div style="margin-top:32px;">
+    <a href="{{ activation_url }}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#0f172a;color:#ffffff;text-decoration:none;font-weight:700;">
+        Verify email
+    </a>
+</div>
+<p style="margin:20px 0 0;font-size:14px;line-height:1.7;color:#64748b;">
+    If the button does not work, open this link:
+    <br>
+    <a href="{{ activation_url }}" style="color:#b45309;word-break:break-all;text-decoration:none;">{{ activation_url }}</a>
+</p>
+{% endblock %}

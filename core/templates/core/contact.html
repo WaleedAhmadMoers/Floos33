@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cms.contact.meta_title }} | floos33{% endblock title %}
+{% block meta_description %}{{ cms.contact.meta_description }}{% endblock %}
+{% block social_title %}{{ cms.contact.meta_title }} | floos33{% endblock %}
+{% block social_description %}{{ cms.contact.meta_description }}{% endblock %}
+{% block twitter_title %}{{ cms.contact.meta_title }} | floos33{% endblock %}
+{% block twitter_description %}{{ cms.contact.meta_description }}{% endblock %}
+{% block content %}
+<div class="bg-slate-50">
+  <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <section class="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-orange-50/70 to-amber-50 p-5 shadow-panel sm:p-6 lg:p-8">
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,22rem)] lg:items-end">
+        <div>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-600">{{ cms.contact.eyebrow }}</p>
+          <h1 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ cms.contact.title }}</h1>
+          <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{{ cms.contact.intro }}</p>
+          <p class="mt-3 max-w-3xl text-sm font-medium leading-7 text-slate-500">{{ cms.contact.subtitle }}</p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.contact.support_email_label }}</p>
+            <a href="mailto:{{ support_email }}" class="mt-2 block text-lg font-black text-slate-900 transition hover:text-brand-700">{{ support_email }}</a>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.contact.support_email_text }}</p>
+          </article>
+          <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.contact.phone_label }}</p>
+            <a href="tel:{{ support_phone }}" class="mt-2 block text-lg font-black text-slate-900 transition hover:text-brand-700">{{ support_phone }}</a>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.contact.phone_text }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_20rem]">
+      <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+        <div class="border-b border-slate-200 pb-5">
+          <h2 class="text-2xl font-black tracking-tight text-slate-900">{{ cms.contact.form_title }}</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.contact.form_intro }}</p>
+        </div>
+
+        <form method="post" class="mt-6 space-y-5">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="space-y-2">
+              <label for="{{ form.name.id_for_label }}" class="text-sm font-bold text-slate-800">{{ form.name.label }}</label>
+              {{ form.name }}
+              {% if form.name.errors %}<p class="text-sm text-rose-600">{{ form.name.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div class="space-y-2">
+              <label for="{{ form.email.id_for_label }}" class="text-sm font-bold text-slate-800">{{ form.email.label }}</label>
+              {{ form.email }}
+              {% if form.email.errors %}<p class="text-sm text-rose-600">{{ form.email.errors|join:", " }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label for="{{ form.phone.id_for_label }}" class="text-sm font-bold text-slate-800">{{ form.phone.label }}</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<p class="text-sm text-rose-600">{{ form.phone.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div class="space-y-2">
+            <label for="{{ form.subject.id_for_label }}" class="text-sm font-bold text-slate-800">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<p class="text-sm text-rose-600">{{ form.subject.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div class="space-y-2">
+            <label for="{{ form.message.id_for_label }}" class="text-sm font-bold text-slate-800">{{ form.message.label }}</label>
+            {{ form.message }}
+            {% if form.message.errors %}<p class="text-sm text-rose-600">{{ form.message.errors|join:", " }}</p>{% endif %}
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+            {{ cms.contact.form_support_note }}
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm leading-6 text-slate-500">{{ cms.contact.direct_email_hint }} <a href="mailto:{{ support_email }}" class="font-bold text-brand-700 transition hover:text-brand-600">{{ support_email }}</a></p>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ cms.shared.submit_button }}</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="space-y-4">
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">{{ cms.contact.quick_actions_title }}</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-500">{{ cms.contact.quick_actions_intro }}</p>
+          <div class="mt-4 space-y-3">
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.contact.support_email_label }}</p>
+              <a href="mailto:{{ support_email }}" class="mt-2 block text-base font-black text-slate-900 transition hover:text-brand-700">{{ support_email }}</a>
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.contact.whatsapp_label }}</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">{{ cms.contact.whatsapp_text }}</p>
+              <a href="{{ support_whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-600">{{ cms.contact.whatsapp_button }}</a>
+            </article>
+          </div>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">{{ cms.contact.help_title }}</h2>
+          <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+            {% for topic in contact_help_topics %}
+            <p class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">{{ topic }}</p>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">{{ cms.contact.response_time_title }}</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-500">{{ cms.contact.response_time_body }}</p>
+        </section>
+
+        <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <h2 class="text-xl font-black text-slate-900">{{ cms.contact.direct_title }}</h2>
+          <p class="mt-3 text-sm leading-6 text-slate-500">{{ cms.contact.direct_text }}</p>
+          <a href="mailto:{{ support_email }}" class="mt-4 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-white">{{ support_email }}</a>
+          <a href="tel:{{ support_phone }}" class="mt-3 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-white">{{ support_phone }}</a>
+          <a href="{{ support_whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100">{{ cms.contact.whatsapp_button }}</a>
+        </section>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock content %}

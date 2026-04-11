@@ -1,0 +1,205 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags static %}
+
+{% block extra_head %}{{ block.super }}<script src="{% static 'js/live.js' %}"></script>{% endblock extra_head %}
+
+{% block title %}{{ cms.inbox.detail_page_title }} | floos33{% endblock title %}
+{% block account_eyebrow %}{{ cms.inbox.eyebrow }}{% endblock account_eyebrow %}
+{% block account_title %}{{ cms.inbox.detail_page_title }}{% endblock account_title %}
+{% block account_intro %}{{ cms.inbox.detail_page_intro }}{% endblock account_intro %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="mb-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+        <p class="text-sm leading-6 text-slate-600">{{ cms.inbox.thread_intro }}</p>
+    </div>
+
+    <div id="deal-live"
+         data-deal-id="{{ deal.id }}"
+         data-status-url="{% url 'core:deal_status' deal.id %}"
+         data-buyer="{{ inquiry.buyer.full_name|default:inquiry.buyer.email }}"
+         data-seller="{{ inquiry.seller_company.owner.full_name|default:inquiry.seller_company.owner.email }}"
+         class="space-y-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex flex-col gap-3 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.status_eyebrow }}</p>
+                <h2 class="mt-2 text-xl font-black text-slate-900">{{ cms.deal.conversation_progress_title }}</h2>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <span id="deal-overall" class="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{{ deal.get_status_display }}</span>
+                <span id="deal-progress" class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">{{ deal.get_progress_status_display }}</span>
+            </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.buyer_decision }}</div><div id="deal-buyer" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.seller_decision }}</div><div id="deal-seller" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.admin_label }}</div><div id="deal-admin" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.next_action }}</div><div id="deal-next" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+        </div>
+
+        <p id="deal-latest" class="text-sm text-slate-500"></p>
+
+        <div id="deal-actions" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            {% if can_interact %}
+                {% if request.user.is_staff or inquiry.buyer_id == request.user.id or inquiry.seller_company.owner_id == request.user.id %}
+                    <form method="post" class="deal-accept-form" action="{% url 'inquiries:deal_accept' inquiry.pk %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Accept</button></form>
+                    <form method="post" class="deal-reject-form" action="{% url 'inquiries:deal_reject' inquiry.pk %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reject</button></form>
+                    <form method="post" class="deal-cancel-form" action="{% url 'inquiries:deal_cancel' inquiry.pk %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100">Cancel</button></form>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="grid gap-5 xl:grid-cols-2">
+            <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.recent_activity }}</h3>
+                <ul id="deal-history-list" class="mt-4 space-y-3 text-sm text-slate-600"></ul>
+            </section>
+
+            <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.identity }}</h3>
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ cms.deal.seller_label }}</p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <span id="identity-seller-status" class="{% if identity_status.seller == 'revealed' %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% elif identity_status.seller == 'pending' %}inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">
+                                {% if identity_status.seller == "revealed" %}Identity revealed{% elif identity_status.seller == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
+                            </span>
+                            <span id="identity-seller-label" class="text-sm text-slate-500">{{ identity_labels.seller }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ cms.deal.buyer_label }}</p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <span id="identity-buyer-status" class="{% if identity_status.buyer == 'revealed' %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% elif identity_status.buyer == 'pending' %}inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">
+                                {% if identity_status.buyer == "revealed" %}Identity revealed{% elif identity_status.buyer == "pending" %}Reveal pending{% else %}Identity hidden{% endif %}
+                            </span>
+                            <span id="identity-buyer-label" class="text-sm text-slate-500">{{ identity_labels.buyer }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if can_interact %}
+                    <div class="mt-5 flex flex-col gap-3">
+                        {% if request.user.id == inquiry.buyer_id %}
+                            {% if identity_status.buyer == "hidden" %}
+                                <form method="post" class="btn-reveal-buyer" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'buyer' %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reveal my identity to seller</button></form>
+                            {% endif %}
+                            {% if identity_status.seller != "revealed" %}
+                                <form method="post" class="btn-request-seller" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'seller' %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Request seller identity</button></form>
+                            {% endif %}
+                        {% endif %}
+                        {% if request.user.id == inquiry.seller_company.owner_id %}
+                            {% if identity_status.seller == "hidden" %}
+                                <form method="post" class="btn-reveal-seller" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'seller' %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reveal my company to buyer</button></form>
+                            {% endif %}
+                            {% if identity_status.buyer != "revealed" %}
+                                <form method="post" class="btn-request-buyer" action="{% url 'core:deal_identity_request' deal.id 'reveal' 'buyer' %}">{% csrf_token %}<button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Request buyer identity</button></form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% if identity_status.seller == "pending" or identity_status.buyer == "pending" %}
+                        <p class="mt-4 text-sm text-slate-500">{{ cms.deal.waiting_admin }}</p>
+                    {% endif %}
+                {% else %}
+                    <p class="mt-5 text-sm text-slate-500">{{ cms.deal.verification_required_identity }}</p>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</section>
+
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_stocklot }}</div>
+            <div class="mt-3 text-sm font-semibold text-slate-900"><a class="hover:text-brand-700" href="{{ inquiry.stocklot.get_absolute_url }}">{{ inquiry.stocklot.title }}</a></div>
+        </article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.seller_company }}</div>
+            <div class="mt-3 text-sm font-semibold text-slate-900">{% display_company inquiry.seller_company %}</div>
+        </article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_buyer }}</div>
+            <div class="mt-3 text-sm font-semibold text-slate-900">{% display_user inquiry.buyer 'buyer' %}</div>
+        </article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.table_status }}</div>
+            <div class="mt-3 text-sm font-semibold text-slate-900">{{ inquiry.get_status_display }}</div>
+        </article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.inbox.created_label }}</div>
+            <div class="mt-3 text-sm font-semibold text-slate-900">{{ inquiry.created_at|date:"Y-m-d H:i" }}</div>
+        </article>
+    </div>
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <h3 class="text-lg font-black text-slate-900">{{ inquiry.display_subject }}</h3>
+        {% if show_inquiry_message %}
+            <div class="mt-4 space-y-3 text-sm leading-7 text-slate-700">
+                <div>{{ inquiry.message|linebreaksbr }}</div>
+                {% if inquiry.moderation_status == "pending_review" and inquiry.buyer_id == request.user.id %}
+                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-amber-700">Pending admin review</span>
+                {% elif inquiry.moderation_status == "rejected" and request.user.is_staff %}
+                    <span class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-rose-700">Rejected</span>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="mt-3 text-sm text-slate-500">{{ cms.inbox.message_pending_approval }}</p>
+        {% endif %}
+    </section>
+
+    {% if visible_replies %}
+        <section class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <h3 class="text-lg font-black text-slate-900">{{ cms.inbox.thread_title }}</h3>
+            <div class="mt-5 space-y-4">
+                {% for reply in visible_replies %}
+                    {% include "inquiries/_reply_item.html" with reply=reply %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <h3 class="text-lg font-black text-slate-900">{{ cms.inbox.reply_title }}</h3>
+        {% if can_interact %}
+        <form method="post" class="mt-5 space-y-5 border-t border-slate-200 pt-5" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if reply_form.non_field_errors %}
+                <ul class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {% for error in reply_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="space-y-2">
+                {{ reply_form.message.label_tag }}
+                {{ reply_form.message }}
+                {% if reply_form.message.errors %}
+                    <ul class="text-sm text-rose-600">
+                        {% for error in reply_form.message.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <div class="space-y-2">
+                {{ reply_form.attachment.label_tag }}
+                {{ reply_form.attachment }}
+                <p class="text-sm text-slate-500">{{ cms.inbox.attachment_hint }}</p>
+                {% if reply_form.attachment.errors %}
+                    <ul class="text-sm text-rose-600">
+                        {% for error in reply_form.attachment.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ cms.inbox.send_reply }}</button>
+        </form>
+        {% else %}
+            <p class="mt-4 text-sm text-slate-500">{{ cms.inbox.verification_required_reply }}</p>
+        {% endif %}
+    </section>
+</section>
+{% endblock account_content %}

@@ -1,0 +1,82 @@
+{% extends "accounts/account_shell.html" %}
+{% load control_tags %}
+{% block account_title %}{{ title }}{% endblock account_title %}
+{% block account_intro %}{{ description }}{% endblock account_intro %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+            <h2 class="text-xl font-black text-slate-900">{{ title }}</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ description }}</p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <form method="get" class="flex flex-col gap-3 sm:flex-row" aria-label="search and filters">
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search..." class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-64" />
+                {% if verification_filters %}
+                    <select name="verification" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56">
+                        {% for val,label in verification_filters %}
+                            <option value="{{ val }}" {% if verification == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+                <button type="submit" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Search</button>
+            </form>
+            {% if create_url %}
+                <a href="{{ create_url }}" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Add new</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if items %}
+    <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        {% for label,attr in columns %}
+                            <th class="px-4 py-3 text-left font-bold text-slate-500">{{ label }}</th>
+                        {% endfor %}
+                        <th class="px-4 py-3 text-left font-bold text-slate-500">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 bg-white">
+                    {% for item in items %}
+                    <tr class="align-top">
+                        {% for label,attr in columns %}
+                            <td class="px-4 py-4 text-slate-700">
+                                {% if attr == "full_name" %}
+                                    {{ item.full_name|default:item.email }}
+                                {% elif attr == "roles" %}
+                                    {% if item.is_buyer %}Buyer{% endif %}{% if item.is_seller %}{% if item.is_buyer %} / {% endif %}Seller{% endif %}
+                                {% elif attr == "is_verified_user" %}
+                                    <span class="{% if item.is_verified_user %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">
+                                        {% if item.is_verified_user %}Verified user{% else %}Not verified{% endif %}
+                                    </span>
+                                {% elif attr == "identity_status" %}
+                                    {{ item.get_identity_status_display }}
+                                {% elif attr == "company" %}
+                                    {{ item.company }}
+                                {% elif attr == "status" %}
+                                    {{ item.get_status_display|default:item.status }}
+                                {% elif attr == "moderation_status" %}
+                                    {{ item.get_moderation_status_display|default:item.moderation_status }}
+                                {% else %}
+                                    {{ item|attr:attr }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="px-4 py-4">
+                            <a href="{{ request.path }}{{ item.pk }}/" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">View details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        <p class="mt-6 text-sm text-slate-500">Nothing to show yet.</p>
+    {% endif %}
+</section>
+{% endblock account_content %}

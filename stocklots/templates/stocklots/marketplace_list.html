@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+{% load identity_tags stocklot_tags %}
+
+{% block title %}{{ cms.listing_ui.marketplace_page_title }} | floos33{% endblock title %}
+{% block meta_description %}{{ cms.listing_ui.marketplace_meta_description }}{% endblock %}
+{% block social_title %}{{ cms.listing_ui.marketplace_page_title }} | floos33{% endblock %}
+{% block social_description %}{{ cms.listing_ui.marketplace_meta_description }}{% endblock %}
+{% block twitter_title %}{{ cms.listing_ui.marketplace_page_title }} | floos33{% endblock %}
+{% block twitter_description %}{{ cms.listing_ui.marketplace_meta_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50">
+<div class="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:px-6 lg:space-y-6 lg:px-8 lg:py-8">
+  <section class="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-white via-orange-50/70 to-amber-50 p-5 shadow-panel sm:p-6 lg:p-8">
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_18rem] lg:items-end">
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-600">{{ cms.listing_ui.marketplace_eyebrow }}</p>
+        <h1 class="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ cms.listing_ui.marketplace_hero_title }}</h1>
+        <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{{ cms.listing_ui.marketplace_hero_body }}</p>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Visible listings</p>
+          <p class="mt-2 text-3xl font-black tracking-tight text-slate-900">{% if page_obj %}{{ page_obj.paginator.count }}{% else %}0{% endif %}</p>
+          <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.listing_ui.visible_listings_body }}</p>
+        </article>
+        <article class="rounded-2xl border border-slate-200 bg-white/90 p-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Workflow</p>
+          <p class="mt-2 text-lg font-black tracking-tight text-slate-900">{{ cms.listing_ui.workflow_title }}</p>
+          <p class="mt-2 text-sm leading-6 text-slate-500">{{ cms.listing_ui.workflow_body }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <form id="market-form" method="get" class="space-y-4">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-panel sm:p-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-xl font-black text-slate-900">{{ cms.listing_ui.available_stocklots_title }}</h2>
+          <p class="mt-1 text-sm leading-6 text-slate-500">
+            {% if page_obj %}
+              {{ page_obj.paginator.count }} listing{% if page_obj.paginator.count != 1 %}s{% endif %} matched your current view.
+            {% else %}
+              {{ cms.listing_ui.live_marketplace_inventory }}
+            {% endif %}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" data-open-filter class="sm:hidden inline-flex items-center rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-sm">{{ cms.listing_ui.filters }}</button>
+          <label class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+            <span class="font-semibold text-slate-500">Sort</span>
+            <select id="id_sort" name="sort" class="border-0 bg-transparent p-0 text-sm font-semibold text-slate-900 focus:ring-0" onchange="this.form.submit()">
+            <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest</option>
+            <option value="price_low" {% if sort == "price_low" %}selected{% endif %}>Price (low - high)</option>
+            <option value="price_high" {% if sort == "price_high" %}selected{% endif %}>Price (high - low)</option>
+            <option value="quantity_high" {% if sort == "quantity_high" %}selected{% endif %}>Quantity (high - low)</option>
+            <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    </div>
+
+    <!-- Mobile quick chips -->
+    <div class="sm:hidden flex gap-2 overflow-x-auto pb-1">
+      <button type="button" class="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm" data-open-filter data-focus="sheet_category">
+        {% if selected_category %}{{ selected_category.full_name }}{% else %}Category{% endif %}
+      </button>
+      <button type="button" class="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm" data-open-filter data-focus="sheet_condition">
+        {% if selected_condition %}Condition: {{ selected_condition|capfirst }}{% else %}Condition{% endif %}
+      </button>
+      <button type="button" class="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm" data-open-filter data-focus="sheet_country">
+        {% if selected_country %}{{ selected_country }}{% else %}Location{% endif %}
+      </button>
+      <button type="button" class="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm" data-open-filter data-focus="sheet_price_min">Price / Qty</button>
+      {% if has_filters %}
+        <a class="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm" href="{% url 'stocklots:list' %}">Reset</a>
+      {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <!-- Sidebar -->
+      <aside class="hidden space-y-4 lg:col-span-3 lg:block">
+        <div class="sticky top-28 space-y-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-panel">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">{{ cms.listing_ui.refine_results_title }}</h2>
+              <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.listing_ui.refine_results_body }}</p>
+            </div>
+            {% if has_filters %}<a href="{% url 'stocklots:list' %}" class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 transition hover:border-slate-300 hover:bg-white">{{ cms.listing_ui.reset }}</a>{% endif %}
+          </div>
+
+          <label class="block text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Category</label>
+          <select id="id_category" name="category" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option value="">All categories</option>
+            {% for parent in marketplace_categories %}
+              <option value="{{ parent.slug }}" {% if selected_category and selected_category.slug == parent.slug %}selected{% endif %}>{{ parent.name }}</option>
+              {% for child in parent.children.all %}
+                <option value="{{ child.slug }}" {% if selected_category and selected_category.slug == child.slug %}selected{% endif %}>{{ parent.name }} / {{ child.name }}</option>
+              {% endfor %}
+            {% endfor %}
+          </select>
+
+          <label class="block text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Country</label>
+          <select id="id_country" name="country" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option value="">Any country</option>
+            {% for c in available_countries %}
+              <option value="{{ c }}" {% if selected_country == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+
+          <label class="block text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Condition</label>
+          <select id="id_condition" name="condition" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <option value="">Any condition</option>
+            {% for value,label in condition_choices %}
+              <option value="{{ value }}" {% if selected_condition == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <div>
+            <p class="mb-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Price range</p>
+            <div class="flex gap-2">
+              <input type="number" step="0.01" min="0" name="price_min" value="{{ price_min }}" placeholder="Min" class="w-1/2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+              <input type="number" step="0.01" min="0" name="price_max" value="{{ price_max }}" placeholder="Max" class="w-1/2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            </div>
+          </div>
+
+          <div>
+            <p class="mb-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Quantity range</p>
+            <div class="flex gap-2">
+              <input type="number" min="0" name="quantity_min" value="{{ quantity_min }}" placeholder="Min" class="w-1/2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+              <input type="number" min="0" name="quantity_max" value="{{ quantity_max }}" placeholder="Max" class="w-1/2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            </div>
+          </div>
+
+          <div>
+            <p class="mb-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Lot type</p>
+            <select name="lot_type" id="id_lot_type" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+              <option value="">Any type</option>
+              <option value="mixed" {% if request.GET.lot_type == "mixed" %}selected{% endif %}>Mixed lot</option>
+              <option value="single" {% if request.GET.lot_type == "single" %}selected{% endif %}>Single SKU</option>
+              <option value="pallet" {% if request.GET.lot_type == "pallet" %}selected{% endif %}>Pallet</option>
+              <option value="container" {% if request.GET.lot_type == "container" %}selected{% endif %}>Container</option>
+            </select>
+          </div>
+
+          <button type="submit" class="inline-flex w-full justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ cms.listing_ui.apply_filters }}</button>
+        </div>
+      </aside>
+
+      <!-- Listings -->
+      <div class="space-y-4 lg:col-span-9">
+        {% if has_filters %}
+        <div class="flex flex-wrap gap-2">
+          {% if search_query %}
+            <a class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-slate-300" href="{% query_without request.GET 'q' %}">
+              Search: {{ search_query }}
+              <span aria-hidden="true">&times;</span>
+            </a>
+          {% endif %}
+          {% for f in active_filters %}
+            {% with remove_keys=f.remove_keys|default:f.key %}
+            <a class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-slate-300"
+               href="{% if f.remove_keys %}{% query_without request.GET f.remove_keys.0 f.remove_keys.1 %}{% else %}{% query_without request.GET f.key %}{% endif %}">
+              {{ f.label }}: {{ f.value }} ✕
+            </a>
+            {% endwith %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="flex flex-col gap-3 rounded-[2rem] border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-panel sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          {% if page_obj %}
+            <span class="font-semibold text-slate-700">{{ page_obj.paginator.count }} listing{% if page_obj.paginator.count != 1 %}s{% endif %}</span>
+          {% endif %}
+          {% if request.user.is_authenticated and request.user.is_seller %}
+            <a href="{% url 'stocklots:create' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 font-bold text-slate-900 transition hover:border-slate-300 hover:bg-white">List stocklot</a>
+          {% endif %}
+        </div>
+
+        {% if stocklots %}
+        <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {% for stocklot in stocklots %}
+          <article class="listing-card group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-panel"
+                   data-href="{% url 'stocklots:detail' stocklot.slug %}">
+            <div class="relative">
+              {% with first_image=stocklot.images.first %}
+                {% if first_image %}
+                  <img loading="lazy" src="{{ first_image.file.url }}" alt="{{ stocklot.public_title }}" class="h-48 w-full object-cover">
+                {% else %}
+                  <div class="grid h-48 place-items-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-semibold text-slate-400">No preview available</div>
+                {% endif %}
+              {% endwith %}
+              <div class="absolute left-4 top-4 flex flex-wrap gap-2">
+                <span class="rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">{{ stocklot.get_condition_display }}</span>
+                {% if stocklot.is_admin_verified %}<span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">Admin approved</span>{% endif %}
+              </div>
+              <div class="absolute right-4 top-4">
+                <form method="post" class="favorite-toggle" action="{% url 'stocklots:favorite_toggle' stocklot.slug %}">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-500 shadow-sm transition hover:border-amber-300 hover:text-amber-600 {% if stocklot.is_favorited %}!bg-amber-50 !border-amber-300 !text-amber-600{% endif %}">
+                    {% if stocklot.is_favorited %}
+                      <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+                    {% else %}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+                    {% endif %}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="flex flex-1 flex-col p-5">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ stocklot.category.full_name }}</p>
+              <h2 dir="{{ stocklot.public_content_direction }}" class="mt-2 text-lg font-black leading-7 text-slate-900 line-clamp-2">{{ stocklot.public_title }}</h2>
+              <div class="mt-4 flex items-baseline gap-2">
+                <span class="text-2xl font-black tracking-tight text-brand-600">{{ stocklot.price }} {{ stocklot.currency }}</span>
+                <span class="text-sm font-semibold text-slate-500">per {{ stocklot.get_unit_type_display }}</span>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
+                <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+                <span>{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
+                <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Commercial lot</span>
+              </div>
+              <p dir="{{ stocklot.public_content_direction }}" class="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">{{ stocklot.public_description|truncatechars:120 }}</p>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">{% display_company stocklot.company %}</span>
+              {% if stocklot.company.owner.is_verified_user %}
+                <span class="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Verified seller</span>
+              {% endif %}
+            </div>
+
+            <div class="mt-5 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="text-sm font-semibold text-slate-400">Commercial listing</div>
+              <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition group-hover:border-slate-300 group-hover:bg-slate-50" href="{% url 'stocklots:detail' stocklot.slug %}">View details</a>
+            </div>
+          </article>
+          {% endfor %}
+        </section>
+        {% else %}
+          <div class="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-panel">
+            <h3 class="text-2xl font-black text-slate-900">No listings match your filters</h3>
+            <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">Try resetting filters or broadening the range to explore more inventory.</p>
+            <a class="mt-6 inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" href="{% url 'stocklots:list' %}">{{ cms.listing_ui.reset_filters }}</a>
+          </div>
+        {% endif %}
+
+        <div class="flex flex-col items-center gap-3 rounded-[2rem] border border-slate-200 bg-white px-4 py-5 text-sm text-slate-600 shadow-panel sm:flex-row sm:justify-between">
+          {% if page_obj %}
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% endif %}
+          <div class="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
+            {% if page_prev %}
+              <a class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto sm:min-w-[9rem]" href="{{ page_prev }}">Previous</a>
+            {% else %}
+              <span class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-5 py-3 text-sm font-bold text-slate-400 sm:w-auto sm:min-w-[9rem]">Previous</span>
+            {% endif %}
+            {% if page_next %}
+              <a class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 sm:w-auto sm:min-w-[9rem]" href="{{ page_next }}">Next</a>
+            {% else %}
+              <span class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-bold text-slate-400 sm:w-auto sm:min-w-[9rem]">Next</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile filter sheet -->
+    <section id="filter-sheet" class="fixed inset-x-0 bottom-0 z-50 grid max-h-[85vh] translate-y-full grid-rows-[auto,1fr,auto] gap-4 rounded-t-[2rem] border border-slate-200 bg-white p-4 shadow-2xl transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-black text-slate-900">Filters</h2>
+          <p class="mt-1 text-sm text-slate-500">Refine the current marketplace view.</p>
+        </div>
+        <button type="button" data-close-filter class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-2xl leading-none text-slate-500">&times;</button>
+      </div>
+      <div class="overflow-y-auto space-y-3 pr-1 text-sm">
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_q">Search</label>
+          <input id="sheet_q" type="text" data-sync-target="#id_q" value="{{ search_query }}" class="w-full rounded-lg border-gray-200">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_category">Category</label>
+          <select id="sheet_category" data-sync-target="#id_category" class="w-full rounded-lg border-gray-200">
+            <option value="">All categories</option>
+            {% for parent in marketplace_categories %}
+              <option value="{{ parent.slug }}" {% if selected_category and selected_category.slug == parent.slug %}selected{% endif %}>{{ parent.name }}</option>
+              {% for child in parent.children.all %}
+                <option value="{{ child.slug }}" {% if selected_category and selected_category.slug == child.slug %}selected{% endif %}>{{ parent.name }} / {{ child.name }}</option>
+              {% endfor %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_country">Country</label>
+          <select id="sheet_country" data-sync-target="#id_country" class="w-full rounded-lg border-gray-200">
+            <option value="">Any country</option>
+            {% for c in available_countries %}
+              <option value="{{ c }}" {% if selected_country == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_condition">Condition</label>
+          <select id="sheet_condition" data-sync-target="#id_condition" class="w-full rounded-lg border-gray-200">
+            <option value="">Any condition</option>
+            {% for value,label in condition_choices %}
+              <option value="{{ value }}" {% if selected_condition == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs font-semibold text-gray-600">Price range</p>
+          <div class="flex gap-2">
+            <input id="sheet_price_min" type="number" step="0.01" min="0" data-sync-target="[name='price_min']" value="{{ price_min }}" placeholder="Min" class="w-1/2 rounded-lg border-gray-200">
+            <input type="number" step="0.01" min="0" data-sync-target="[name='price_max']" value="{{ price_max }}" placeholder="Max" class="w-1/2 rounded-lg border-gray-200">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs font-semibold text-gray-600">Quantity range</p>
+          <div class="flex gap-2">
+            <input type="number" min="0" data-sync-target="[name='quantity_min']" value="{{ quantity_min }}" placeholder="Min" class="w-1/2 rounded-lg border-gray-200">
+            <input type="number" min="0" data-sync-target="[name='quantity_max']" value="{{ quantity_max }}" placeholder="Max" class="w-1/2 rounded-lg border-gray-200">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_lot_type">Lot type</label>
+          <select id="sheet_lot_type" data-sync-target="#id_lot_type" class="w-full rounded-lg border-gray-200">
+            <option value="">Any type</option>
+            <option value="mixed" {% if request.GET.lot_type == "mixed" %}selected{% endif %}>Mixed lot</option>
+            <option value="single" {% if request.GET.lot_type == "single" %}selected{% endif %}>Single SKU</option>
+            <option value="pallet" {% if request.GET.lot_type == "pallet" %}selected{% endif %}>Pallet</option>
+            <option value="container" {% if request.GET.lot_type == "container" %}selected{% endif %}>Container</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600" for="sheet_sort">Sort</label>
+          <select id="sheet_sort" data-sync-target="#id_sort" class="w-full rounded-lg border-gray-200">
+            <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest</option>
+            <option value="price_low" {% if sort == "price_low" %}selected{% endif %}>Price (low - high)</option>
+            <option value="price_high" {% if sort == "price_high" %}selected{% endif %}>Price (high - low)</option>
+            <option value="quantity_high" {% if sort == "quantity_high" %}selected{% endif %}>Quantity (high - low)</option>
+            <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <a class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700" href="{% url 'stocklots:list' %}">Reset</a>
+        <button type="button" data-apply-sheet class="inline-flex items-center px-4 py-2 rounded-lg bg-brand text-white text-sm font-semibold">Apply</button>
+      </div>
+    </section>
+  </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const form = document.getElementById('market-form');
+  const sheet = document.getElementById('filter-sheet');
+
+  function syncSheetFromMain() {
+    sheet.querySelectorAll('[data-sync-target]').forEach(el => {
+      const sel = el.dataset.syncTarget;
+      const target = document.querySelector(sel);
+      if (target) el.value = target.value || '';
+    });
+  }
+
+  function openSheet(focusName) {
+    syncSheetFromMain();
+    sheet.classList.remove('translate-y-full');
+    if (focusName) {
+      setTimeout(() => {
+        const target = document.getElementById(focusName) || sheet.querySelector('[data-sync-target="#'+focusName+'"]');
+        if (target) target.focus();
+      }, 50);
+    }
+  }
+  function closeSheet() {
+    sheet.classList.add('translate-y-full');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSheet();
+  });
+
+  document.querySelectorAll('[data-open-filter]').forEach(btn => {
+    btn.addEventListener('click', () => openSheet(btn.dataset.focus));
+  });
+  document.querySelectorAll('[data-close-filter]').forEach(btn => btn.addEventListener('click', closeSheet));
+
+  function syncToMain() {
+    sheet.querySelectorAll('[data-sync-target]').forEach(el => {
+      const sel = el.dataset.syncTarget;
+      const target = document.querySelector(sel);
+      if (target) target.value = el.value;
+    });
+  }
+  document.querySelector('[data-apply-sheet]')?.addEventListener('click', () => {
+    syncToMain();
+    closeSheet();
+    form.submit();
+  });
+
+  // Clickable cards without interfering with controls
+  document.querySelectorAll('.listing-card').forEach(card => {
+    const href = card.dataset.href;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button, a, input, select, textarea')) return;
+      window.location = href;
+    });
+  });
+
+  // Favorite toggle AJAX + no propagation
+  document.querySelectorAll('.favorite-toggle').forEach(f => {
+    f.addEventListener('click', e => e.stopPropagation());
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const btn = f.querySelector('button');
+      const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+      try {
+        const resp = await fetch(f.action, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrftoken || '', 'Accept': 'application/json' },
+          body: new FormData(f)
+        });
+        if (!resp.ok) { window.location = f.action; return; }
+        const data = await resp.json();
+        const saved = !!data.is_favorited;
+        btn.classList.toggle('bg-amber-50', saved);
+        btn.classList.toggle('border-amber-300', saved);
+        btn.classList.toggle('text-amber-600', saved);
+        btn.dataset.saved = saved ? 'true' : 'false';
+        btn.innerHTML = saved
+          ? '<svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+      } catch (err) {
+        console.error(err);
+        window.location = f.action;
+      }
+    });
+  });
+})();
+</script>
+{% endblock extra_js %}

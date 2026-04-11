@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ article.public_title }} | floos33{% endblock title %}
+{% block meta_description %}{{ article.public_meta_description }}{% endblock %}
+{% block social_title %}{{ article.public_title }} | floos33{% endblock %}
+{% block social_description %}{{ article.public_meta_description }}{% endblock %}
+{% block twitter_title %}{{ article.public_title }} | floos33{% endblock %}
+{% block twitter_description %}{{ article.public_meta_description }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block social_image %}{% if article.featured_image %}{{ site_origin }}{{ article.featured_image.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if article.featured_image %}{{ site_origin }}{{ article.featured_image.url }}{% else %}{{ site_origin }}{% static 'logo.png' %}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50">
+  <div class="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div class="text-sm text-slate-500">
+      <a href="{% url 'blog:list' %}" class="transition hover:text-brand-700">{{ cms.blog.breadcrumb_blog }}</a>
+      <span class="mx-2 text-slate-300">/</span>
+      <span>{{ article.get_kind_display }}</span>
+    </div>
+
+    <article class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-panel">
+      <div class="aspect-[16/8] overflow-hidden bg-slate-100">
+        {% if article.featured_image %}
+        <img src="{{ article.featured_image.url }}" alt="{{ article.public_title }}" class="h-full w-full object-cover">
+        {% else %}
+        <img src="{% static 'logo.png' %}" alt="{{ article.public_title }}" class="h-full w-full object-contain p-10">
+        {% endif %}
+      </div>
+
+      <div class="space-y-6 p-6 sm:p-8">
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-500">{{ article.get_kind_display }}</span>
+            <span class="text-sm text-slate-500">{{ article.published_at|date:"Y-m-d" }}</span>
+            <span class="text-sm text-slate-400">{{ article.view_count }} {{ cms.blog.views_label }}</span>
+            <span class="text-sm text-slate-400">{{ article.like_count }} {{ cms.blog.likes_label }}</span>
+          </div>
+
+          <h1 dir="{{ article.public_content_direction }}" class="text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl">{{ article.public_title }}</h1>
+          <p dir="{{ article.public_content_direction }}" class="max-w-3xl text-base leading-7 text-slate-600">{{ article.public_meta_description }}</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          {% if request.user.is_authenticated %}
+          <form method="post" action="{% url 'blog:like_toggle' article.slug %}" class="article-like-form">
+            {% csrf_token %}
+            <button type="submit" class="article-like-button inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition {% if is_liked %}border-brand-200 bg-brand-50 text-brand-700{% else %}border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50{% endif %}" data-liked="{{ is_liked|yesno:'true,false' }}">
+              <span class="article-like-icon">{% if is_liked %}♥{% else %}♡{% endif %}</span>
+              <span class="article-like-label">{% if is_liked %}{{ cms.blog.liked }}{% else %}{{ cms.blog.like_article }}{% endif %}</span>
+              <span class="article-like-count">{{ article.like_count }}</span>
+            </button>
+          </form>
+          {% else %}
+          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            <span>♡</span>
+            <span>{{ cms.blog.like_article }}</span>
+            <span>{{ article.like_count }}</span>
+          </a>
+          {% endif %}
+        </div>
+
+        <div dir="{{ article.public_content_direction }}" class="prose prose-slate max-w-none text-base leading-8">
+          {{ article.public_body|linebreaksbr }}
+        </div>
+      </div>
+    </article>
+
+    {% if related_articles %}
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-black text-slate-900">{{ cms.blog.more_from_topic }}</h2>
+        <a href="{% url 'blog:list' %}" class="text-sm font-bold text-brand-700 transition hover:text-brand-600">{{ cms.blog.back_to_blog }}</a>
+      </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        {% for related in related_articles %}
+        <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <a href="{% url 'blog:detail' related.slug %}" class="block aspect-[16/10] overflow-hidden bg-slate-100">
+            {% if related.featured_image %}
+            <img src="{{ related.featured_image.url }}" alt="{{ related.public_title }}" class="h-full w-full object-cover">
+            {% else %}
+            <img src="{% static 'logo.png' %}" alt="{{ related.public_title }}" class="h-full w-full object-contain p-8">
+            {% endif %}
+          </a>
+          <div class="space-y-2 p-4">
+            <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{{ related.get_kind_display }}</p>
+            <h3 dir="{{ related.public_content_direction }}" class="text-lg font-black leading-tight text-slate-900">
+              <a href="{% url 'blog:detail' related.slug %}" class="transition hover:text-brand-700">{{ related.public_title }}</a>
+            </h3>
+            <p dir="{{ related.public_content_direction }}" class="text-sm leading-6 text-slate-500">{{ related.public_meta_description }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function() {
+    const form = document.querySelector('.article-like-form');
+    if (!form) {
+      return;
+    }
+
+    const button = form.querySelector('.article-like-button');
+    const icon = form.querySelector('.article-like-icon');
+    const label = form.querySelector('.article-like-label');
+    const count = form.querySelector('.article-like-count');
+
+    function render(liked, likeCount) {
+      button.dataset.liked = liked ? 'true' : 'false';
+      button.className = liked
+        ? 'article-like-button inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 transition'
+        : 'article-like-button inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
+      icon.textContent = liked ? '♥' : '♡';
+      label.textContent = liked ? '{{ cms.blog.liked|escapejs }}' : '{{ cms.blog.like_article|escapejs }}';
+      count.textContent = likeCount;
+    }
+
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const csrftoken = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken || '',
+            'Accept': 'application/json'
+          },
+          body: new FormData(form)
+        });
+        if (!response.ok) {
+          window.location = form.action;
+          return;
+        }
+        const data = await response.json();
+        render(!!data.liked, data.like_count);
+      } catch (error) {
+        console.error(error);
+        window.location = form.action;
+      }
+    });
+  })();
+</script>
+{% endblock extra_js %}

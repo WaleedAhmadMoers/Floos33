@@ -1,0 +1,142 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block title %}Admin Control Panel | floos33{% endblock title %}
+{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
+{% block account_title %}Control panel{% endblock account_title %}
+{% block account_intro %}Moderation queues, monitoring, and admin shortcuts in one Tailwind workspace.{% endblock account_intro %}
+
+{% block account_content %}
+<div class="space-y-5">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Users</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.users|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Companies</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.companies|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Listings</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.stocklots_approved|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Pending deals</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.deal_pending|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Inquiries</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.inquiries|default:"0" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Pending replies</div><div class="mt-3 text-3xl font-black text-slate-900">{{ metrics.inquiry_replies_pending|default:"0" }}</div></article>
+    </section>
+
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <div class="flex flex-wrap gap-3">
+            <a href="#queues" class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Queues</a>
+            <a href="{% url 'core:control_deals' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Deals</a>
+            <a href="{% url 'core:control_users' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Users</a>
+            <a href="{% url 'core:control_companies' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Companies</a>
+            <a href="{% url 'core:control_stocklots' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Listings</a>
+            <a href="{% url 'core:control_rfqs' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">RFQs</a>
+            <a href="#monitoring" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Monitoring</a>
+        </div>
+    </section>
+
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Recent activity</h2>
+        {% if latest_activity %}
+            <div class="mt-5 space-y-3">
+                {% for n in latest_activity %}
+                    <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">{{ n.title }}</h3>
+                                <p class="mt-1 text-xs font-medium text-slate-400">{{ n.get_notification_type_display }} · {{ n.created_at|timesince }} ago</p>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-sm leading-6 text-slate-600">{{ n.body|truncatewords:25 }}</p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="mt-4 text-sm text-slate-500">No recent activity.</p>
+        {% endif %}
+    </section>
+
+    <section id="queues" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Moderation queues</h2>
+        <div class="mt-6 space-y-8">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending deals</h3>
+                {% if pending_deals %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Type</th><th class="px-4 py-3 text-left font-bold text-slate-500">Link</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for deal in pending_deals %}<tr><td class="px-4 py-4">{{ deal.deal_type }}</td><td class="px-4 py-4">{% if deal.inquiry %}<a class="font-semibold text-brand-700" href="{% url 'core:control_inquiry_detail' deal.inquiry.id %}">Inquiry #{{ deal.inquiry.id }}</a>{% elif deal.rfq_conversation %}<a class="font-semibold text-brand-700" href="{% url 'core:control_deal_detail' deal.id %}">RFQ #{{ deal.rfq_conversation.id }}</a>{% endif %}</td><td class="px-4 py-4">{{ deal.buyer.email|truncatechars:20 }}</td><td class="px-4 py-4">{{ deal.seller_company.name|truncatechars:20 }}</td><td class="px-4 py-4">{{ deal.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_deal_detail' deal.id %}">View</a><form method="post" action="{% url 'core:control_deal' deal.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_deal' deal.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">All clear. No deals pending.</p>{% endif %}
+            </div>
+
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending RFQ messages</h3>
+                {% if pending_rfq_messages %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">RFQ</th><th class="px-4 py-3 text-left font-bold text-slate-500">Sender</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Preview</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for m in pending_rfq_messages %}<tr><td class="px-4 py-4">{{ m.conversation.rfq.title|truncatechars:35 }}</td><td class="px-4 py-4">{{ m.sender_user.email }}</td><td class="px-4 py-4">{{ m.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4">{{ m.message|truncatechars:50 }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_rfq_message_detail' m.id %}">View</a><form method="post" action="{% url 'core:control_rfq_message' m.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_rfq_message' m.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No RFQ messages pending.</p>{% endif %}
+            </div>
+
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending inquiry replies</h3>
+                {% if pending_inquiry_replies %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Inquiry</th><th class="px-4 py-3 text-left font-bold text-slate-500">Sender</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Preview</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for r in pending_inquiry_replies %}<tr><td class="px-4 py-4">{{ r.inquiry.display_subject|truncatechars:35 }}</td><td class="px-4 py-4">{{ r.sender_user.email }}</td><td class="px-4 py-4">{{ r.created_at|date:"Y-m-d H:i" }}</td><td class="px-4 py-4">{{ r.message|truncatechars:50 }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_inquiry_reply_detail' r.id %}">View</a><form method="post" action="{% url 'core:control_inquiry_reply' r.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_inquiry_reply' r.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No inquiry replies pending.</p>{% endif %}
+            </div>
+
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Pending listings</h3>
+                {% if pending_stocklots %}
+                    <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Category</th><th class="px-4 py-3 text-left font-bold text-slate-500">When</th><th class="px-4 py-3 text-left font-bold text-slate-500">Action</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for lot in pending_stocklots %}<tr><td class="px-4 py-4">{{ lot.title|truncatechars:45 }}</td><td class="px-4 py-4">{{ lot.company.name }}</td><td class="px-4 py-4">{{ lot.category.full_name }}</td><td class="px-4 py-4">{{ lot.created_at|date:"Y-m-d" }}</td><td class="px-4 py-4"><div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"><form method="post" action="{% url 'core:control_stocklot' lot.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Approve</button></form><form method="post" action="{% url 'core:control_stocklot' lot.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100">Reject</button></form></div></td></tr>{% endfor %}</tbody></table></div></div>
+                {% else %}<p class="mt-3 text-sm text-slate-500">No pending listings.</p>{% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="grid gap-5 xl:grid-cols-2">
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+            <h2 class="text-xl font-black text-slate-900">User control</h2>
+            <form method="get" action="" class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input type="text" name="user_search" placeholder="Search email..." value="{{ request.GET.user_search|default:'' }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                <button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" type="submit">Search</button>
+            </form>
+            <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Email</th><th class="px-4 py-3 text-left font-bold text-slate-500">Role</th><th class="px-4 py-3 text-left font-bold text-slate-500">Company</th><th class="px-4 py-3 text-left font-bold text-slate-500">Identity</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for u in users_manage %}<tr><td class="px-4 py-4">{{ u.email }}</td><td class="px-4 py-4">{% if u.is_buyer %}Buyer{% endif %}{% if u.is_seller %}{% if u.is_buyer %} / {% endif %}Seller{% endif %}</td><td class="px-4 py-4">{% if u.company %}{{ u.company.name }}{% else %}-{% endif %}</td><td class="px-4 py-4">{{ u.get_identity_status_display }}</td><td class="px-4 py-4">{% if u.is_active %}Active{% else %}Inactive{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+            <h2 class="text-xl font-black text-slate-900">Company control</h2>
+            <form method="get" action="" class="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input type="text" name="company_search" placeholder="Search company..." value="{{ request.GET.company_search|default:'' }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                <button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" type="submit">Search</button>
+            </form>
+            <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Name</th><th class="px-4 py-3 text-left font-bold text-slate-500">Owner</th><th class="px-4 py-3 text-left font-bold text-slate-500">Identity</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for c in companies_manage %}<tr><td class="px-4 py-4 font-semibold text-slate-900">{{ c.name }}</td><td class="px-4 py-4">{{ c.owner.email }}</td><td class="px-4 py-4">{{ c.get_identity_status_display }}</td></tr>{% endfor %}</tbody></table></div></div>
+        </section>
+    </section>
+
+    <section id="monitoring" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel">
+        <h2 class="text-xl font-black text-slate-900">Monitoring</h2>
+        <div class="mt-6 space-y-8">
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">Listings</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.rfq_status %}<input type="hidden" name="rfq_status" value="{{ request.GET.rfq_status }}">{% endif %}{% if request.GET.inquiry_status %}<input type="hidden" name="inquiry_status" value="{{ request.GET.inquiry_status }}">{% endif %}<select name="listing_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All statuses</option><option value="pending_review" {% if request.GET.listing_status == "pending_review" %}selected{% endif %}>Pending</option><option value="approved" {% if request.GET.listing_status == "approved" %}selected{% endif %}>Approved</option><option value="rejected" {% if request.GET.listing_status == "rejected" %}selected{% endif %}>Rejected</option></select></form>
+                </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for lot in all_listings %}<tr><td class="px-4 py-4">{{ lot.title|truncatechars:50 }}</td><td class="px-4 py-4">{{ lot.get_status_display }}</td><td class="px-4 py-4">{{ lot.company.name }}</td><td class="px-4 py-4">{{ lot.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">RFQs</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.listing_status %}<input type="hidden" name="listing_status" value="{{ request.GET.listing_status }}">{% endif %}{% if request.GET.inquiry_status %}<input type="hidden" name="inquiry_status" value="{{ request.GET.inquiry_status }}">{% endif %}<select name="rfq_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All</option><option value="open" {% if request.GET.rfq_status == "open" %}selected{% endif %}>Open</option><option value="closed" {% if request.GET.rfq_status == "closed" %}selected{% endif %}>Closed</option></select></form>
+                </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Title</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for rfq in all_rfqs %}<tr><td class="px-4 py-4">{{ rfq.title|truncatechars:50 }}</td><td class="px-4 py-4">{{ rfq.get_status_display }}</td><td class="px-4 py-4">{{ rfq.buyer.email }}</td><td class="px-4 py-4">{{ rfq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+            <div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-black text-slate-900">Inquiries</h3>
+                    <form method="get" action="" class="flex flex-col gap-3 sm:flex-row">{% if request.GET.listing_status %}<input type="hidden" name="listing_status" value="{{ request.GET.listing_status }}">{% endif %}{% if request.GET.rfq_status %}<input type="hidden" name="rfq_status" value="{{ request.GET.rfq_status }}">{% endif %}<select name="inquiry_status" onchange="this.form.submit()" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"><option value="">All</option><option value="pending_admin" {% if request.GET.inquiry_status == "pending_admin" %}selected{% endif %}>Pending admin</option><option value="approved" {% if request.GET.inquiry_status == "approved" %}selected{% endif %}>Approved</option><option value="replied" {% if request.GET.inquiry_status == "replied" %}selected{% endif %}>Replied</option><option value="closed" {% if request.GET.inquiry_status == "closed" %}selected{% endif %}>Closed</option></select></form>
+                </div>
+                <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">Subject</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Seller</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white">{% for iq in all_inquiries %}<tr><td class="px-4 py-4">{{ iq.display_subject|truncatechars:45 }}</td><td class="px-4 py-4">{{ iq.get_status_display }}</td><td class="px-4 py-4">{{ iq.buyer.email|truncatechars:18 }}</td><td class="px-4 py-4">{{ iq.seller_company.name|truncatechars:18 }}</td><td class="px-4 py-4">{{ iq.created_at|date:"Y-m-d" }}</td></tr>{% endfor %}</tbody></table></div></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const firstSearch = document.querySelector('input[type="text"]');
+            if (firstSearch) firstSearch.focus();
+        }
+    });
+</script>
+{% endblock account_content %}

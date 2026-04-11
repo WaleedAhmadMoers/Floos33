@@ -1,0 +1,68 @@
+{% extends "accounts/account_shell.html" %}
+{% load static %}
+
+{% block extra_head %}{{ block.super }}<script src="{% static 'js/live.js' %}"></script>{% endblock extra_head %}
+{% block account_eyebrow %}{{ cms.deal.page_eyebrow }}{% endblock account_eyebrow %}
+{% block account_title %}{{ cms.deal.page_title }}{% endblock account_title %}
+{% block account_intro %}{{ cms.deal.page_intro }}{% endblock account_intro %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div id="deal-live" data-deal-id="{{ object.id }}" data-status-url="{% url 'core:deal_status' object.id %}" class="space-y-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <div class="flex flex-col gap-3 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between">
+            <div><p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.page_eyebrow }}</p><h2 class="mt-2 text-xl font-black text-slate-900">{{ cms.deal.workflow_title }}</h2></div>
+            <div class="flex flex-wrap gap-2"><span id="deal-overall" class="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-brand-700">{{ object.get_status_display }}</span><span id="deal-progress" class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">{{ object.get_progress_status_display }}</span></div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.buyer_decision }}</div><div id="deal-buyer" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.seller_decision }}</div><div id="deal-seller" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.admin_label }}</div><div id="deal-admin" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.next_action }}</div><div id="deal-next" class="mt-3 text-sm font-semibold text-slate-900">...</div></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.updated_label }}</div><div id="deal-latest" class="mt-3 text-sm font-semibold text-slate-900"></div></div>
+        </div>
+        <div id="deal-actions" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <form method="post" class="deal-accept-form" action="{% url 'core:control_deal' object.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">{{ cms.deal.approve_button }}</button></form>
+            <form method="post" class="deal-reject-form" action="{% url 'core:control_deal' object.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.reject_button }}</button></form>
+            <form method="post" class="deal-cancel-form" action="{% url 'core:control_deal_progress' object.id 'cancel' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100">{{ cms.deal.cancel_button }}</button></form>
+            <form method="post" action="{% url 'core:control_deal_progress' object.id 'start' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.mark_in_progress_button }}</button></form>
+            <form method="post" action="{% url 'core:control_deal_progress' object.id 'ready' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.mark_ready_button }}</button></form>
+            <form method="post" action="{% url 'core:control_deal_progress' object.id 'complete' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.mark_completed_button }}</button></form>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <article class="rounded-3xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.type_label }}</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.get_deal_type_display }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.buyer_label }}</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.buyer }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.seller_user_label }}</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.seller_user|default:"-" }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.seller_company_label }}</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.seller_company|default:"-" }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.deal.created_label }}</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.created_at|date:"Y-m-d H:i" }}</div></article>
+        </div>
+        <div class="grid gap-5 xl:grid-cols-2">
+            <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.identity_controls_title }}</h3>
+                <div class="mt-4 space-y-4">
+                    <div><p class="text-sm font-semibold text-slate-900">{{ cms.deal.seller_identity_title }}</p><div class="mt-2 flex flex-wrap items-center gap-2"><span id="identity-seller-status" class="{% if object.seller_identity_revealed %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">{% if object.seller_identity_revealed %}{{ cms.deal.identity_revealed }}{% else %}{{ cms.deal.identity_hidden }}{% endif %}</span><span id="identity-seller-label" class="text-sm text-slate-500">{% if object.seller_identity_revealed %}{{ cms.deal.visible_label }}{% else %}{{ cms.deal.hidden_label }}{% endif %}</span></div></div>
+                    <div><p class="text-sm font-semibold text-slate-900">{{ cms.deal.buyer_identity_title }}</p><div class="mt-2 flex flex-wrap items-center gap-2"><span id="identity-buyer-status" class="{% if object.buyer_identity_revealed %}inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700{% else %}inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-600{% endif %}">{% if object.buyer_identity_revealed %}{{ cms.deal.identity_revealed }}{% else %}{{ cms.deal.identity_hidden }}{% endif %}</span><span id="identity-buyer-label" class="text-sm text-slate-500">{% if object.buyer_identity_revealed %}{{ cms.deal.visible_label }}{% else %}{{ cms.deal.hidden_label }}{% endif %}</span></div></div>
+                </div>
+                <div class="mt-5 flex flex-col gap-3">
+                    <form method="post" class="btn-reveal-seller" action="{% url 'core:deal_identity_request' object.id 'approve' 'seller' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.approve_seller_reveal }}</button></form>
+                    <form method="post" class="btn-request-seller" action="{% url 'core:deal_identity_request' object.id 'reject' 'seller' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.hide_seller_button }}</button></form>
+                    <form method="post" class="btn-reveal-buyer" action="{% url 'core:deal_identity_request' object.id 'approve' 'buyer' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.approve_buyer_reveal }}</button></form>
+                    <form method="post" class="btn-request-buyer" action="{% url 'core:deal_identity_request' object.id 'reject' 'buyer' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">{{ cms.deal.hide_buyer_button }}</button></form>
+                </div>
+            </section>
+            <section class="rounded-3xl border border-slate-200 bg-white p-5">
+                <h3 class="text-lg font-black text-slate-900">{{ cms.deal.history_title }}</h3>
+                <ul id="deal-history-list" class="mt-4 space-y-3 text-sm text-slate-600"></ul>
+                {% if history %}
+                    <div class="mt-4 space-y-3">
+                        {% for h in history %}
+                            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><strong class="text-slate-900">{{ h.action }}</strong> - {{ h.note }} <span class="text-slate-400">by {{ h.actor|default:"system" }} at {{ h.created_at|date:"Y-m-d H:i" }}</span></article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="mt-4 text-sm text-slate-500">{{ cms.deal.no_history }}</p>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock account_content %}

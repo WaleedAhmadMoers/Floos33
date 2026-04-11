@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load identity_tags %}
+
+{% block title %}{{ rfq.public_title }} | RFQ | floos33{% endblock title %}
+{% block meta_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
+{% block social_title %}{{ rfq.public_title }} | RFQ | floos33{% endblock %}
+{% block social_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
+{% block twitter_title %}{{ rfq.public_title }} | RFQ | floos33{% endblock %}
+{% block twitter_description %}{{ rfq.public_meta_description|default:rfq.public_description|truncatechars:165 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50">
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div class="text-sm text-slate-500">
+      <a href="{% url 'rfqs:list' %}" class="transition hover:text-brand-700">{{ cms.rfq_ui.browse_rfqs }}</a>
+      <span class="mx-2 text-slate-300">/</span>
+      <span>{{ rfq.category.full_name }}</span>
+    </div>
+
+    <div class="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_22rem]">
+      <div class="space-y-5">
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{{ rfq.category.full_name }}</span>
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold {% if rfq.status == 'open' %}border border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border border-slate-200 bg-slate-100 text-slate-500{% endif %}">
+                  {{ rfq.get_status_display }}
+                </span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{{ rfq.get_moderation_status_display }}</span>
+              </div>
+
+              <h1 dir="{{ rfq.public_content_direction }}" class="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{{ rfq.public_title }}</h1>
+              <p class="mt-4 text-base leading-7 text-slate-600">
+                {{ cms.rfq_ui.detail_intro }}
+              </p>
+            </div>
+
+            <div class="w-full max-w-sm lg:w-auto">
+              {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'rfqs:favorite_toggle' rfq.pk %}" class="rfq-save-form">
+                  {% csrf_token %}
+                  <button type="submit" class="rfq-save-button inline-flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition {% if is_saved %}border-brand-200 bg-brand-50 text-brand-700{% else %}border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50{% endif %}" data-saved="{{ is_saved|yesno:'true,false' }}">
+                    <span class="rfq-save-icon">{% if is_saved %}★{% else %}☆{% endif %}</span>
+                    <span class="rfq-save-label">{% if is_saved %}{{ cms.rfq_ui.saved_rfq }}{% else %}{{ cms.rfq_ui.save_rfq }}{% endif %}</span>
+                  </button>
+                </form>
+              {% else %}
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                  <span>☆</span>
+                  <span>{{ cms.rfq_ui.save_rfq }}</span>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.quantity_label }}</p>
+              <p class="mt-2 text-xl font-black text-slate-900">{{ rfq.quantity }} {{ rfq.get_unit_type_display }}</p>
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.budget_label }}</p>
+              <p class="mt-2 text-xl font-black text-slate-900">{% if rfq.target_price %}{{ rfq.target_price }} {{ rfq.currency }}{% else %}{{ cms.rfq_ui.open_budget }}{% endif %}</p>
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.destination_label }}</p>
+              <p class="mt-2 text-xl font-black text-slate-900">{{ rfq.location_country }}</p>
+              {% if rfq.location_city %}<p class="mt-1 text-sm text-slate-500">{{ rfq.location_city }}</p>{% endif %}
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.buyer_label }}</p>
+              <p class="mt-2 text-xl font-black text-slate-900">{% display_user rfq.buyer 'buyer' %}</p>
+              <p class="mt-1 text-sm text-slate-500">{% if rfq.buyer.is_verified_user %}{{ cms.rfq_ui.verified_buyer }}{% else %}{{ cms.rfq_ui.buyer_visible_on_request }}{% endif %}</p>
+            </article>
+          </div>
+
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            {% if rfq.status == "open" and request.user.is_authenticated and can_quote %}
+              <a href="{% url 'rfqs:start_conversation' rfq.pk %}" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 sm:w-auto">{{ cms.rfq_ui.send_quote }}</a>
+              <a href="{{ ask_question_url }}" class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto">{{ cms.rfq_ui.ask_question }}</a>
+            {% elif rfq.status == "open" and request.user.is_authenticated and not can_quote %}
+              <span class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-bold text-slate-500 sm:w-auto">{{ cms.rfq_ui.send_quote_verification_required }}</span>
+              <span class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-5 py-3 text-sm font-bold text-slate-400 sm:w-auto">{{ cms.rfq_ui.ask_question_verification_required }}</span>
+            {% elif rfq.status == "open" %}
+              <a href="{% url 'accounts:login' %}?next={% url 'rfqs:start_conversation' rfq.pk %}" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 sm:w-auto">{{ cms.rfq_ui.send_quote }}</a>
+              <a href="{% url 'accounts:login' %}?next={{ ask_question_url|urlencode }}" class="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto">{{ cms.rfq_ui.ask_question }}</a>
+            {% else %}
+              <span class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-bold text-slate-500 sm:w-auto">{{ cms.rfq_ui.rfq_closed }}</span>
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-xl font-black text-slate-900">{{ cms.rfq_ui.request_details_title }}</h2>
+              <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.rfq_ui.request_details_body }}</p>
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div dir="{{ rfq.public_content_direction }}" class="prose prose-slate max-w-none text-sm leading-7">
+              {{ rfq.public_description|linebreaksbr }}
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-xl font-black text-slate-900">{{ cms.rfq_ui.files_trade_documents }}</h2>
+              <p class="mt-1 text-sm leading-6 text-slate-500">{{ cms.rfq_ui.files_trade_documents_body }}</p>
+            </div>
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{{ cms.rfq_ui.no_files }}</span>
+          </div>
+
+          <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+            <h3 class="text-lg font-black text-slate-900">{{ cms.rfq_ui.no_files_attached }}</h3>
+            <p class="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              {{ cms.rfq_ui.no_files_attached_body }}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="space-y-5">
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+          <h2 class="text-lg font-black text-slate-900">{{ cms.rfq_ui.summary_title }}</h2>
+          <div class="mt-5 space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.posted_label }}</p>
+              <p class="mt-2 text-sm font-bold text-slate-900">{{ rfq.created_at|date:"Y-m-d" }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.updated_label }}</p>
+              <p class="mt-2 text-sm font-bold text-slate-900">{{ rfq.updated_at|date:"Y-m-d" }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.responses_label }}</p>
+              <p class="mt-2 text-sm font-bold text-slate-900">{{ response_count }} active conversation{{ response_count|pluralize }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.rfq_ui.buyer_trust_label }}</p>
+              <p class="mt-2 text-sm font-bold {% if rfq.buyer.is_verified_user %}text-emerald-700{% else %}text-slate-900{% endif %}">
+                {% if rfq.buyer.is_verified_user %}{{ cms.rfq_ui.verified_buyer }}{% else %}{{ cms.rfq_ui.standard_buyer_account }}{% endif %}
+              </p>
+              <p class="mt-1 text-sm text-slate-500">{{ cms.rfq_ui.buyer_trust_body }}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+          <h2 class="text-lg font-black text-slate-900">{{ cms.rfq_ui.response_guidance_title }}</h2>
+          <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+            <p>{{ cms.rfq_ui.response_guidance_point_1 }}</p>
+            <p>{{ cms.rfq_ui.response_guidance_point_2 }}</p>
+            <p>{{ cms.rfq_ui.response_guidance_point_3 }}</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function() {
+    const form = document.querySelector('.rfq-save-form');
+    if (!form) {
+      return;
+    }
+
+    const button = form.querySelector('.rfq-save-button');
+    const icon = form.querySelector('.rfq-save-icon');
+    const label = form.querySelector('.rfq-save-label');
+
+    function render(saved) {
+      button.dataset.saved = saved ? 'true' : 'false';
+      button.className = saved
+        ? 'rfq-save-button inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 transition'
+        : 'rfq-save-button inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
+      icon.textContent = saved ? '★' : '☆';
+      label.textContent = saved ? '{{ cms.rfq_ui.saved_rfq|escapejs }}' : '{{ cms.rfq_ui.save_rfq|escapejs }}';
+    }
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const csrftoken = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken || '',
+            'Accept': 'application/json'
+          },
+          body: new FormData(form)
+        });
+
+        if (!response.ok) {
+          window.location = form.action;
+          return;
+        }
+
+        const data = await response.json();
+        render(!!data.is_saved);
+      } catch (error) {
+        console.error(error);
+        window.location = form.action;
+      }
+    });
+  })();
+</script>
+{% endblock extra_js %}

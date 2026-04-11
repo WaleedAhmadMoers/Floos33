@@ -1,0 +1,50 @@
+{% extends "accounts/auth_shell.html" %}
+
+{% block title %}Create account | floos33{% endblock title %}
+{% block auth_eyebrow %}Signup{% endblock auth_eyebrow %}
+{% block auth_title %}Create a new account{% endblock auth_title %}
+{% block auth_intro %}Sign up with your email, choose a password, and activate the account from the verification email we send you.{% endblock auth_intro %}
+
+{% block auth_content %}
+<form method="post" class="space-y-5">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% for field in form %}
+        <div>
+            <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-900">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <p class="mt-2 text-sm text-slate-500">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+                <ul class="mt-2 space-y-1 text-sm text-rose-600">
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+    {% endif %}
+
+    <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Create account</button>
+</form>
+
+<p class="mt-4 text-sm leading-6 text-slate-500">We will send a verification link to your email address. You can log in after confirming it.</p>
+
+<p class="mt-6 text-sm text-slate-600">
+    Already have an account?
+    <a href="{% url 'accounts:login' %}" class="font-bold text-brand-700 transition hover:text-brand-600">Log in instead</a>
+</p>
+{% endblock auth_content %}

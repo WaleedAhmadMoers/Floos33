@@ -1,0 +1,84 @@
+{% extends "accounts/account_shell.html" %}
+{% load identity_tags %}
+
+{% block title %}Saved listings | floos33{% endblock title %}
+{% block account_eyebrow %}Saved{% endblock account_eyebrow %}
+{% block account_title %}Saved listings{% endblock account_title %}
+{% block account_intro %}Stocklots you bookmarked to review later.{% endblock account_intro %}
+
+{% block account_header_actions %}
+<a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Browse marketplace</a>
+{% endblock account_header_actions %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+  <div>
+    <h2 class="text-xl font-black text-slate-900">Saved overview</h2>
+    <p class="mt-1 text-sm leading-6 text-slate-500">Keep a focused shortlist of listings worth reviewing, comparing, or contacting later.</p>
+  </div>
+
+  <div class="mt-5 grid gap-3 md:grid-cols-2">
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Saved items</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">{{ favorites|length }}</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">Listings currently on your watchlist.</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Purpose</p>
+      <p class="mt-3 text-2xl font-black tracking-tight text-slate-900">Review</p>
+      <p class="mt-2 text-sm leading-6 text-slate-500">Use saved items as a short decision queue for outreach and comparison.</p>
+    </article>
+  </div>
+</section>
+
+{% if favorites %}
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-xl font-black text-slate-900">Saved listings</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-500">Open any saved listing to review commercial details or contact the seller.</p>
+      </div>
+      <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">{{ favorites|length }} saved</span>
+    </div>
+
+    <div class="mt-5 grid gap-4 xl:grid-cols-2">
+      {% for favorite in favorites %}
+        {% with stocklot=favorite.stocklot %}
+          <article class="flex h-full flex-col rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ stocklot.category.full_name }}</p>
+                <h3 class="mt-1 text-lg font-black leading-7 text-slate-900">
+                  <a href="{% url 'stocklots:detail' stocklot.slug %}" class="transition hover:text-brand-700">{{ stocklot.title }}</a>
+                </h3>
+              </div>
+              <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{{ stocklot.get_status_display }}</span>
+            </div>
+
+            <p class="mt-4 text-sm leading-6 text-slate-500">{{ stocklot.description|truncatechars:180 }}</p>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{% display_company stocklot.company %}</span>
+              <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{{ stocklot.location_country }}{% if stocklot.location_city %} · {{ stocklot.location_city }}{% endif %}</span>
+              <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">{{ stocklot.quantity }} {{ stocklot.get_unit_type_display }}</span>
+            </div>
+
+            <div class="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
+              <div class="text-2xl font-black tracking-tight text-slate-900">{{ stocklot.price }} {{ stocklot.currency }}</div>
+              <a href="{% url 'stocklots:detail' stocklot.slug %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-100">View details</a>
+            </div>
+          </article>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </section>
+{% else %}
+  <section class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-panel">
+    <h2 class="text-2xl font-black text-slate-900">No saved listings</h2>
+    <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Save a stocklot to see it here.</p>
+    <div class="mt-5">
+      <a href="{% url 'stocklots:list' %}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800">Browse marketplace</a>
+    </div>
+  </section>
+{% endif %}
+{% endblock account_content %}

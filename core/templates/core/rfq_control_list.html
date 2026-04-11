@@ -1,0 +1,57 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
+{% block account_title %}RFQ moderation{% endblock account_title %}
+{% block account_intro %}Review RFQs, moderation states, and one-click status actions.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <form method="get" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search RFQs" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-64">
+        <select name="status" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-48">
+            <option value="">All statuses</option>
+            <option value="open" {% if request.GET.status == "open" %}selected{% endif %}>Open</option>
+            <option value="closed" {% if request.GET.status == "closed" %}selected{% endif %}>Closed</option>
+        </select>
+        <button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" type="submit">Filter</button>
+        {% if request.GET %}<a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_rfqs' %}">Clear</a>{% endif %}
+    </form>
+</section>
+
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-black text-slate-900">RFQ queue</h2>
+        <a class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800" href="{% url 'core:control_rfq_create' %}">Create RFQ</a>
+    </div>
+    <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left font-bold text-slate-500">RFQ</th><th class="px-4 py-3 text-left font-bold text-slate-500">Buyer</th><th class="px-4 py-3 text-left font-bold text-slate-500">Status</th><th class="px-4 py-3 text-left font-bold text-slate-500">Created</th><th class="px-4 py-3 text-left font-bold text-slate-500">Actions</th></tr></thead>
+                <tbody class="divide-y divide-slate-200 bg-white">
+                    {% for rfq in rfqs %}
+                    <tr>
+                        <td class="px-4 py-4 text-slate-700">{{ rfq.title }}</td>
+                        <td class="px-4 py-4 text-slate-700">{{ rfq.buyer.email }}</td>
+                        <td class="px-4 py-4 text-slate-700">{{ rfq.get_status_display }}</td>
+                        <td class="px-4 py-4 text-slate-700">{{ rfq.created_at|date:"Y-m-d" }}</td>
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                <a class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800" href="{% url 'core:control_rfq_detail' rfq.id %}">View</a>
+                                <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_rfq_edit' rfq.id %}">Edit</a>
+                                <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Approve</button></form>
+                                <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reject</button></form>
+                                <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'close' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Close</button></form>
+                                <form method="post" action="{% url 'core:control_rfq_status' rfq.id 'open' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reopen</button></form>
+                                <a class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100" href="{% url 'core:control_rfq_delete' rfq.id %}">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500">No RFQs found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock account_content %}

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block extra_head %}{% block account_extra_head %}{% endblock account_extra_head %}{% endblock extra_head %}
+
+{% block content %}
+{% with ns=request.resolver_match.namespace name=request.resolver_match.url_name %}
+<div class="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-7">
+  <div class="grid grid-cols-1 gap-4 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-5">
+    <aside>
+      <button
+        type="button"
+        id="dashboard-menu-toggle"
+        aria-expanded="false"
+        aria-controls="dashboard-sidebar"
+        class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-panel lg:hidden"
+      >
+        <span>{{ cms.account.menu_button }}</span>
+        <span id="dashboard-menu-icon" class="text-slate-500">&#9776;</span>
+      </button>
+
+      <div
+        id="dashboard-sidebar"
+        class="mt-3 hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-panel lg:sticky lg:top-28 lg:mt-0 lg:block"
+      >
+        <div class="border-b border-slate-200 pb-4">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.account.control_center }}</p>
+          <p class="mt-1 text-lg font-black text-slate-900">{{ request.user.full_name|default:request.user.email }}</p>
+          <p class="mt-2 text-sm leading-6 text-slate-500">
+            {{ cms.account.workspace_body }}
+          </p>
+        </div>
+
+        <div class="mt-4 space-y-5">
+          <section>
+            <p class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.account.section_account }}</p>
+            <div class="space-y-2">
+              <a href="{% url 'accounts:dashboard' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'accounts' and name == 'dashboard' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'accounts' and name == 'dashboard' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">DB</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Dashboard</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.dashboard_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">01</span>
+              </a>
+
+              <a href="{% url 'accounts:settings' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'accounts' and name == 'settings' or ns == 'companies' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'accounts' and name == 'settings' or ns == 'companies' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">PF</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Profile</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.profile_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">02</span>
+              </a>
+
+              <a href="{% url 'accounts:buyer_verification' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'accounts' and name == 'buyer_verification' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'accounts' and name == 'buyer_verification' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">BV</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Buyer verification</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.buyer_verification_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">03</span>
+              </a>
+
+              <a href="{% url 'accounts:seller_request' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'accounts' and name == 'seller_request' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'accounts' and name == 'seller_request' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">SV</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Seller access</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.seller_access_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">04</span>
+              </a>
+
+              <a href="{% url 'accounts:password_change' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">PW</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Security</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.security_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">05</span>
+              </a>
+            </div>
+          </section>
+
+          <section class="border-t border-slate-200 pt-5">
+            <p class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.account.section_marketplace }}</p>
+            <div class="space-y-2">
+              <a href="{% url 'stocklots:mine' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'stocklots' and name == 'mine' or ns == 'stocklots' and name == 'create' or ns == 'stocklots' and name == 'edit' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'stocklots' and name == 'mine' or ns == 'stocklots' and name == 'create' or ns == 'stocklots' and name == 'edit' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">LS</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Listings</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.listings_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">06</span>
+              </a>
+
+              <a href="{% url 'core:saved' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'core' and name == 'saved' or ns == 'stocklots' and name == 'favorites' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'core' and name == 'saved' or ns == 'stocklots' and name == 'favorites' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">SV</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Saved items</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.saved_items_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">07</span>
+              </a>
+
+              <a href="{% url 'inquiries:sent' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'inquiries' and name == 'sent' or ns == 'inquiries' and name == 'detail' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'inquiries' and name == 'sent' or ns == 'inquiries' and name == 'detail' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">IQ</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Sent inquiries</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.sent_inquiries_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">08</span>
+              </a>
+
+              <a href="{% url 'inquiries:received' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'inquiries' and name == 'received' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'inquiries' and name == 'received' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">IN</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Inbox</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.inbox_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">09</span>
+              </a>
+            </div>
+          </section>
+
+          <section class="border-t border-slate-200 pt-5">
+            <p class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{{ cms.account.section_rfqs }}</p>
+            <div class="space-y-2">
+              <a href="{% url 'rfqs:my_rfqs' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'rfqs' and name == 'my_rfqs' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'rfqs' and name == 'my_rfqs' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">RQ</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">My RFQs</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.my_rfqs_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">10</span>
+              </a>
+
+              <a href="{% url 'rfqs:buyer_conversations' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'rfqs' and name == 'buyer_conversations' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'rfqs' and name == 'buyer_conversations' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">BC</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Buyer conversations</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.buyer_conversations_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">11</span>
+              </a>
+
+              <a href="{% url 'rfqs:seller_conversations' %}" class="flex items-center justify-between rounded-2xl border px-3 py-3 transition {% if ns == 'rfqs' and name == 'seller_conversations' %}border-brand-200 bg-brand-50{% else %}border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white{% endif %}">
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-xl border text-xs font-black {% if ns == 'rfqs' and name == 'seller_conversations' %}border-brand-200 bg-white text-brand-700{% else %}border-slate-200 bg-white text-slate-600{% endif %}">SC</span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold text-slate-900">Seller responses</span>
+                    <span class="block text-xs text-slate-500">{{ cms.account.seller_responses_body }}</span>
+                  </span>
+                </span>
+                <span class="text-xs font-bold text-slate-400">12</span>
+              </a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </aside>
+
+    <main class="min-w-0 space-y-4">
+      <header class="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-panel sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="max-w-3xl">
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">{% block account_eyebrow %}{% endblock account_eyebrow %}</p>
+            <h1 class="mt-1 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{% block account_title %}{% endblock account_title %}</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{% block account_intro %}{% endblock account_intro %}</p>
+          </div>
+          <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">{% block account_header_actions %}{% endblock account_header_actions %}</div>
+        </div>
+
+        <nav class="mt-5 overflow-x-auto border-t border-slate-200 pt-5" aria-label="Dashboard quick navigation">
+          <div class="flex min-w-max gap-3 pb-1">
+            <a href="{% url 'accounts:dashboard' %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'accounts' and name == 'dashboard' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'accounts' and name == 'dashboard' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">DB</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">Dashboard</span>
+                <span class="block text-xs {% if ns == 'accounts' and name == 'dashboard' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.dashboard_body }}</span>
+              </span>
+            </a>
+
+            <a href="{% url 'stocklots:mine' %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'stocklots' and name == 'mine' or ns == 'stocklots' and name == 'create' or ns == 'stocklots' and name == 'edit' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'stocklots' and name == 'mine' or ns == 'stocklots' and name == 'create' or ns == 'stocklots' and name == 'edit' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">LS</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">Listings</span>
+                <span class="block text-xs {% if ns == 'stocklots' and name == 'mine' or ns == 'stocklots' and name == 'create' or ns == 'stocklots' and name == 'edit' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.listings_body }}</span>
+              </span>
+            </a>
+
+            <a href="{% if request.user.is_seller %}{% url 'inquiries:received' %}{% else %}{% url 'inquiries:sent' %}{% endif %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'inquiries' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'inquiries' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">IQ</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">Inquiries</span>
+                <span class="block text-xs {% if ns == 'inquiries' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.inbox_body }}</span>
+              </span>
+            </a>
+
+            <a href="{% url 'rfqs:my_rfqs' %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'rfqs' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'rfqs' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">RQ</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">My RFQs</span>
+                <span class="block text-xs {% if ns == 'rfqs' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.my_rfqs_body }}</span>
+              </span>
+            </a>
+
+            <a href="{% url 'core:saved' %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'core' and name == 'saved' or ns == 'stocklots' and name == 'favorites' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'core' and name == 'saved' or ns == 'stocklots' and name == 'favorites' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">SV</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">Saved items</span>
+                <span class="block text-xs {% if ns == 'core' and name == 'saved' or ns == 'stocklots' and name == 'favorites' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.saved_items_body }}</span>
+              </span>
+            </a>
+
+            <a href="{% url 'accounts:settings' %}" class="flex min-w-[10rem] items-center gap-3 rounded-2xl border px-4 py-3 transition {% if ns == 'accounts' and name == 'settings' or ns == 'companies' or ns == 'accounts' and name == 'buyer_verification' or ns == 'accounts' and name == 'seller_request' or ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}border-slate-900 bg-slate-900 text-white{% else %}border-slate-200 bg-white text-slate-900 hover:border-slate-300{% endif %}">
+              <span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black {% if ns == 'accounts' and name == 'settings' or ns == 'companies' or ns == 'accounts' and name == 'buyer_verification' or ns == 'accounts' and name == 'seller_request' or ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}bg-white/10 text-white{% else %}border border-slate-200 bg-slate-50 text-slate-600{% endif %}">PF</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-bold">Profile</span>
+                <span class="block text-xs {% if ns == 'accounts' and name == 'settings' or ns == 'companies' or ns == 'accounts' and name == 'buyer_verification' or ns == 'accounts' and name == 'seller_request' or ns == 'accounts' and name == 'password_change' or ns == 'accounts' and name == 'password_change_done' %}text-slate-300{% else %}text-slate-500{% endif %}">{{ cms.account.profile_body }}</span>
+              </span>
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <div class="space-y-4">
+        {% block account_content %}{% endblock account_content %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const toggle = document.getElementById("dashboard-menu-toggle");
+    const sidebar = document.getElementById("dashboard-sidebar");
+    const icon = document.getElementById("dashboard-menu-icon");
+
+    if (!toggle || !sidebar || !icon) {
+      return;
+    }
+
+    toggle.addEventListener("click", function() {
+      const isHidden = sidebar.classList.contains("hidden");
+      sidebar.classList.toggle("hidden", !isHidden);
+      toggle.setAttribute("aria-expanded", isHidden ? "true" : "false");
+      icon.innerHTML = isHidden ? "&#10005;" : "&#9776;";
+    });
+  })();
+</script>
+{% endwith %}
+{% endblock content %}

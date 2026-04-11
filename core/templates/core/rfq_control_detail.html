@@ -1,0 +1,68 @@
+{% extends "accounts/account_shell.html" %}
+
+{% block account_eyebrow %}Admin{% endblock account_eyebrow %}
+{% block account_title %}RFQ review{% endblock account_title %}
+{% block account_intro %}Moderation details, buyer identity context, and conversation volume for this RFQ.{% endblock account_intro %}
+
+{% block account_content %}
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Title</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.title }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Moderation</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.get_moderation_status_display }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Status</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.get_status_display }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Category</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.category }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Quantity</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.quantity }} {{ object.unit_type }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Target price</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.target_price }} {{ object.currency }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Location</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.location_country }} {{ object.location_city }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Created</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.created_at|date:"Y-m-d H:i" }}</div></article>
+        <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Updated</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.updated_at|date:"Y-m-d H:i" }}</div></article>
+    </div>
+    <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">{{ object.description|linebreaksbr }}</div>
+    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'core:control_rfq_edit' object.id %}">Edit RFQ</a>
+        <form method="post" action="{% url 'core:control_rfq_status' object.id 'approve' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800">Approve</button></form>
+        <form method="post" action="{% url 'core:control_rfq_status' object.id 'reject' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reject</button></form>
+        <form method="post" action="{% url 'core:control_rfq_status' object.id 'close' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Close RFQ</button></form>
+        <form method="post" action="{% url 'core:control_rfq_status' object.id 'open' %}">{% csrf_token %}<button class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50">Reopen RFQ</button></form>
+        <a class="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100" href="{% url 'core:control_rfq_delete' object.id %}">Delete</a>
+    </div>
+</section>
+
+<section class="grid gap-5 xl:grid-cols-2">
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+        <h2 class="text-xl font-black text-slate-900">Buyer details</h2>
+        <div class="mt-5 grid gap-4 md:grid-cols-3">
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Buyer</div><div class="mt-3 text-sm font-semibold text-slate-900"><a class="hover:text-brand-700" href="{% url 'core:control_user_detail' object.buyer.id %}">{{ object.buyer }}</a></div></article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Email</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.buyer.email }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Identity</div><div class="mt-3 text-sm font-semibold text-slate-900">{{ object.buyer.get_identity_status_display }}</div></article>
+        </div>
+    </section>
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+        <h2 class="text-xl font-black text-slate-900">Conversation metrics</h2>
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Conversations</div><div class="mt-3 text-2xl font-black text-slate-900">{{ conversations|length }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Messages</div><div class="mt-3 text-2xl font-black text-slate-900">{{ messages_count }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Pending messages</div><div class="mt-3 text-2xl font-black text-slate-900">{{ messages_pending }}</div></article>
+            <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4"><div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Deals</div><div class="mt-3 text-2xl font-black text-slate-900">{{ deal_count }}</div></article>
+        </div>
+    </section>
+</section>
+
+<section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-panel sm:p-6">
+    <h2 class="text-xl font-black text-slate-900">Conversations</h2>
+    {% if conversations %}
+        <div class="mt-5 space-y-3">
+            {% for convo in conversations %}
+                <article class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="text-sm text-slate-700">Conversation #{{ convo.id }} with {{ convo.seller_company.name }}</div>
+                        <a class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50" href="{% url 'rfqs:conversation_detail' convo.id %}">Open</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="mt-4 text-sm text-slate-500">No conversations yet.</p>
+    {% endif %}
+</section>
+{% endblock account_content %}
